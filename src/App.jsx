@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import { useAuth } from "./contexts/AuthContext";
+import AuthPage from "./components/AuthPage";
 import AreaChartDemo from "./components/ui/demo";
 import CRMView from "./components/ui/crm-view";
 import MessagesView from "./components/ui/messages-view";
@@ -313,7 +315,7 @@ function BusinessOverview({ t, dark, mobile, compact, mode, notifOpen, setNotifO
 
         <header style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:mobile?"4px 2px 0":"8px 4px 0",flexShrink:0,gap:8}}>
           <div style={{minWidth:0,flex:1,marginLeft:mobile&&!sidebarOpen?48:0}}>
-            <h1 style={{fontSize:mobile?22:28,fontWeight:700,letterSpacing:-0.6}}>Hello, Anthony!</h1>
+            <h1 style={{fontSize:mobile?22:28,fontWeight:700,letterSpacing:-0.6}}>Hello, {(typeof userName === 'string' && userName) || 'there'}!</h1>
             <p style={{fontSize:mobile?12:14,color:t.sub,marginTop:3,fontWeight:400}}>Here's your overview of your business!</p>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
@@ -332,8 +334,8 @@ function BusinessOverview({ t, dark, mobile, compact, mode, notifOpen, setNotifO
             </div>
             {!mobile&&(
               <div style={{display:"flex",alignItems:"center",gap:10,marginLeft:4,paddingLeft:14,borderLeft:`1px solid ${t.divider}`}}>
-                <div style={{width:38,height:38,borderRadius:"50%",background:t.accentGrad,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,fontWeight:600,color:t.accentText,boxShadow:t.accentGlow}}>A</div>
-                <div><div style={{fontSize:13,fontWeight:600}}>Anthony Alverizko</div><div style={{fontSize:11,color:t.sub}}>anthony.alve@gmail.com</div></div>
+                <div style={{width:38,height:38,borderRadius:"50%",background:t.accentGrad,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,fontWeight:600,color:t.accentText,boxShadow:t.accentGlow}}>{(userName || 'U')[0].toUpperCase()}</div>
+                <div><div style={{fontSize:13,fontWeight:600}}>{userName || 'User'}</div><div style={{fontSize:11,color:t.sub}}>{userEmail || ''}</div></div>
               </div>)}
           </div>
         </header>
@@ -446,6 +448,26 @@ function BusinessOverview({ t, dark, mobile, compact, mode, notifOpen, setNotifO
 }
 
 export default function Dashboard(){
+  const { user, profile, loading, signOut } = useAuth();
+
+  // Show loading spinner while checking session
+  if (loading) {
+    return (
+      <div style={{display:'flex',alignItems:'center',justifyContent:'center',width:'100vw',height:'100vh',background:'#08080a',color:'#ccfd01',fontFamily:"-apple-system,'SF Pro Display',system-ui,sans-serif"}}>
+        <div style={{textAlign:'center'}}>
+          <div style={{width:48,height:48,borderRadius:14,background:'linear-gradient(135deg,#ccfd01,#b8e300)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,fontWeight:800,color:'#0a0a0a',margin:'0 auto 16px',boxShadow:'0 3px 18px rgba(204,253,1,0.18)'}}>N</div>
+          <div style={{fontSize:14,color:'#8b8fa3'}}>Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show auth page if not logged in
+  if (!user) return <AuthPage />;
+
+  const userName = profile?.full_name || user?.user_metadata?.full_name || '';
+  const userEmail = user?.email || '';
+
   const[dark,setDark]=useState(true);
   const VOLTD = '#c3ef00'; // slightly darker
 
@@ -524,6 +546,11 @@ export default function Dashboard(){
               <div style={{marginLeft:"auto",width:26,height:26,borderRadius:"50%",background:t.accentGrad,display:"flex",alignItems:"center",justifyContent:"center",color:t.accentText,boxShadow:t.accentGlow}}>{IC.arrow}</div>
             </div>
           </div>
+          {/* Sign Out */}
+          <button onClick={signOut} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 12px",borderRadius:12,width:"100%",fontSize:12,fontWeight:500,color:t.sub,background:dark?"rgba(255,255,255,0.03)":"rgba(0,0,0,0.03)",border:`1px solid ${t.inputBorder}`,cursor:"pointer",fontFamily:"inherit",transition:ease,marginTop:8}}>
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            Sign Out
+          </button>
         </aside>
       )}
       {mobile&&sidebarOpen&&<div onClick={()=>setSidebarOpen(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:250}}/>}
