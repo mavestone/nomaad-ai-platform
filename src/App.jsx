@@ -305,7 +305,7 @@ function DonutRing({pct,color,size=72,strokeW=7,t}){
 }
 
 
-function BusinessOverview({ t, dark, mobile, compact, mode, notifOpen, setNotifOpen, w }) {
+function BusinessOverview({ t, dark, mobile, compact, mode, notifOpen, setNotifOpen, w, userName, userEmail, sidebarOpen }) {
   const ease="all 0.45s cubic-bezier(.4,0,.2,1)";
   const card=(ex={})=>({background:t.card,border:`1px solid ${t.cardBorder}`,borderRadius:20,boxShadow:t.cardShadow,transition:ease,backdropFilter:"blur(24px) saturate(1.6)",...ex});
 
@@ -559,7 +559,7 @@ export default function Dashboard(){
       <main style={{flex:1,display:"flex",flexDirection:"column",gap:12,
         height:mobile?"calc(100vh - 16px)":"calc(100vh - 28px)",
         overflowY:"auto",overflowX:"hidden",minWidth:0}}>
-        {navSec === 0 && nav === 0 && <BusinessOverview t={t} dark={dark} mobile={mobile} compact={compact} mode={mode} notifOpen={notifOpen} setNotifOpen={setNotifOpen} w={w} />}
+        {navSec === 0 && nav === 0 && <BusinessOverview t={t} dark={dark} mobile={mobile} compact={compact} mode={mode} notifOpen={notifOpen} setNotifOpen={setNotifOpen} w={w} userName={userName} userEmail={userEmail} sidebarOpen={sidebarOpen} />}
         {navSec === 0 && nav === 1 && <ProspectingView t={t} dark={dark} mobile={mobile} compact={compact} />}
         {navSec === 0 && nav === 2 && <CRMView t={t} dark={dark} mobile={mobile} compact={compact} mode={mode} notifOpen={notifOpen} setNotifOpen={setNotifOpen} w={w} IC={IC} pal={pal} VOLT={VOLT} VOLTD={VOLTD} />}
         {navSec === 0 && nav === 3 && <ProjectsView t={t} dark={dark} mobile={mobile} compact={compact} onLaunchPortal={() => setShowPortal(true)} />}
