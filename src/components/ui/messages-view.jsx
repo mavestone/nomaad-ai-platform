@@ -135,19 +135,22 @@ const PlatformIcon = ({ platformId, size = 11 }) => {
 
 export default function MessagesView({ t, dark, mobile, compact }) {
   const [activePlatform, setActivePlatform]   = useState("all");
+  const [threads, setThreads]                 = useState(INITIAL_THREADS);
+  const [channels, setChannels]               = useState(INITIAL_CHANNELS);
   const [activeThreadId, setActiveThreadId]   = useState(INITIAL_THREADS[0].id);
   const [activeChannelId, setActiveChannelId] = useState(null);
+  const [messageText, setMessageText]         = useState('');
 
   const ease = "all 0.2s cubic-bezier(.4,0,.2,1)";
   const card = `1px solid ${t.cardBorder}`;
 
   const filteredThreads = activePlatform === "all"
-    ? INITIAL_THREADS
-    : INITIAL_THREADS.filter(th => th.platform === activePlatform);
+    ? threads
+    : threads.filter(th => th.platform === activePlatform);
 
   // Resolve what's currently open
-  const activeThread  = activeThreadId  ? INITIAL_THREADS.find(th => th.id === activeThreadId)   : null;
-  const activeChannel = activeChannelId ? INITIAL_CHANNELS.find(ch => ch.id === activeChannelId) : null;
+  const activeThread  = activeThreadId  ? threads.find(th => th.id === activeThreadId)   : null;
+  const activeChannel = activeChannelId ? channels.find(ch => ch.id === activeChannelId) : null;
   const activePaneItem = activeChannel || activeThread;
 
   const selectThread = (id) => { setActiveThreadId(id); setActiveChannelId(null); };
@@ -158,6 +161,30 @@ export default function MessagesView({ t, dark, mobile, compact }) {
     : activeThread?.platform === "gmail"
     ? "Hi Bobby, thanks for sending this over. I'll review the Facebook ad spend and get back to you by EOD."
     : "On it — will get back to you shortly.";
+
+  const handleSendMessage = () => {
+    if (!messageText.trim() || !activePaneItem) return;
+    
+    const newMsg = {
+      id: Date.now(),
+      from: "Me",
+      text: messageText,
+      time: "Just now",
+      color: "#34C759"
+    };
+
+    if (activeThreadId) {
+      setThreads(prev => prev.map(th => th.id === activeThreadId ? { ...th, messages: [...th.messages, newMsg], unread: false } : th));
+    } else if (activeChannelId) {
+      setChannels(prev => prev.map(ch => ch.id === activeChannelId ? { ...ch, messages: [...ch.messages, newMsg] } : ch));
+    }
+    
+    setMessageText('');
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') handleSendMessage();
+  };
 
   return (
     <div style={{ display: "flex", width: "100%", height: "100%", gap: 12, overflow: "hidden", animation: "fadeUp 0.4s ease backwards" }}>
@@ -254,12 +281,11 @@ export default function MessagesView({ t, dark, mobile, compact }) {
             })}
           </div>
 
-          {/* ── Channels section ── */}
           <div style={{ padding: "10px 18px 6px", display: "flex", alignItems: "center", gap: 6, borderTop: `1px solid ${t.divider}` }}>
             <Users size={11} color={t.sub} />
             <span style={{ fontSize: 11, fontWeight: 700, color: t.sub, letterSpacing: "0.5px", textTransform: "uppercase" }}>Team Channels</span>
           </div>
-          {INITIAL_CHANNELS.map(ch => {
+          {channels.map(ch => {
             const isActive = activeChannelId === ch.id;
             return (
               <div key={ch.id} onClick={() => selectChannel(ch.id)} style={{
@@ -424,13 +450,16 @@ export default function MessagesView({ t, dark, mobile, compact }) {
                 <Paperclip size={15} />
               </button>
               <input
+                value={messageText}
+                onChange={(e) => setMessageText(e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder={activeChannel ? `Message #${activeChannel.name}…` : activeThread?.platform === "gmail" ? "Reply via Gmail…" : `Message via ${PLATFORMS.find(p => p.id === activeThread?.platform)?.label}…`}
                 style={{ flex: 1, border: "none", background: "transparent", color: t.text, fontSize: 14, outline: "none", padding: "0 4px" }}
               />
               <button style={{ background: "transparent", border: "none", color: t.sub, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: "50%" }}>
                 <Mic size={15} />
               </button>
-              <button style={{ background: t.accentGrad, border: "none", color: t.accentText, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, borderRadius: "50%", boxShadow: t.accentGlow }}>
+              <button onClick={handleSendMessage} style={{ background: t.accentGrad, border: "none", color: t.accentText, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, borderRadius: "50%", boxShadow: t.accentGlow }}>
                 <Send size={14} style={{ marginLeft: -1, marginTop: 2 }} />
               </button>
             </div>

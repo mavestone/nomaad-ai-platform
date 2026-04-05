@@ -11,6 +11,8 @@ import DocsView from "./components/ui/docs-view";
 import DeliverablesView from "./components/ui/deliverables-view";
 import ClientPortalView from "./components/ui/client-portal-view";
 import AutomationsView from "./components/ui/automations-view";
+import FinancialsView from "./components/ui/financials-view";
+import { supabase } from './lib/supabase';
 
 const salesData = [
   { month:"Jan",profit:3200,expense:1800 },{ month:"Feb",profit:4100,expense:2200 },
@@ -136,7 +138,7 @@ const IC={
   zap:<svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>,
 };
 
-const navM=[{ic:"grid",label:"Dashboard"},{ic:"compass",label:"Prospecting"},{ic:"users",label:"CRM"},{ic:"chart",label:"Projects"},{ic:"bell",label:"Calendar"},{ic:"zap",label:"Automations"}];
+const navM=[{ic:"grid",label:"Dashboard"},{ic:"compass",label:"Prospecting"},{ic:"users",label:"CRM"},{ic:"chart",label:"Projects"},{ic:"bell",label:"Calendar"},{ic:"zap",label:"Automations"},{ic:"dollar",label:"Financials"}];
 const navS=[{ic:"star",label:"Docs"},{ic:"mail",label:"Messages"},{ic:"cog",label:"Settings"}];
 
 function useWidth(){const[w,setW]=useState(typeof window!=='undefined'?window.innerWidth:1200);useEffect(()=>{const u=()=>setW(window.innerWidth);window.addEventListener("resize",u);return()=>window.removeEventListener("resize",u)},[]);return w;}
@@ -308,6 +310,60 @@ function DonutRing({pct,color,size=72,strokeW=7,t}){
 function BusinessOverview({ t, dark, mobile, compact, mode, notifOpen, setNotifOpen, w, userName, userEmail, sidebarOpen }) {
   const ease="all 0.45s cubic-bezier(.4,0,.2,1)";
   const card=(ex={})=>({background:t.card,border:`1px solid ${t.cardBorder}`,borderRadius:20,boxShadow:t.cardShadow,transition:ease,backdropFilter:"blur(24px) saturate(1.6)",...ex});
+  
+  const [dbSalesData, setDbSalesData] = useState(salesData);
+  const [dbSchedule, setDbSchedule] = useState(scheduleItems);
+  const [dbStats, setDbStats] = useState(statDefs);
+
+  useEffect(() => {
+    async function loadDashboard() {
+      // 1. Load Calendar Events for the next few items
+      const { data: events } = await supabase.from('calendar_events')
+        .select('*')
+        .gte('start_time', new Date().toISOString())
+        .order('start_time', { ascending: true })
+        .limit(5);
+
+      if (events && events.length > 0) {
+        setDbSchedule(events.map(e => {
+          const d = new Date(e.start_time);
+          return {
+            time: d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            date: d.toLocaleDateString([], { weekday: 'short', day: '2-digit', month: 'short' }),
+            title: e.title,
+            who: e.type.charAt(0).toUpperCase() + e.type.slice(1),
+            done: false
+          };
+        }));
+      }
+
+      // 2. Load Stats: Prospects (Total Customers)
+      const { count: prospectCount } = await supabase.from('prospects')
+        .select('*', { count: 'exact', head: true });
+        
+      const { data: projects } = await supabase.from('projects').select('*');
+      const activeProjects = projects ? projects.filter(p => !['done','cancelled'].includes(p.status)).length : 0;
+
+      // 3. Load Financials
+      const { data: txs } = await supabase.from('transactions').select('*');
+      let totalExpense = 0;
+      let totalProfit = 0;
+      if (txs) {
+        txs.forEach(t => {
+          if (t.type === 'expense') totalExpense += t.amount;
+          if (t.type === 'income') totalProfit += t.amount;
+        });
+      }
+
+      setDbStats([
+        {ic:"cust",label:"Total CRM Contacts",val:prospectCount?.toString() || "0",ch:"+0%",up:true,p:pal.volt},
+        {ic:"actCust",label:"Active Projects",val:activeProjects.toString(),ch:"+0%",up:true,p:pal.teal},
+        {ic:"dollar",label:"Profit Total",val:`$${totalProfit.toLocaleString()}`,ch:"+0%",up:true,p:pal.amber},
+        {ic:"expense",label:"Expense Total",val:`$${totalExpense.toLocaleString()}`,ch:"-0%",up:false,p:pal.coral},
+      ]);
+    }
+    loadDashboard();
+  }, []);
 
   return (
     <>
@@ -342,7 +398,7 @@ function BusinessOverview({ t, dark, mobile, compact, mode, notifOpen, setNotifO
 
         {/* Stats */}
         <div style={{display:"grid",gridTemplateColumns:mobile?"1fr 1fr":compact?"repeat(2,1fr)":"repeat(4,1fr)",gap:compact?10:12,flexShrink:0}}>
-          {statDefs.map((s,i)=>(
+          {dbStats.map((s,i)=>(
             <div key={i} style={{background:cardGrads[mode][i],border:`1px solid ${t.cardBorder}`,borderRadius:20,boxShadow:t.cardShadow,
               padding:compact?"14px":"16px 18px",transition:ease,backdropFilter:"blur(24px) saturate(1.6)",
               position:"relative",overflow:"hidden",animation:`fadeUp 0.45s ease ${i*.06}s backwards`,minWidth:0}}>
@@ -399,8 +455,9 @@ function BusinessOverview({ t, dark, mobile, compact, mode, notifOpen, setNotifO
                 <h3 style={{fontSize:15,fontWeight:600}}>Upcoming Schedule</h3>
                 <button style={{color:t.muted,background:"none",border:"none",cursor:"pointer"}}>{IC.dots}</button>
               </div>
-              {scheduleItems.map((item,i)=>(
-                <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:i<scheduleItems.length-1?`1px solid ${t.divider}`:"none",minWidth:0}}>
+              {dbSchedule.length === 0 && <div style={{fontSize:13,color:t.sub,marginTop:20,textAlign:'center'}}>No upcoming events</div>}
+              {dbSchedule.map((item,i)=>(
+                <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:i<dbSchedule.length-1?`1px solid ${t.divider}`:"none",minWidth:0}}>
                   <div style={{width:22,height:22,borderRadius:"50%",flexShrink:0,border:item.done?"none":`1.5px solid ${t.chk}`,background:item.done?pal.volt.grad:"transparent",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:item.done?`0 2px 8px ${pal.volt.glow}`:"none"}}>
                     {item.done&&<svg width="11" height="11" fill="none" viewBox="0 0 11 11"><path d="M2.5 5.5L4.5 7.5L8.5 3.5" stroke="#0a0a0a" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                   </div>
@@ -565,6 +622,7 @@ export default function Dashboard(){
         {navSec === 0 && nav === 3 && <ProjectsView t={t} dark={dark} mobile={mobile} compact={compact} onLaunchPortal={() => setShowPortal(true)} />}
         {navSec === 0 && nav === 4 && <CalendarView t={t} dark={dark} mobile={mobile} compact={compact} />}
         {navSec === 0 && nav === 5 && <AutomationsView t={t} dark={dark} mobile={mobile} compact={compact} />}
+        {navSec === 0 && nav === 6 && <FinancialsView t={t} dark={dark} mobile={mobile} compact={compact} mode={mode} IC={IC} pal={pal} VOLT={VOLT} VOLTD={VOLTD} />}
         
         {navSec === 1 && nav === 0 && <DocsView t={t} dark={dark} mobile={mobile} compact={compact} />}
         {navSec === 1 && nav === 1 && <MessagesView t={t} dark={dark} mobile={mobile} compact={compact} mode={mode} IC={IC} />}

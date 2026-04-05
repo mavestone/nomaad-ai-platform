@@ -5,44 +5,21 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { MoreHorizontal, Plus, Clock, Target, CreditCard, PlayCircle, Film, CheckCircle2, X, Eye, AlertCircle, Package, Link, Play, AlignLeft, Users, Calendar as CalIcon, Settings2, Trash2, CheckSquare, MessageSquare, Send, ListTodo, UserPlus, UserMinus, Activity } from 'lucide-react';
 import { format, addDays, startOfWeek, isSameDay, parseISO } from 'date-fns';
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../contexts/AuthContext';
+
 
 const STAGES = [
-  { id: 'pre-production', title: 'Pre-production', ic: <Target size={15} />, color: '#AF52DE' },
-  { id: 'in-progress', title: 'In Progress', ic: <Film size={15} />, color: '#5AC8FA' },
-  { id: 'shared', title: 'Shared for Review', ic: <Eye size={15} />, color: '#FFB340' },
-  { id: 'changes', title: 'Changes Requested', ic: <AlertCircle size={15} />, color: '#FF453A' },
-  { id: 'approved', title: 'Approved', ic: <CheckCircle2 size={15} />, color: '#34C759' },
-  { id: 'delivered', title: 'Delivered', ic: <Package size={15} />, color: '#ccfd01' }
+  { id: 'planning', title: 'Planning', ic: <Target size={15} />, color: '#AF52DE' },
+  { id: 'active', title: 'Active', ic: <Film size={15} />, color: '#5AC8FA' },
+  { id: 'review', title: 'Review', ic: <Eye size={15} />, color: '#FFB340' },
+  { id: 'completed', title: 'Completed', ic: <CheckCircle2 size={15} />, color: '#34C759' },
+  { id: 'archived', title: 'Archived', ic: <Package size={15} />, color: '#ccfd01' }
 ];
 
 const MOCK_USERS = ['AA', 'SJ', 'MC', 'ER', 'JD', 'KP'];
 
-const INIT_TASKS = [
-  { 
-    id: '1', columnId: 'pre-production', client: 'Nike Running', title: 'Winter Campaign Shoot', value: 12500, dueDate: '2023-11-24', members: ['SJ', 'MC'], 
-    desc: 'High-energy running montage for the winter gear rollout. Shot on Arri Alexa.',
-    deliverables: [], checklist: [{id: 'c1', text: 'Scout locations', done: true}, {id: 'c2', text: 'Book talent', done: false}], comments: [{id: 'm1', author: 'SJ', text: 'I think we need to push the date back by a day, talent is sick.', time: '2 hours ago'}]
-  },
-  { 
-    id: '2', columnId: 'in-progress', client: 'Acme Corp', title: 'Brand Documentary', value: 8200, dueDate: '2023-11-22', members: ['SJ'], 
-    desc: 'Story-driven piece explaining Acme’s origins.',
-    deliverables: [], checklist: [], comments: []
-  },
-  { 
-    id: '3', columnId: 'changes', client: 'Local Coffee Spot', title: 'Social Media Ad 15s', value: 2500, dueDate: '2023-11-19', members: ['MC', 'ER'], 
-    desc: 'Vertical video for Instagram/TikTok promoting the new seasonal latte.',
-    deliverables: [
-      { id: 'd1', name: 'V1 - Rough Cut', status: 'Changes Requested', revsUsed: 1, revsMax: 3 }
-    ], checklist: [], comments: []
-  },
-  { 
-    id: '4', columnId: 'approved', client: 'Tech Startup', title: 'Promo Video Overview', value: 15000, dueDate: '2023-11-15', members: [], 
-    desc: 'Main website explainer video.',
-    deliverables: [
-      { id: 'd2', name: 'V2 - Audio Mix Final', status: 'Approved', revsUsed: 2, revsMax: 3 }
-    ], checklist: [], comments: []
-  },
-];
+const INIT_TASKS = []; // Fetched dynamically
 
 
 function DroppableColumn({ id, items, children }) {
@@ -141,9 +118,30 @@ function TaskCard({ task, t, dark, ease, isDragging }) {
 
 
 export default function ProjectsView({ t, dark, mobile, onLaunchPortal }) {
-  const [tasks, setTasks] = useState(INIT_TASKS);
+  const { user } = useAuth();
+  const [tasks, setTasks] = useState([]);
   const [activeTask, setActiveTask] = useState(null);
-  const [openedTask, setOpenedTask] = useState(null); // Full Trello Modal
+  const [openedTask, setOpenedTask] = useState(null); 
+  
+  React.useEffect(() => {
+    if (user) fetchProjects();
+  }, [user]);
+
+  async function fetchProjects() {
+    const { data } = await supabase.from('projects').select('*').order('created_at', { ascending: false });
+    if (data) {
+      setTasks(data.map(p => ({
+        id: p.id,
+        columnId: p.status,
+        client: p.client_name || 'No Client',
+        title: p.name,
+        value: 0, 
+        dueDate: p.due_date ? p.due_date.split('T')[0] : format(new Date(), 'yyyy-MM-dd'),
+        desc: p.description || '',
+        members: []
+      })));
+    }
+  }
   const ease = "all 0.45s cubic-bezier(.4,0,.2,1)";
   const formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
   
@@ -185,6 +183,7 @@ export default function ProjectsView({ t, dark, mobile, onLaunchPortal }) {
         const activeIndex = prev.findIndex(tk => tk.id === activeId);
         const newTasks = [...prev];
         newTasks[activeIndex] = { ...newTasks[activeIndex], columnId: overId };
+        supabase.from('projects').update({ status: overId }).eq('id', activeId).then();
         return arrayMove(newTasks, activeIndex, activeIndex);
       });
     }
@@ -192,9 +191,20 @@ export default function ProjectsView({ t, dark, mobile, onLaunchPortal }) {
 
   const handleDragEnd = () => setActiveTask(null);
 
-  const saveTaskDetails = (key, val) => {
+  const saveTaskDetails = async (key, val) => {
     setTasks(prev => prev.map(t => t.id === openedTask.id ? { ...t, [key]: val } : t));
     setOpenedTask(prev => ({ ...prev, [key]: val }));
+    
+    // Auto-save mapped fields to DB
+    const updatePayload = {};
+    if (key === 'title') updatePayload.name = val;
+    if (key === 'client') updatePayload.client_name = val;
+    if (key === 'desc') updatePayload.description = val;
+    if (key === 'dueDate') updatePayload.due_date = new Date(val).toISOString();
+    
+    if (Object.keys(updatePayload).length > 0) {
+      await supabase.from('projects').update(updatePayload).eq('id', openedTask.id);
+    }
   };
 
   const addDeliverable = () => {
@@ -281,11 +291,20 @@ export default function ProjectsView({ t, dark, mobile, onLaunchPortal }) {
                   </SortableContext>
                   
                   {/* Add Button */}
-                  <button onClick={() => {
-                    const newId = Math.random().toString(36).substr(2, 9);
-                    const newTask = { id: newId, columnId: col.id, client: 'New Client', title: 'New Project', value: 0, dueDate: format(today, 'yyyy-MM-dd'), deliverables: [], members: [] };
-                    setTasks([...tasks, newTask]);
-                    setOpenedTask(newTask);
+                  <button onClick={async () => {
+                    const todayStr = format(new Date(), 'yyyy-MM-dd');
+                    const { data } = await supabase.from('projects').insert([{
+                      user_id: user.id,
+                      name: 'New Project',
+                      status: col.id,
+                      client_name: 'New Client',
+                      due_date: new Date().toISOString()
+                    }]).select().single();
+                    if (data) {
+                      const newTask = { id: data.id, columnId: data.status, client: data.client_name, title: data.name, value: 0, dueDate: todayStr, deliverables: [], members: [] };
+                      setTasks([...tasks, newTask]);
+                      setOpenedTask(newTask);
+                    }
                   }} style={{ padding: "14px", borderRadius: 16, border: `1px dashed ${t.cardBorder}`, background: "transparent", color: t.sub, fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, cursor: "pointer", transition: ease, ':hover': { background: t.input } }}>
                     <Plus size={14} /> Add Project
                   </button>
@@ -556,7 +575,11 @@ export default function ProjectsView({ t, dark, mobile, onLaunchPortal }) {
                 </div>
 
                 <div style={{ marginTop: 'auto', paddingTop: 24, borderTop: `1px solid ${t.divider}` }}>
-                  <button onClick={() => { setTasks(prev => prev.filter(t => t.id !== openedTask.id)); setOpenedTask(null); }} style={{ width: '100%', padding: '12px', borderRadius: 10, background: 'rgba(255,59,48,0.1)', color: '#FF453A', border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                  <button onClick={async () => { 
+                    await supabase.from('projects').delete().eq('id', openedTask.id);
+                    setTasks(prev => prev.filter(t => t.id !== openedTask.id)); 
+                    setOpenedTask(null); 
+                  }} style={{ width: '100%', padding: '12px', borderRadius: 10, background: 'rgba(255,59,48,0.1)', color: '#FF453A', border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                     <Trash2 size={16} /> Delete Project
                   </button>
                 </div>

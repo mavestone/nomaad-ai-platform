@@ -226,7 +226,38 @@ create policy "Users can manage own automations"
   on public.automations for all using (auth.uid() = user_id);
 
 
--- ─── 10. UPDATED_AT TRIGGER ────────────────
+-- ─── 10. FINANCIALS ──────────────────────────
+create table if not exists public.transactions (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  description text not null,
+  amount numeric(12,2) not null,
+  type text check (type in ('income', 'expense')),
+  status text default 'completed' check (status in ('pending', 'processing', 'completed', 'failed')),
+  account text,
+  transaction_date date default current_date,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+alter table public.transactions enable row level security;
+create policy "Users can manage own transactions" on public.transactions for all using (auth.uid() = user_id);
+
+create table if not exists public.invoices (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  client_name text not null,
+  amount numeric(12,2) not null,
+  status text default 'pending' check (status in ('draft', 'pending', 'paid', 'overdue')),
+  due_date date,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+alter table public.invoices enable row level security;
+create policy "Users can manage own invoices" on public.invoices for all using (auth.uid() = user_id);
+
+-- ─── 11. UPDATED_AT TRIGGER ────────────────
 -- Automatically update the updated_at column
 create or replace function public.update_updated_at()
 returns trigger as $$
@@ -243,7 +274,8 @@ declare
 begin
   for t in select unnest(array[
     'profiles', 'customers', 'prospects', 'projects',
-    'tasks', 'calendar_events', 'documents', 'automations'
+    'tasks', 'calendar_events', 'documents', 'automations',
+    'transactions', 'invoices'
   ])
   loop
     execute format(
@@ -259,4 +291,5 @@ end $$;
 -- ─── Done! ──────────────────────────────────
 -- Your database is ready. Tables created:
 --   profiles, customers, prospects, projects, tasks,
---   calendar_events, documents, channels, messages, automations
+--   calendar_events, documents, channels, messages, automations,
+--   transactions, invoices

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Sparkles, Users, Filter, Briefcase, Plus, Search, ChevronRight, Copy, Send, Mail, X, Check, MapPin, Building, Target } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../contexts/AuthContext';
 
 const INDUSTRIES = ['All', 'Ad agencies', 'Consumer brands', 'Media & production', 'PR firms'];
 const ROLES = ['All Roles', 'Creative Directors', 'Marketing Directors', 'Brand Managers', 'Agency Producers'];
@@ -20,6 +22,8 @@ export default function ProspectingView({ t, dark, mobile }) {
   const [activeLead, setActiveLead] = useState(null);
   const [generating, setGenerating] = useState(false);
   const [pitch, setPitch] = useState('');
+  const [pushing, setPushing] = useState(false);
+  const { user } = useAuth();
   
   const ease = "all 0.45s cubic-bezier(.4,0,.2,1)";
 
@@ -36,9 +40,25 @@ export default function ProspectingView({ t, dark, mobile }) {
     setGenerating(true);
     // Mock Groq AI Generation delay
     setTimeout(() => {
-      setPitch(`Hi ${lead.name.split(' ')[0]},\n\nI've been following your recent work at ${lead.company}, specifically your approach to ${lead.industry === 'Consumer brands' ? 'digital-first storytelling' : 'high-end broadcast spots'}—it really caught my eye.\n\nI run a boutique production studio that specializes in cinematic, narrative-driven content. Given your focus on ${lead.bio.includes('documentary') ? 'documentary-style' : 'high-impact visual'} marketing, I think our roster of directors would be a perfect fit for your upcoming 2024 campaigns.\n\nAre you open to a quick 10-minute intro call next week so I can show you some of our recent unreleased reels?\n\nBest,\nYour Name`);
+      setPitch(`Hi ${lead.name.split(' ')[0]},\n\nI've been following your recent work at ${lead.company}, specifically your approach to ${lead.industry === 'Consumer brands' ? 'digital-first storytelling' : 'high-end broadcast spots'}—it really caught my eye.\n\nI run a boutique production studio that specializes in cinematic, narrative-driven content. Given your focus on ${lead.bio.includes('documentary') ? 'documentary-style' : 'high-end impact'} marketing, I think our roster of directors would be a perfect fit for your upcoming campaigns.\n\nAre you open to a quick 10-minute intro call next week?\n\nBest,\n`);
       setGenerating(false);
     }, 1500);
+  };
+
+  const handlePushToCRM = async () => {
+    if (!activeLead || !user) return;
+    setPushing(true);
+    const { data, error } = await supabase.from('prospects').insert([{
+      user_id: user.id,
+      name: activeLead.name,
+      company: activeLead.company,
+      email: `${activeLead.name.split(' ')[0].toLowerCase()}@${activeLead.company.toLowerCase().replace(/[^a-z]/g, '')}.com`,
+      source: 'Prospecting DB',
+      stage: 'new',
+      notes: activeLead.bio
+    }]);
+    setPushing(false);
+    if (!error) setActiveLead(null);
   };
 
   return (
@@ -189,8 +209,8 @@ export default function ProspectingView({ t, dark, mobile }) {
             <button disabled={generating} style={{ flex: 1, padding: '12px', borderRadius: 14, border: `1px solid ${t.inputBorder}`, background: t.input, color: t.text, fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: generating ? 'default' : 'pointer', opacity: generating ? 0.5 : 1 }}>
               <Copy size={16} /> Copy
             </button>
-            <button disabled={generating} style={{ flex: 1, padding: '12px', borderRadius: 14, border: "none", background: t.accentGrad, color: t.accentText, fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: generating ? 'default' : 'pointer', boxShadow: generating ? 'none' : t.accentGlow, opacity: generating ? 0.5 : 1 }}>
-              <Send size={16} /> Push to CRM
+            <button disabled={generating || pushing} onClick={handlePushToCRM} style={{ flex: 1, padding: '12px', borderRadius: 14, border: "none", background: t.accentGrad, color: t.accentText, fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: (generating||pushing) ? 'default' : 'pointer', boxShadow: (generating||pushing) ? 'none' : t.accentGlow, opacity: (generating||pushing) ? 0.5 : 1 }}>
+              {pushing ? 'Pushing...' : <><Send size={16} /> Push to CRM</>}
             </button>
           </div>
 

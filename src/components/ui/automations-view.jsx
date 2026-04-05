@@ -3,8 +3,10 @@ import {
   Zap, Send, Phone, FileText, FileCheck, Receipt, Eye, Clock, CheckCircle2,
   Mail, ExternalLink, Users, Target, Plus, Trash2, Play, Square, X,
   Tag, Filter, GitBranch, Bell, DollarSign, Briefcase, UserPlus, Search,
-  MessageSquare, Link, Star, BarChart2, CalendarDays, RefreshCw,
+  MessageSquare, Link, Star, BarChart2, CalendarDays, RefreshCw, Save
 } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../contexts/AuthContext';
 
 const STAGES = [
   { id: 'prospect', label: 'Prospect', color: '#AF52DE' },
@@ -363,18 +365,61 @@ const Port = ({ nodeId, side, color, active, onStartDrag, dark }) => {
 };
 
 export default function AutomationsView({ t, dark }) {
-  const [nodes, setNodes]                   = useState(INIT_NODES);
-  const [wires, setWires]                   = useState(INIT_WIRES);
+  const { user } = useAuth();
+  const [nodes, setNodes]                   = useState([]);
+  const [wires, setWires]                   = useState([]);
   const [selectedWireId, setSelectedWireId] = useState(null);
   const [hoveredWireId, setHoveredWireId]   = useState(null);
   const [selectedNode, setSelectedNode]     = useState(null);
   const [contextMenu, setContextMenu]       = useState(null);
-  const [nodePicker, setNodePicker]         = useState(null); // stageId | null
+  const [nodePicker, setNodePicker]         = useState(null); 
   const [dragging, setDragging]             = useState(null);
   const [nodePositions, setNodePositions]   = useState({});
   const [isRunning, setIsRunning]           = useState(false);
+  const [saving, setSaving]                 = useState(false);
+  const [automationId, setAutomationId]     = useState(null);
   const canvasRef = useRef(null);
   const nodeRefs  = useRef({});
+
+  useEffect(() => {
+    if (user) {
+      loadWorkflow();
+    }
+  }, [user]);
+
+  const loadWorkflow = async () => {
+    const { data } = await supabase.from('automations').select('*').eq('user_id', user.id).limit(1);
+    if (data && data.length > 0) {
+      const dbNodes = JSON.parse(data[0].trigger_type || '[]');
+      const dbWires = JSON.parse(data[0].action_type || '[]');
+      setNodes(dbNodes.length ? dbNodes : INIT_NODES);
+      setWires(dbWires.length ? dbWires : INIT_WIRES);
+      setAutomationId(data[0].id);
+    } else {
+      setNodes(INIT_NODES);
+      setWires(INIT_WIRES);
+    }
+  };
+
+  const saveWorkflow = async () => {
+    if (!user) return;
+    setSaving(true);
+    const payload = {
+      user_id: user.id,
+      name: 'Main Workflow',
+      trigger_type: JSON.stringify(nodes),
+      action_type: JSON.stringify(wires),
+      is_active: isRunning
+    };
+
+    if (automationId) {
+      await supabase.from('automations').update(payload).eq('id', automationId);
+    } else {
+      const { data } = await supabase.from('automations').insert([payload]).select().single();
+      if (data) setAutomationId(data.id);
+    }
+    setSaving(false);
+  };
 
   const updatePositions = useCallback(() => {
     if (!canvasRef.current) return;
@@ -474,7 +519,23 @@ export default function AutomationsView({ t, dark }) {
             {nodes.length} Nodes · {wires.length} Connections
           </div>
           <button
-            onClick={() => setIsRunning(r => !r)}
+            onClick={saveWorkflow}
+            disabled={saving}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 7,
+              padding: '7px 18px', borderRadius: 20, border: `1px solid ${t.cardBorder}`,
+              background: t.card, color: t.text, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              transition: 'background 0.2s', opacity: saving ? 0.7 : 1
+            }}
+          >
+            <Save size={14} /> {saving ? 'Saving...' : 'Save'}
+          </button>
+          <button
+            onClick={() => setIsRunning(r => {
+              const next = !r;
+              if (automationId) supabase.from('automations').update({ is_active: next }).eq('id', automationId);
+              return next;
+            })}
             style={{
               display: 'flex', alignItems: 'center', gap: 7,
               padding: '7px 18px', borderRadius: 20, border: 'none',

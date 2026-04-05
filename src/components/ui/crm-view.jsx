@@ -1,28 +1,63 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../contexts/AuthContext";
+import { X } from "lucide-react";
 
-const INITIAL_CONTACTS = [
-  { id: 1, name: "Alice Freeman", email: "alice@acme.co", company: "Acme Corp", stage: "Active", value: "$12,400", lastContact: "2h ago", avatar: "A", color: "#5AC8FA" },
-  { id: 2, name: "Bobby Tables", email: "bobby@drop.co", company: "Drop Inc.", stage: "Lead", value: "$4,500", lastContact: "1d ago", avatar: "B", color: "#FFB340" },
-  { id: 3, name: "Carolina Herr", email: "carol@design.co", company: "CH Design", stage: "Negotiating", value: "$28,000", lastContact: "3d ago", avatar: "C", color: "#FF6259" },
-  { id: 4, name: "David Kim", email: "david@build.io", company: "Build IO", stage: "Won", value: "$52,000", lastContact: "1w ago", avatar: "D", color: "#ccfd01" },
-  { id: 5, name: "Evelyn Salt", email: "eve@sec.gov", company: "Securities", stage: "Active", value: "$8,900", lastContact: "2w ago", avatar: "E", color: "#ccfd01" },
-  { id: 6, name: "Frank Wright", email: "frank@arch.com", company: "Arch Group", stage: "Lead", value: "$15,200", lastContact: "3w ago", avatar: "F", color: "#FFB340" },
-  { id: 7, name: "Grace Hopper", email: "grace@navy.mil", company: "USN", stage: "Negotiating", value: "$120,000", lastContact: "1mo ago", avatar: "G", color: "#FF6259" },
-];
-
-const STAGES = ["Lead", "Negotiating", "Active", "Won"];
+const STAGES = ["new", "contacted", "proposal", "negotiation", "won"];
 
 export default function CRMView({ t, dark, mobile, compact, mode, notifOpen, setNotifOpen, w, IC, pal, VOLT, VOLTD }) {
-  const [view, setView] = useState("table"); // 'table' or 'board'
+  const { user } = useAuth();
+  const [view, setView] = useState("table"); 
+  const [contacts, setContacts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [formData, setFormData] = useState({ name: '', company: '', email: '', value: '', stage: 'new' });
+
+  useEffect(() => {
+    if (user) fetchProspects();
+  }, [user]);
+
+  async function fetchProspects() {
+    const { data, error } = await supabase.from('prospects').select('*').order('created_at', { ascending: false });
+    if (data) {
+      const formatted = data.map(d => ({
+        id: d.id, name: d.name, email: d.email, company: d.company, stage: d.stage,
+        value: `$${parseFloat(d.value).toLocaleString()}`,
+        lastContact: "recently", avatar: d.name ? d.name.charAt(0).toUpperCase() : "?",
+        color: stageColor(d.stage)
+      }));
+      setContacts(formatted);
+    }
+    setLoading(false);
+  }
+
+  const handleCreateLead = async (e) => {
+    e.preventDefault();
+    if (!user) return;
+    const { name, company, email, value, stage } = formData;
+    await supabase.from('prospects').insert([{
+      user_id: user.id,
+      name,
+      company,
+      email,
+      value: parseFloat(value) || 0,
+      stage,
+      status: 'active'
+    }]);
+    setModalOpen(false);
+    fetchProspects();
+  };
+
   const ease="all 0.45s cubic-bezier(.4,0,.2,1)";
   const card = (ex = {}) => ({ background: t.card, border: `1px solid ${t.cardBorder}`, borderRadius: 20, boxShadow: t.cardShadow, transition: ease, backdropFilter: "blur(24px) saturate(1.6)", ...ex });
 
   const stageColor = (stage) => {
     switch (stage) {
-      case "Lead": return pal.amber.base;
-      case "Negotiating": return pal.coral.base;
-      case "Active": return pal.teal.base;
-      case "Won": return pal.volt.base;
+      case "new": return pal.amber.base;
+      case "contacted": return pal.coral.base;
+      case "proposal": return pal.teal.base;
+      case "negotiation": return pal.volt.base;
+      case "won": return pal.volt.base;
       default: return t.muted;
     }
   };
@@ -70,7 +105,7 @@ export default function CRMView({ t, dark, mobile, compact, mode, notifOpen, set
               {IC.search}<input placeholder="Search deals..." style={{ border: "none", background: "transparent", color: t.text, fontSize: 13, outline: "none", width: 120 }} />
             </div>
           )}
-          <button style={{ height: 38, padding: "0 16px", borderRadius: 20, border: "none", background: t.text, color: t.shell, fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 6, cursor: "pointer", boxShadow: `0 4px 14px rgba(0,0,0,0.15)` }}>
+          <button onClick={() => setModalOpen(true)} style={{ height: 38, padding: "0 16px", borderRadius: 20, border: "none", background: t.text, color: t.shell, fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 6, cursor: "pointer", boxShadow: `0 4px 14px rgba(0,0,0,0.15)` }}>
             <span style={{ fontSize: 16 }}>+</span> New
           </button>
         </div>
@@ -91,8 +126,10 @@ export default function CRMView({ t, dark, mobile, compact, mode, notifOpen, set
             </div>
             
             <div style={{ flex: 1, overflowY: "auto" }}>
-              {INITIAL_CONTACTS.map((c, i) => (
-                <div key={c.id} style={{ display: "flex", alignItems: "center", padding: "16px 20px", borderBottom: i < INITIAL_CONTACTS.length - 1 ? `1px solid ${t.divider}` : "none", transition: ease, cursor: "pointer", ':hover': { background: t.input } }}>
+              {loading && <div style={{ padding: 20, textAlign: "center", color: t.muted }}>Loading data...</div>}
+              {!loading && contacts.length === 0 && <div style={{ padding: 20, textAlign: "center", color: t.muted }}>No prospects yet. Add one!</div>}
+              {contacts.map((c, i) => (
+                <div key={c.id} style={{ display: "flex", alignItems: "center", padding: "16px 20px", borderBottom: i < contacts.length - 1 ? `1px solid ${t.divider}` : "none", transition: ease, cursor: "pointer", ':hover': { background: t.input } }}>
                   <div style={{ flex: 2, minWidth: 150, display: "flex", alignItems: "center", gap: 12 }}>
                     <div style={{ width: 36, height: 36, borderRadius: "50%", background: `linear-gradient(135deg, ${c.color}, ${c.color}aa)`, display: "flex", alignItems: "center", justifyContent: "center", color: dark ? "#000" : "#fff", fontWeight: 700, fontSize: 14 }}>
                       {c.avatar}
@@ -116,7 +153,7 @@ export default function CRMView({ t, dark, mobile, compact, mode, notifOpen, set
         ) : (
           <div style={{ flex: 1, display: "flex", gap: 16, overflowX: "auto", overflowY: "hidden", marginTop: 12, paddingRight: 4, paddingBottom: 10 }}>
             {STAGES.map(stage => {
-              const stageDeals = INITIAL_CONTACTS.filter(c => c.stage === stage);
+              const stageDeals = contacts.filter(c => c.stage === stage);
               return (
                 <div key={stage} style={{ width: 300, flexShrink: 0, display: "flex", flexDirection: "column", gap: 12 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 4px" }}>
@@ -158,6 +195,48 @@ export default function CRMView({ t, dark, mobile, compact, mode, notifOpen, set
           </div>
         )}
       </div>
+
+      {modalOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: dark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.3)', backdropFilter: 'blur(5px)' }}>
+          <div style={{ background: t.card, padding: 24, borderRadius: 20, width: 360, boxShadow: t.cardShadow, border: `1px solid ${t.cardBorder}` }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
+              <h3 style={{ fontSize: 18, fontWeight: 700 }}>New Pipeline Deal</h3>
+              <button onClick={() => setModalOpen(false)} style={{ background: 'none', border: 'none', color: t.sub, cursor: 'pointer' }}><X size={18} /></button>
+            </div>
+            <form onSubmit={handleCreateLead} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, color: t.sub, marginBottom: 4 }}>Contact Name</label>
+                <input required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: 10, border: `1px solid ${t.inputBorder}`, background: t.input, color: t.text }} />
+              </div>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: 12, color: t.sub, marginBottom: 4 }}>Company</label>
+                  <input required value={formData.company} onChange={e => setFormData({ ...formData, company: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: 10, border: `1px solid ${t.inputBorder}`, background: t.input, color: t.text }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: 12, color: t.sub, marginBottom: 4 }}>Deal Value ($)</label>
+                  <input required type="number" value={formData.value} onChange={e => setFormData({ ...formData, value: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: 10, border: `1px solid ${t.inputBorder}`, background: t.input, color: t.text }} />
+                </div>
+              </div>
+              <div>
+                 <label style={{ display: 'block', fontSize: 12, color: t.sub, marginBottom: 4 }}>Email</label>
+                 <input type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: 10, border: `1px solid ${t.inputBorder}`, background: t.input, color: t.text }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, color: t.sub, marginBottom: 4 }}>Initial Stage</label>
+                <select value={formData.stage} onChange={e => setFormData({ ...formData, stage: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: 10, border: `1px solid ${t.inputBorder}`, background: t.input, color: t.text, appearance: 'none', cursor: 'pointer' }}>
+                  {STAGES.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <button type="submit" style={{ marginTop: 10, padding: '12px', borderRadius: 12, border: 'none', background: t.accentGrad, color: t.accentText, fontWeight: 700, cursor: 'pointer', boxShadow: t.accentGlow }}>
+                Add Deal
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
     </>
   );
 }
+

@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Plus, ChevronLeft, ChevronRight, X, Video, Edit3, Briefcase, Users, Coffee, Trash2, Clock, GripVertical } from 'lucide-react';
-import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
+import { format, addDays, startOfWeek, isSameDay, differenceInDays, startOfDay, addHours, addMinutes } from 'date-fns';
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../contexts/AuthContext';
+
 
 const CATEGORIES = [
   { id: 'Shoot', label: 'Shoot', color: '#ccfd01', textColor: '#1a1a1f', darkBg: 'rgba(204,253,1,0.12)', lightBg: 'rgba(204,253,1,0.15)', icon: <Video size={11} strokeWidth={2.5} /> },
@@ -15,18 +18,8 @@ const END_HOUR = 22;
 const HOURS = Array.from({ length: END_HOUR - START_HOUR }).map((_, i) => i + START_HOUR);
 const HOUR_HEIGHT = 64;
 
-const INIT_BLOCKS = [
-  { id: 1, dayIdx: 0, startHr: 8.0, endHr: 12.0, title: 'Commercial Shoot — Nike', category: 'Shoot' },
-  { id: 2, dayIdx: 0, startHr: 13.0, endHr: 16.0, title: 'Nike Rough Cut', category: 'Edit' },
-  { id: 3, dayIdx: 1, startHr: 7.0, endHr: 13.0, title: 'Location Scouting', category: 'Shoot' },
-  { id: 4, dayIdx: 1, startHr: 14.0, endHr: 15.0, title: 'Client Sync Call', category: 'Meeting' },
-  { id: 5, dayIdx: 2, startHr: 9.0, endHr: 17.0, title: 'Editing Intensive', category: 'Edit' },
-  { id: 6, dayIdx: 3, startHr: 8.0, endHr: 10.0, title: 'Invoicing & Emails', category: 'Admin' },
-  { id: 7, dayIdx: 3, startHr: 10.5, endHr: 12.0, title: 'Pitch Deck Prep', category: 'Admin' },
-  { id: 8, dayIdx: 4, startHr: 8.0, endHr: 16.0, title: 'Music Video Shoot', category: 'Shoot' },
-  { id: 9, dayIdx: 4, startHr: 19.0, endHr: 21.0, title: 'Team Dinner', category: 'Personal' },
-  { id: 10, dayIdx: 5, startHr: 10.0, endHr: 14.0, title: 'Editing Catchup', category: 'Edit' },
-];
+// Initial blocks removed. Fetched from Supabase DB.
+
 
 const fmtTime = (hr) => {
   const h = Math.floor(hr);
@@ -51,17 +44,49 @@ for (let h = START_HOUR; h <= END_HOUR; h += 0.5) {
 }
 
 export default function CalendarView({ t, dark, mobile, compact }) {
-  const [blocks, setBlocks] = useState(INIT_BLOCKS);
+  const { user } = useAuth();
+  const [blocks, setBlocks] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editBlock, setEditBlock] = useState(null);
   const [hoveredSlot, setHoveredSlot] = useState(null);
   const [selectedCat, setSelectedCat] = useState('Edit');
+  const [weekOffset, setWeekOffset] = useState(0);
   const gridRef = useRef(null);
   const ease = 'all 0.3s cubic-bezier(.4,0,.2,1)';
 
-  const today = new Date('2023-11-20');
-  const startOfWk = startOfWeek(today, { weekStartsOn: 1 });
+  const today = new Date(); // Changed to dynamic today
+  const startOfWk = addDays(startOfWeek(today, { weekStartsOn: 1 }), weekOffset * 7);
   const weekDays = Array.from({ length: 7 }).map((_, i) => addDays(startOfWk, i));
+
+  useEffect(() => {
+    if (user) fetchEvents();
+  }, [user, weekOffset]);
+
+  const fetchEvents = async () => {
+    const start = startOfWk.toISOString();
+    const end = addDays(startOfWk, 7).toISOString();
+    
+    const { data } = await supabase.from('calendar_events')
+      .select('*')
+      .gte('start_time', start)
+      .lt('start_time', end);
+      
+    if (data) {
+      setBlocks(data.map(d => {
+        const sTime = new Date(d.start_time);
+        const eTime = new Date(d.end_time);
+        const dayIdx = differenceInDays(startOfDay(sTime), startOfDay(startOfWk));
+        return {
+          id: d.id,
+          dayIdx,
+          startHr: sTime.getHours() + sTime.getMinutes() / 60,
+          endHr: eTime.getHours() + eTime.getMinutes() / 60,
+          title: d.title,
+          category: d.type.charAt(0).toUpperCase() + d.type.slice(1) // Title case
+        };
+      }));
+    }
+  };
 
   // Stats
   const totalHours = blocks.reduce((acc, b) => acc + (b.endHr - b.startHr), 0);
@@ -96,28 +121,43 @@ export default function CalendarView({ t, dark, mobile, compact }) {
     setModalOpen(true);
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
+    if (!user) return;
     const fd = new FormData(e.target);
-    const b = {
-      id: editBlock.id || Math.random().toString(36).substr(2, 9),
-      dayIdx: parseInt(fd.get('dayIdx'), 10),
-      startHr: parseFloat(fd.get('startHr')),
-      endHr: parseFloat(fd.get('endHr')),
-      title: fd.get('title') || 'Untitled Block',
-      category: fd.get('category'),
-    };
-    if (editBlock.id) {
-      setBlocks(blocks.map(x => x.id === b.id ? b : x));
+    
+    const dayIdx = parseInt(fd.get('dayIdx'), 10);
+    const startHr = parseFloat(fd.get('startHr'));
+    const endHr = parseFloat(fd.get('endHr'));
+    const title = fd.get('title') || 'Untitled Block';
+    const category = fd.get('category');
+    
+    const targetDay = addDays(startOfWk, dayIdx);
+    const sTime = addMinutes(startOfDay(targetDay), startHr * 60).toISOString();
+    const eTime = addMinutes(startOfDay(targetDay), endHr * 60).toISOString();
+
+    const isEdit = editBlock.id && String(editBlock.id).length > 20; // Check UUID length roughly
+
+    if (isEdit) {
+      await supabase.from('calendar_events').update({
+        title, start_time: sTime, end_time: eTime, type: category.toLowerCase()
+      }).eq('id', editBlock.id);
     } else {
-      setBlocks([...blocks, b]);
+      await supabase.from('calendar_events').insert([{
+        user_id: user.id, title, start_time: sTime, end_time: eTime, type: category.toLowerCase()
+      }]);
     }
+    
+    fetchEvents();
     setModalOpen(false);
     setEditBlock(null);
   };
 
-  const handleDelete = () => {
-    if (editBlock?.id) {
+  const handleDelete = async () => {
+    if (editBlock?.id && String(editBlock.id).length > 20) {
+      await supabase.from('calendar_events').delete().eq('id', editBlock.id);
+      fetchEvents();
+    } else {
       setBlocks(blocks.filter(x => x.id !== editBlock.id));
     }
     setModalOpen(false);
@@ -135,9 +175,9 @@ export default function CalendarView({ t, dark, mobile, compact }) {
         </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <div style={{ display: 'flex', background: t.card, border: `1px solid ${t.cardBorder}`, padding: 3, borderRadius: 12, boxShadow: t.cardShadow, backdropFilter: 'blur(20px)' }}>
-            <button style={{ background: 'transparent', border: 'none', color: t.sub, display: 'flex', alignItems: 'center', padding: '5px 8px', cursor: 'pointer', borderRadius: 8 }}><ChevronLeft size={15} /></button>
-            <span style={{ fontSize: 13, fontWeight: 600, padding: '5px 10px', display: 'flex', alignItems: 'center', color: t.text }}>This Week</span>
-            <button style={{ background: 'transparent', border: 'none', color: t.sub, display: 'flex', alignItems: 'center', padding: '5px 8px', cursor: 'pointer', borderRadius: 8 }}><ChevronRight size={15} /></button>
+            <button onClick={() => setWeekOffset(prev => prev - 1)} style={{ background: 'transparent', border: 'none', color: t.sub, display: 'flex', alignItems: 'center', padding: '5px 8px', cursor: 'pointer', borderRadius: 8 }}><ChevronLeft size={15} /></button>
+            <span style={{ fontSize: 13, fontWeight: 600, padding: '5px 10px', display: 'flex', alignItems: 'center', color: t.text }}>{weekOffset === 0 ? 'This Week' : weekOffset > 0 ? `+${weekOffset} Wk` : `${weekOffset} Wk`}</span>
+            <button onClick={() => setWeekOffset(prev => prev + 1)} style={{ background: 'transparent', border: 'none', color: t.sub, display: 'flex', alignItems: 'center', padding: '5px 8px', cursor: 'pointer', borderRadius: 8 }}><ChevronRight size={15} /></button>
           </div>
           <button onClick={() => { setEditBlock({ dayIdx: 0, startHr: 9, endHr: 10, title: '', category: selectedCat }); setModalOpen(true); }} style={{ height: 36, padding: '0 16px', borderRadius: 18, border: 'none', background: t.accentGrad, color: t.accentText, fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', boxShadow: t.accentGlow, transition: ease }}>
             <Plus size={15} strokeWidth={2.5} /> Block

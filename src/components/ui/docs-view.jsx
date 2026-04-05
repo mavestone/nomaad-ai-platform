@@ -1,10 +1,18 @@
-import React, { useState } from 'react';
-import { FileText, Download, Send, Plus, Trash2, ChevronDown, CheckCircle2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { FileText, Download, Send, Plus, Trash2, ChevronDown, CheckCircle2, Save } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../contexts/AuthContext';
+
 
 const DOC_TYPES = ['Invoice', 'Quote', 'Proposal', 'Contract', 'Pitch'];
 
 export default function DocsView({ t, dark, mobile }) {
+  const { user } = useAuth();
   const [docType, setDocType] = useState('Invoice');
+  const [projects, setProjects] = useState([]);
+  const [selectedProjectId, setSelectedProjectId] = useState('');
+  const [saving, setSaving] = useState(false);
+
   const [data, setData] = useState({
     client: 'Acme Corp',
     project: 'Winter Campaign Final',
@@ -18,9 +26,31 @@ export default function DocsView({ t, dark, mobile }) {
       { desc: 'Post-production (Edit, Color, Audio)', price: 3000 }
     ]
   });
-  
+
+  useEffect(() => {
+    if (user) {
+      supabase.from('projects').select('*').eq('user_id', user.id).then(({ data }) => {
+        if (data) setProjects(data);
+      });
+    }
+  }, [user]);
+
+  const handleSaveDoc = async () => {
+    if (!user || !selectedProjectId) return alert("Please select a project first.");
+    setSaving(true);
+    await supabase.from('documents').insert([{
+      user_id: user.id,
+      project_id: selectedProjectId,
+      title: `${data.project} - ${docType}`,
+      type: docType.toLowerCase(),
+    }]);
+    setSaving(false);
+    alert("Document saved to project!");
+  };
+
   const ease = "all 0.45s cubic-bezier(.4,0,.2,1)";
   const formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+
 
   const handleUpdate = (e) => {
     setData({ ...data, [e.target.name]: e.target.value });
@@ -53,6 +83,16 @@ export default function DocsView({ t, dark, mobile }) {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div>
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: t.sub, marginBottom: 4, textTransform: 'uppercase' }}>Assign to Project</label>
+              <div style={{ position: 'relative' }}>
+                <select value={selectedProjectId} onChange={(e) => setSelectedProjectId(e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: `1px solid ${t.inputBorder}`, background: t.input, color: t.text, fontSize: 14, outline: 'none', appearance: 'none', cursor: 'pointer' }}>
+                  <option value="" disabled>Select a Project</option>
+                  {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+                <ChevronDown size={14} style={{ position: 'absolute', right: 12, top: 14, color: t.sub, pointerEvents: 'none' }} />
+              </div>
+            </div>
             <div>
               <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: t.sub, marginBottom: 4, textTransform: 'uppercase' }}>Client Name</label>
               <input name="client" value={data.client} onChange={handleUpdate} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: `1px solid ${t.inputBorder}`, background: t.input, color: t.text, fontSize: 14, outline: 'none' }} />
@@ -98,13 +138,18 @@ export default function DocsView({ t, dark, mobile }) {
         </div>
 
         {/* Global actions */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <button style={{ padding: '14px', borderRadius: 16, border: `1px solid ${t.cardBorder}`, background: t.card, color: t.text, fontSize: 14, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: "pointer", boxShadow: t.cardShadow }}>
-            <Download size={16} /> Export PDF
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <button onClick={handleSaveDoc} disabled={saving} style={{ padding: '14px', borderRadius: 16, border: "none", background: t.accentGrad, color: t.accentText, fontSize: 14, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: "pointer", boxShadow: t.accentGlow, opacity: saving ? 0.7 : 1 }}>
+            <Save size={16} /> {saving ? 'Saving...' : 'Save to Project'}
           </button>
-          <button style={{ padding: '14px', borderRadius: 16, border: "none", background: t.accentGrad, color: t.accentText, fontSize: 14, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: "pointer", boxShadow: t.accentGlow }}>
-            <Send size={16} /> Send via Kinso
-          </button>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <button style={{ padding: '14px', borderRadius: 16, border: `1px solid ${t.cardBorder}`, background: t.card, color: t.text, fontSize: 14, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: "pointer", boxShadow: t.cardShadow }}>
+              <Download size={16} /> Export
+            </button>
+            <button style={{ padding: '14px', borderRadius: 16, border: `1px solid ${t.cardBorder}`, background: t.card, color: t.text, fontSize: 14, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: "pointer", boxShadow: t.cardShadow }}>
+              <Send size={16} /> Send Email
+            </button>
+          </div>
         </div>
 
       </div>
