@@ -179,6 +179,16 @@ npm run dev
 
 ---
 
+## Git / Deploy Rules
+
+- **Remote:** `https://github.com/mavestone/nomaad-ai-platform.git` → also deploys to Vercel automatically
+- **Author:** `Liam <hello@mavestone.com>` (already set in git config)
+- **After every significant change:** commit + `git push origin main`
+  - Vercel picks up the push and redeploys automatically
+  - Commit message format: `feat/fix/refactor(scope): short description`
+
+---
+
 ## Session Log
 
 | Date | AI | Work Done |
