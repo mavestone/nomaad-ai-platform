@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Mail, MessageCircle, MessageSquare, Hash, MoreHorizontal, Archive, CheckCircle2, CornerUpLeft, Search, Send, Mic, Paperclip, Users } from "lucide-react";
+import { Mail, MessageCircle, MessageSquare, Hash, MoreHorizontal, Archive, CheckCircle2, CornerUpLeft, Search, Send, Mic, Paperclip, Users, StopCircle, Trash2 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 
 // ── Platform config ────────────────────────────────────────────────────────────
@@ -154,14 +154,27 @@ export default function MessagesView({ t, dark, mobile, compact }) {
   const pollRef                               = useRef(null);
   const userIdRef                             = useRef(null);
   const messagesEndRef                        = useRef(null);
+  const mediaRecorderRef                      = useRef(null);
+  const audioChunksRef                        = useRef([]);
 
-  // Helper — merge fresh WA threads into state + write cache
+  const [recording,   setRecording]   = useState(false);
+  const [audioBlob,   setAudioBlob]   = useState(null);
+  const [audioUrl,    setAudioUrl]    = useState(null);
+  const [recordSecs,  setRecordSecs]  = useState(0);
+  const recordTimerRef                = useRef(null);
+
+  // Helper — merge fresh WA threads, PRESERVING already-loaded message history
   const applyWAThreads = (waThreads) => {
     setThreads(prev => {
+      const waWithHistory = waThreads.map(fresh => {
+        const existing = prev.find(t => t._channelId === fresh._channelId);
+        // Keep message history and loaded flag if already fetched
+        if (existing?._loaded) return { ...fresh, messages: existing.messages, _loaded: true };
+        return fresh;
+      });
       const non_wa = prev.filter(th => !String(th.id).startsWith('wa-'));
-      const merged = [...waThreads, ...non_wa];
-      writeCache(waThreads); // only cache the WA threads
-      return merged;
+      writeCache(waWithHistory);
+      return [...waWithHistory, ...non_wa];
     });
   };
 
@@ -290,16 +303,17 @@ export default function MessagesView({ t, dark, mobile, compact }) {
     if (!thread._channelId || thread._loaded) return;
     const { data: msgs } = await supabase
       .from('messages')
-      .select('id, content, sender_name, sender_phone, created_at')
+      .select('id, content, sender_name, sender_phone, created_at, voice_url')
       .eq('channel_id', thread._channelId)
       .order('created_at', { ascending: true });
 
     if (!msgs) return;
     const formatted = msgs.map(m => ({
-      id:   m.id,
-      from: m.sender_name || m.sender_phone,
-      text: m.content,
-      time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      id:        m.id,
+      from:      m.sender_name || m.sender_phone,
+      text:      m.content,
+      voice_url: m.voice_url || null,
+      time:      new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     }));
 
     setThreads(prev => prev.map(th =>
@@ -345,10 +359,19 @@ export default function MessagesView({ t, dark, mobile, compact }) {
     if (activeThreadId) {
       setThreads(prev => prev.map(th => th.id === activeThreadId ? { ...th, messages: [...th.messages, newMsg], unread: false } : th));
 
-      // If it's a real WhatsApp thread, send via Twilio
+      // If it's a real WhatsApp thread, persist + send via Twilio
       const th = threads.find(t => t.id === activeThreadId);
-      if (th?.platform === 'whatsapp' && th.sender) {
+      if (th?.platform === 'whatsapp' && th._channelId) {
         try {
+          // Save to Supabase so it survives polls
+          await supabase.from('messages').insert({
+            channel_id:  th._channelId,
+            user_id:     userIdRef.current,
+            content:     text,
+            sender_name: 'Me',
+            platform:    'whatsapp',
+          });
+          // Deliver via Twilio
           await fetch('/api/whatsapp-send', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -365,6 +388,77 @@ export default function MessagesView({ t, dark, mobile, compact }) {
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') handleSendMessage();
+  };
+
+  // ── Voice note recording ──────────────────────────────────────────────────
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mr = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      audioChunksRef.current = [];
+      mr.ondataavailable = e => { if (e.data.size > 0) audioChunksRef.current.push(e.data); };
+      mr.onstop = () => {
+        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        setAudioBlob(blob);
+        setAudioUrl(URL.createObjectURL(blob));
+        stream.getTracks().forEach(t => t.stop());
+      };
+      mr.start();
+      mediaRecorderRef.current = mr;
+      setRecording(true);
+      setRecordSecs(0);
+      recordTimerRef.current = setInterval(() => setRecordSecs(s => s + 1), 1000);
+    } catch (e) {
+      alert('Microphone access denied');
+    }
+  };
+
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop();
+    clearInterval(recordTimerRef.current);
+    setRecording(false);
+  };
+
+  const discardVoice = () => {
+    setAudioBlob(null);
+    setAudioUrl(null);
+    setRecordSecs(0);
+  };
+
+  const sendVoiceNote = async () => {
+    if (!audioBlob) return;
+    const th = threads.find(t => t.id === activeThreadId);
+    if (!th?._channelId) return;
+
+    const fileName = `voice-${Date.now()}.webm`;
+
+    // Upload to Supabase Storage
+    const { error: upErr } = await supabase.storage
+      .from('voice-notes')
+      .upload(fileName, audioBlob, { contentType: 'audio/webm', upsert: false });
+
+    if (upErr) { console.error('Upload failed:', upErr); return; }
+
+    const { data: { publicUrl } } = supabase.storage.from('voice-notes').getPublicUrl(fileName);
+
+    const newMsg = { id: Date.now(), from: 'Me', text: '🎤 Voice message', voice_url: publicUrl, time: 'Just now' };
+    setThreads(prev => prev.map(t => t.id === activeThreadId ? { ...t, messages: [...t.messages, newMsg] } : t));
+
+    // Save to Supabase
+    await supabase.from('messages').insert({
+      channel_id: th._channelId, user_id: userIdRef.current,
+      content: '🎤 Voice message', sender_name: 'Me',
+      platform: 'whatsapp', voice_url: publicUrl,
+    });
+
+    // Send via Twilio with media
+    await fetch('/api/whatsapp-send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to: th.sender, message: '🎤 Voice message', mediaUrl: publicUrl }),
+    });
+
+    discardVoice();
   };
 
   return (
@@ -604,14 +698,18 @@ export default function MessagesView({ t, dark, mobile, compact }) {
               return (
                 <div key={msg.id} style={{ display: "flex", flexDirection: "column", alignItems: isMe ? "flex-end" : "flex-start" }}>
                   <div style={{
-                    maxWidth: "75%", padding: "11px 15px",
+                    maxWidth: "75%", padding: msg.voice_url ? "8px 12px" : "11px 15px",
                     borderRadius: isMe ? "20px 20px 4px 20px" : "20px 20px 20px 4px",
                     background: isMe ? t.accentGrad : t.input,
                     color: isMe ? t.accentText : t.text,
                     fontSize: 14, lineHeight: 1.4,
                     boxShadow: isMe ? t.accentGlow : "0 2px 5px rgba(0,0,0,0.02)",
                   }}>
-                    {msg.text}
+                    {msg.voice_url ? (
+                      <audio controls src={msg.voice_url}
+                        style={{ height: 36, maxWidth: 220, display: "block",
+                          filter: isMe ? "invert(1) brightness(0.8)" : "none" }} />
+                    ) : msg.text}
                   </div>
                   <span style={{ fontSize: 10, color: t.muted, marginTop: 4, padding: "0 4px" }}>{msg.time}</span>
                 </div>
@@ -622,25 +720,73 @@ export default function MessagesView({ t, dark, mobile, compact }) {
 
           {/* Composer */}
           <div style={{ padding: "14px 22px", borderTop: `1px solid ${t.divider}` }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, background: t.input, border: `1px solid ${t.inputBorder}`, padding: "8px 14px", borderRadius: 24 }}>
+
+            {/* Voice note preview */}
+            {audioUrl && !recording && (
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10,
+                padding: "10px 14px", borderRadius: 16,
+                background: dark ? "rgba(37,211,102,0.08)" : "rgba(37,211,102,0.06)",
+                border: "1px solid rgba(37,211,102,0.25)" }}>
+                <audio controls src={audioUrl} style={{ flex: 1, height: 32 }} />
+                <button onClick={discardVoice}
+                  style={{ background: "transparent", border: "none", color: "#FF6259", cursor: "pointer", display: "flex", padding: 4 }}>
+                  <Trash2 size={15} />
+                </button>
+                <button onClick={sendVoiceNote}
+                  style={{ background: "#25D366", border: "none", color: "#fff", cursor: "pointer",
+                    width: 32, height: 32, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Send size={14} />
+                </button>
+              </div>
+            )}
+
+            <div style={{ display: "flex", alignItems: "center", gap: 10, background: t.input, border: `1px solid ${recording ? "rgba(255,98,89,0.5)" : t.inputBorder}`, padding: "8px 14px", borderRadius: 24, transition: "border 0.2s" }}>
               <button style={{ background: "transparent", border: "none", color: t.sub, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: "50%" }}>
                 <Paperclip size={15} />
               </button>
-              <input
-                value={messageText}
-                onChange={(e) => setMessageText(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={activeChannel ? `Message #${activeChannel.name}…` : activeThread?.platform === "gmail" ? "Reply via Gmail…" : `Message via ${PLATFORMS.find(p => p.id === activeThread?.platform)?.label}…`}
-                style={{ flex: 1, border: "none", background: "transparent", color: t.text, fontSize: 14, outline: "none", padding: "0 4px" }}
-              />
-              <button style={{ background: "transparent", border: "none", color: t.sub, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: "50%" }}>
-                <Mic size={15} />
-              </button>
-              <button onClick={handleSendMessage} style={{ background: t.accentGrad, border: "none", color: t.accentText, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, borderRadius: "50%", boxShadow: t.accentGlow }}>
-                <Send size={14} style={{ marginLeft: -1, marginTop: 2 }} />
-              </button>
+
+              {recording ? (
+                <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#FF6259", animation: "recPulse 1s infinite" }} />
+                  <span style={{ fontSize: 13, color: "#FF6259", fontWeight: 600 }}>
+                    Recording {Math.floor(recordSecs / 60)}:{String(recordSecs % 60).padStart(2, '0')}
+                  </span>
+                </div>
+              ) : (
+                <input
+                  value={messageText}
+                  onChange={(e) => setMessageText(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={activeChannel ? `Message #${activeChannel.name}…` : `Message via ${PLATFORMS.find(p => p.id === activeThread?.platform)?.label ?? 'WhatsApp'}…`}
+                  style={{ flex: 1, border: "none", background: "transparent", color: t.text, fontSize: 14, outline: "none", padding: "0 4px" }}
+                />
+              )}
+
+              {/* Mic / Stop button — only show for WhatsApp threads */}
+              {(activeThread?.platform === 'whatsapp') && (
+                <button
+                  onClick={recording ? stopRecording : startRecording}
+                  style={{ background: recording ? "rgba(255,98,89,0.15)" : "transparent",
+                    border: "none", color: recording ? "#FF6259" : t.sub,
+                    cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                    width: 28, height: 28, borderRadius: "50%", transition: "all 0.2s" }}>
+                  {recording ? <StopCircle size={16} /> : <Mic size={15} />}
+                </button>
+              )}
+
+              {!recording && (
+                <button onClick={handleSendMessage}
+                  style={{ background: t.accentGrad, border: "none", color: t.accentText, cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    width: 32, height: 32, borderRadius: "50%", boxShadow: t.accentGlow }}>
+                  <Send size={14} style={{ marginLeft: -1, marginTop: 2 }} />
+                </button>
+              )}
             </div>
           </div>
+          <style>{`
+            @keyframes recPulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+          `}</style>
         </div>
       )}
     </div>

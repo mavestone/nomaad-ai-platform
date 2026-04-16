@@ -27,7 +27,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { to, message } = payload;
+  const { to, message, mediaUrl } = payload;
   if (!to || !message) {
     res.status(400).json({ error: 'Missing to or message' });
     return;
@@ -52,6 +52,7 @@ export default async function handler(req, res) {
     To:   toNumber,
     Body: message,
   });
+  if (mediaUrl) params.append('MediaUrl0', mediaUrl);
 
   const response = await fetch(twilioUrl, {
     method:  'POST',
