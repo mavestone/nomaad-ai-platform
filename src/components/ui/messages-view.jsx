@@ -298,6 +298,8 @@ export default function MessagesView({ t, dark, mobile, compact }) {
           (payload) => {
             const msg = payload.new;
             if (msg.platform !== 'whatsapp') return;
+            // Skip our own sent messages — already shown optimistically
+            if (msg.sender_name === 'Me') return;
             const newMsgObj = {
               id: msg.id, from: msg.sender_name || msg.sender_phone,
               text: msg.content, voice_url: msg.voice_url || null,
@@ -419,15 +421,22 @@ export default function MessagesView({ t, dark, mobile, compact }) {
     const th = activeThreadId ? threads.find(t => t.id === activeThreadId) : null;
 
     if (th?.platform === 'whatsapp' && th._channelId) {
-      // Save to Supabase first — get real ID to prevent realtime dedup from doubling
-      const { data: saved } = await supabase.from('messages').insert({
-        channel_id: th._channelId, user_id: userIdRef.current,
-        content: text, sender_name: 'Me', platform: 'whatsapp',
-      }).select('id').single();
-
-      const newMsg = { id: saved?.id ?? Date.now(), from: 'Me', text, time: 'Just now' };
+      // Optimistic: show message immediately so UI never feels blocked
+      const optimisticId = `opt-${Date.now()}`;
+      const newMsg = { id: optimisticId, from: 'Me', text, time: 'Just now' };
       setThreads(prev => prev.map(t => t.id === activeThreadId
         ? { ...t, messages: [...t.messages, newMsg], snippet: text, time: 'Just now' } : t));
+
+      // Save to Supabase in background, then swap optimistic ID for real ID
+      supabase.from('messages').insert({
+        channel_id: th._channelId, user_id: userIdRef.current,
+        content: text, sender_name: 'Me', platform: 'whatsapp',
+      }).select('id').single().then(({ data: saved }) => {
+        if (saved?.id) {
+          setThreads(prev => prev.map(t => t.id === activeThreadId
+            ? { ...t, messages: t.messages.map(m => m.id === optimisticId ? { ...m, id: saved.id } : m) } : t));
+        }
+      }).catch(e => console.error('[send] Supabase insert failed:', e));
 
       fetch('/api/whatsapp-send', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
