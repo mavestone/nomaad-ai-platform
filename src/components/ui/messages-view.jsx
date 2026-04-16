@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Mail, MessageCircle, MessageSquare, Hash, MoreHorizontal, Archive, CheckCircle2, CornerUpLeft, Search, Sparkles, Send, Mic, Paperclip, Users } from "lucide-react";
+import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../contexts/AuthContext";
 
 // ── Platform config ────────────────────────────────────────────────────────────
 const PLATFORMS = [
@@ -134,12 +136,123 @@ const PlatformIcon = ({ platformId, size = 11 }) => {
 };
 
 export default function MessagesView({ t, dark, mobile, compact }) {
+  const { user } = useAuth();
   const [activePlatform, setActivePlatform]   = useState("all");
   const [threads, setThreads]                 = useState(INITIAL_THREADS);
   const [channels, setChannels]               = useState(INITIAL_CHANNELS);
   const [activeThreadId, setActiveThreadId]   = useState(INITIAL_THREADS[0].id);
   const [activeChannelId, setActiveChannelId] = useState(null);
   const [messageText, setMessageText]         = useState('');
+  const subscriptionRef                       = useRef(null);
+
+  // ── Load WhatsApp threads from Supabase + realtime subscription ──────────
+  useEffect(() => {
+    if (!user) return;
+
+    const loadWAThreads = async () => {
+      // Get all WhatsApp channels for this user
+      const { data: waChannels } = await supabase
+        .from('channels')
+        .select('id, name, external_phone, created_at')
+        .eq('user_id', user.id)
+        .eq('platform', 'whatsapp')
+        .order('created_at', { ascending: false });
+
+      if (!waChannels?.length) return;
+
+      // Get latest message per channel
+      const channelIds = waChannels.map(c => c.id);
+      const { data: waMsgs } = await supabase
+        .from('messages')
+        .select('channel_id, content, sender_name, created_at')
+        .in('channel_id', channelIds)
+        .order('created_at', { ascending: false });
+
+      // Build thread objects matching INITIAL_THREADS shape
+      const waThreads = waChannels.map(ch => {
+        const latestMsg = waMsgs?.find(m => m.channel_id === ch.id);
+        const phone = ch.external_phone || ch.name;
+        return {
+          id:        `wa-${ch.id}`,
+          _channelId: ch.id,
+          type:      'dm',
+          platform:  'whatsapp',
+          sender:    phone,
+          avatar:    phone.slice(-2),
+          color:     '#25D366',
+          snippet:   latestMsg?.content || 'New WhatsApp conversation',
+          time:      latestMsg ? new Date(latestMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+          unread:    true,
+          messages:  [],  // loaded on demand below
+          _loaded:   false,
+        };
+      });
+
+      setThreads(prev => {
+        // Remove stale WA threads, prepend fresh ones
+        const non_wa = prev.filter(th => !String(th.id).startsWith('wa-'));
+        return [...waThreads, ...non_wa];
+      });
+    };
+
+    loadWAThreads();
+
+    // Realtime: new messages on any of the user's WA channels
+    const channel = supabase.channel('wa-messages')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+        filter: `user_id=eq.${user.id}`,
+      }, (payload) => {
+        const msg = payload.new;
+        if (msg.platform !== 'whatsapp') return;
+
+        const newMsgObj = {
+          id:   msg.id,
+          from: msg.sender_name || msg.sender_phone,
+          text: msg.content,
+          time: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        };
+
+        setThreads(prev => prev.map(th => {
+          if (th._channelId !== msg.channel_id) return th;
+          return {
+            ...th,
+            snippet:  msg.content,
+            time:     newMsgObj.time,
+            unread:   true,
+            messages: [...(th.messages || []), newMsgObj],
+          };
+        }));
+      })
+      .subscribe();
+
+    subscriptionRef.current = channel;
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
+
+  // ── Load messages for a WA thread when opened ────────────────────────────
+  const loadWAMessages = async (thread) => {
+    if (!thread._channelId || thread._loaded) return;
+    const { data: msgs } = await supabase
+      .from('messages')
+      .select('id, content, sender_name, sender_phone, created_at')
+      .eq('channel_id', thread._channelId)
+      .order('created_at', { ascending: true });
+
+    if (!msgs) return;
+    const formatted = msgs.map(m => ({
+      id:   m.id,
+      from: m.sender_name || m.sender_phone,
+      text: m.content,
+      time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    }));
+
+    setThreads(prev => prev.map(th =>
+      th.id === thread.id ? { ...th, messages: formatted, _loaded: true, unread: false } : th
+    ));
+  };
 
   const ease = "all 0.2s cubic-bezier(.4,0,.2,1)";
   const card = `1px solid ${t.cardBorder}`;
@@ -153,7 +266,12 @@ export default function MessagesView({ t, dark, mobile, compact }) {
   const activeChannel = activeChannelId ? channels.find(ch => ch.id === activeChannelId) : null;
   const activePaneItem = activeChannel || activeThread;
 
-  const selectThread = (id) => { setActiveThreadId(id); setActiveChannelId(null); };
+  const selectThread = (id) => {
+    setActiveThreadId(id);
+    setActiveChannelId(null);
+    const th = threads.find(t => t.id === id);
+    if (th?._channelId && !th._loaded) loadWAMessages(th);
+  };
   const selectChannel = (id) => { setActiveChannelId(id); setActiveThreadId(null); };
 
   const aiSuggestion = activeThread?.platform === "whatsapp"
