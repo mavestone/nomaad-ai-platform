@@ -310,27 +310,44 @@ export default function MessagesView({ t, dark, mobile, compact }) {
       realtimeRef.current = rt;
     };
 
-    const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (cancelled || !session) return;
-      userIdRef.current = session.user.id;
-      await fetchAndSync(session.user.id);
-      setupRealtime(session.user.id);
-      // Poll every 5s — catches incoming messages even if realtime misses them
-      pollRef.current = setInterval(() => {
-        if (userIdRef.current) fetchAndSync(userIdRef.current);
-      }, 5000);
-    };
+    // onAuthStateChange is the single source of truth for auth state.
+    // On page refresh, Supabase fires INITIAL_SESSION with the stored session —
+    // getSession() alone can return null if the client hasn't finished reading
+    // localStorage yet, which is why relying on it caused messages to vanish on refresh.
+    const { data: { subscription: authListener } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (cancelled) return;
 
-    init();
+        if (!session) {
+          // Signed out — clear everything
+          userIdRef.current = null;
+          clearInterval(pollRef.current);
+          if (realtimeRef.current) supabase.removeChannel(realtimeRef.current);
+          return;
+        }
 
-    const { data: { subscription: authListener } } = supabase.auth.onAuthStateChange((event, session) => {
-      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
+        // INITIAL_SESSION fires on every page load with the stored session.
+        // SIGNED_IN fires after an explicit login.
+        // TOKEN_REFRESHED fires when the access token is silently renewed.
+        // All three mean we have a valid session and should load data.
+        if (!['INITIAL_SESSION', 'SIGNED_IN', 'TOKEN_REFRESHED'].includes(event)) return;
+
+        // Guard against double-init (e.g. both INITIAL_SESSION and TOKEN_REFRESHED firing)
+        if (userIdRef.current === session.user.id) return;
+
         userIdRef.current = session.user.id;
-        fetchAndSync(session.user.id);
+        clearInterval(pollRef.current);
+        if (realtimeRef.current) supabase.removeChannel(realtimeRef.current);
+
+        await fetchAndSync(session.user.id);
+        if (cancelled) return;
+
         setupRealtime(session.user.id);
+        pollRef.current = setInterval(() => {
+          if (userIdRef.current) fetchAndSync(userIdRef.current);
+        }, 5000);
       }
-    });
+    );
 
     return () => {
       cancelled = true;
