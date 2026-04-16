@@ -18,7 +18,14 @@ function parseFormBody(raw) {
 }
 
 export default async function handler(req, res) {
-  // Only accept POST from Twilio
+  console.log('[whatsapp] method:', req.method);
+
+  // Accept GET for manual testing
+  if (req.method === 'GET') {
+    res.status(200).json({ ok: true, message: 'WhatsApp webhook is live' });
+    return;
+  }
+
   if (req.method !== 'POST') {
     res.status(405).end();
     return;
@@ -32,12 +39,19 @@ export default async function handler(req, res) {
     req.on('error', reject);
   });
 
+  console.log('[whatsapp] raw body:', raw);
+
   const { From, To, Body: MsgBody, MessageSid } = parseFormBody(raw);
 
+  console.log('[whatsapp] parsed — From:', From, 'Body:', MsgBody);
+
   if (!From || !MsgBody) {
+    console.error('[whatsapp] Missing From or Body — bailing');
     res.status(200).setHeader('Content-Type', 'text/xml').send('<Response/>');
     return;
   }
+
+  console.log('[whatsapp] env check — SUPABASE_URL:', !!process.env.SUPABASE_URL, 'SERVICE_KEY:', !!process.env.SUPABASE_SERVICE_ROLE_KEY, 'USER_ID:', !!process.env.NOMAAD_OWNER_USER_ID);
 
   // Init Supabase with service role (bypasses RLS so webhook can write)
   const supabase = createClient(
