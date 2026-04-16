@@ -150,16 +150,12 @@ export default function MessagesView({ t, dark, mobile, compact }) {
     if (!user) return;
 
     const loadWAThreads = async () => {
-      console.log('[messages] loading WA threads for user:', user.id);
-      // Get all WhatsApp channels for this user
-      const { data: waChannels, error: chanErr } = await supabase
+      const { data: waChannels } = await supabase
         .from('channels')
         .select('id, name, external_phone, created_at')
         .eq('user_id', user.id)
         .eq('platform', 'whatsapp')
         .order('created_at', { ascending: false });
-
-      console.log('[messages] waChannels:', waChannels, 'error:', chanErr);
 
       if (!waChannels?.length) return;
 
@@ -198,7 +194,9 @@ export default function MessagesView({ t, dark, mobile, compact }) {
       });
     };
 
+    // Run immediately, then retry after 2s in case auth token wasn't ready
     loadWAThreads();
+    const retryTimer = setTimeout(loadWAThreads, 2000);
 
     // Realtime: new messages on any of the user's WA channels
     const channel = supabase.channel('wa-messages')
@@ -232,7 +230,7 @@ export default function MessagesView({ t, dark, mobile, compact }) {
       .subscribe();
 
     subscriptionRef.current = channel;
-    return () => { supabase.removeChannel(channel); };
+    return () => { clearTimeout(retryTimer); supabase.removeChannel(channel); };
   }, [user]);
 
   // ── Load messages for a WA thread when opened ────────────────────────────
@@ -283,24 +281,33 @@ export default function MessagesView({ t, dark, mobile, compact }) {
     ? "Hi Bobby, thanks for sending this over. I'll review the Facebook ad spend and get back to you by EOD."
     : "On it — will get back to you shortly.";
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!messageText.trim() || !activePaneItem) return;
-    
-    const newMsg = {
-      id: Date.now(),
-      from: "Me",
-      text: messageText,
-      time: "Just now",
-      color: "#34C759"
-    };
+
+    const text = messageText;
+    setMessageText('');
+
+    const newMsg = { id: Date.now(), from: "Me", text, time: "Just now", color: "#34C759" };
 
     if (activeThreadId) {
       setThreads(prev => prev.map(th => th.id === activeThreadId ? { ...th, messages: [...th.messages, newMsg], unread: false } : th));
+
+      // If it's a real WhatsApp thread, send via Twilio
+      const th = threads.find(t => t.id === activeThreadId);
+      if (th?.platform === 'whatsapp' && th.sender) {
+        try {
+          await fetch('/api/whatsapp-send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ to: th.sender, message: text }),
+          });
+        } catch (e) {
+          console.error('[messages] failed to send WhatsApp:', e);
+        }
+      }
     } else if (activeChannelId) {
       setChannels(prev => prev.map(ch => ch.id === activeChannelId ? { ...ch, messages: [...ch.messages, newMsg] } : ch));
     }
-    
-    setMessageText('');
   };
 
   const handleKeyDown = (e) => {
