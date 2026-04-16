@@ -198,8 +198,31 @@ export default function MessagesView({ t, dark, mobile, compact }) {
     loadWAThreads();
     const retryTimer = setTimeout(loadWAThreads, 2000);
 
-    // Realtime: new messages on any of the user's WA channels
-    const channel = supabase.channel('wa-messages')
+    // Realtime: watch both new WA channels AND new messages
+    const channel = supabase.channel('wa-realtime')
+      // New WhatsApp conversation started (new channel created by webhook)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'channels',
+        filter: `user_id=eq.${user.id}`,
+      }, (payload) => {
+        const ch = payload.new;
+        if (ch.platform !== 'whatsapp') return;
+        const phone = ch.external_phone || ch.name;
+        setThreads(prev => {
+          if (prev.find(t => t._channelId === ch.id)) return prev;
+          const newThread = {
+            id: `wa-${ch.id}`, _channelId: ch.id, type: 'dm',
+            platform: 'whatsapp', sender: phone,
+            avatar: phone.slice(-2), color: '#25D366',
+            snippet: 'New WhatsApp message', time: 'Just now',
+            unread: true, messages: [], _loaded: false,
+          };
+          return [newThread, ...prev];
+        });
+      })
+      // New message in any WA channel
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
@@ -223,7 +246,7 @@ export default function MessagesView({ t, dark, mobile, compact }) {
             snippet:  msg.content,
             time:     newMsgObj.time,
             unread:   true,
-            messages: [...(th.messages || []), newMsgObj],
+            messages: th._loaded ? [...th.messages, newMsgObj] : th.messages,
           };
         }));
       })
