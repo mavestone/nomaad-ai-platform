@@ -208,7 +208,9 @@ export default function MessagesView({ t, dark, mobile, compact }) {
   const [messageText, setMessageText]         = useState('');
   const realtimeRef                           = useRef(null);
   const pollRef                               = useRef(null);
+  const msgPollRef                            = useRef(null);
   const userIdRef                             = useRef(null);
+  const activeWAChanRef                       = useRef(null); // {threadId, channelId} for active WA thread
   const messagesEndRef                        = useRef(null);
   const mediaRecorderRef                      = useRef(null);
   const audioChunksRef                        = useRef([]);
@@ -355,6 +357,7 @@ export default function MessagesView({ t, dark, mobile, compact }) {
       authListener.unsubscribe();
       if (realtimeRef.current) supabase.removeChannel(realtimeRef.current);
       if (pollRef.current) clearInterval(pollRef.current);
+      if (msgPollRef.current) clearInterval(msgPollRef.current);
     };
   }, []); // runs once on mount — auth is handled internally
 
@@ -407,9 +410,44 @@ export default function MessagesView({ t, dark, mobile, compact }) {
     setActiveThreadId(id);
     setActiveChannelId(null);
     const th = threads.find(t => t.id === id);
+    // Track active WA channel for message polling
+    activeWAChanRef.current = th?._channelId ? { threadId: id, channelId: th._channelId } : null;
     if (th?._channelId && !th._loaded) loadWAMessages(th);
   };
-  const selectChannel = (id) => { setActiveChannelId(id); setActiveThreadId(null); };
+  const selectChannel = (id) => {
+    setActiveChannelId(id);
+    setActiveThreadId(null);
+    activeWAChanRef.current = null;
+  };
+
+  // ── Poll messages for the open WA thread every 5s (realtime fallback) ──────
+  useEffect(() => {
+    const refreshOpenThread = async () => {
+      const cur = activeWAChanRef.current;
+      if (!cur || !userIdRef.current) return;
+      const { data: msgs } = await supabase
+        .from('messages')
+        .select('id, content, sender_name, sender_phone, created_at, voice_url')
+        .eq('channel_id', cur.channelId)
+        .order('created_at', { ascending: true });
+      if (!msgs) return;
+      const formatted = msgs.map(m => ({
+        id: m.id, from: m.sender_name || m.sender_phone,
+        text: m.content, voice_url: m.voice_url || null,
+        time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      }));
+      setThreads(prev => {
+        const updated = prev.map(th =>
+          th.id === cur.threadId ? { ...th, messages: formatted, _loaded: true, unread: false } : th
+        );
+        writeCache(updated.filter(t => String(t.id).startsWith('wa-')));
+        return updated;
+      });
+    };
+
+    msgPollRef.current = setInterval(refreshOpenThread, 5000);
+    return () => clearInterval(msgPollRef.current);
+  }, []);
 
 
 
