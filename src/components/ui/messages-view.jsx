@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Mail, MessageCircle, MessageSquare, Hash, MoreHorizontal, Archive, CheckCircle2, CornerUpLeft, Search, Sparkles, Send, Mic, Paperclip, Users } from "lucide-react";
 import { supabase } from "../../lib/supabase";
-import { useAuth } from "../../contexts/AuthContext";
 
 // ── Platform config ────────────────────────────────────────────────────────────
 const PLATFORMS = [
@@ -135,126 +134,144 @@ const PlatformIcon = ({ platformId, size = 11 }) => {
   return <Icon size={size} />;
 };
 
+// ── localStorage cache helpers ─────────────────────────────────────────────
+const WA_CACHE_KEY = 'nomaad_wa_threads';
+const readCache  = () => { try { return JSON.parse(localStorage.getItem(WA_CACHE_KEY) || '[]'); } catch { return []; } };
+const writeCache = (threads) => { try { localStorage.setItem(WA_CACHE_KEY, JSON.stringify(threads)); } catch {} };
+
 export default function MessagesView({ t, dark, mobile, compact }) {
-  const { user } = useAuth();
   const [activePlatform, setActivePlatform]   = useState("all");
-  const [threads, setThreads]                 = useState(INITIAL_THREADS);
+  const [threads, setThreads]                 = useState(() => {
+    // Seed from cache immediately — no flicker on refresh
+    const cached = readCache();
+    return cached.length ? [...cached, ...INITIAL_THREADS] : INITIAL_THREADS;
+  });
   const [channels, setChannels]               = useState(INITIAL_CHANNELS);
   const [activeThreadId, setActiveThreadId]   = useState(INITIAL_THREADS[0].id);
   const [activeChannelId, setActiveChannelId] = useState(null);
   const [messageText, setMessageText]         = useState('');
-  const subscriptionRef                       = useRef(null);
+  const realtimeRef                           = useRef(null);
 
-  // ── Load WhatsApp threads from Supabase + realtime subscription ──────────
+  // Helper — merge fresh WA threads into state + write cache
+  const applyWAThreads = (waThreads) => {
+    setThreads(prev => {
+      const non_wa = prev.filter(th => !String(th.id).startsWith('wa-'));
+      const merged = [...waThreads, ...non_wa];
+      writeCache(waThreads); // only cache the WA threads
+      return merged;
+    });
+  };
+
+  // ── Single init effect — runs once on mount ───────────────────────────────
   useEffect(() => {
-    if (!user) return;
+    let cancelled = false;
 
-    const loadWAThreads = async () => {
-      const { data: waChannels } = await supabase
-        .from('channels')
-        .select('id, name, external_phone, created_at')
-        .eq('user_id', user.id)
-        .eq('platform', 'whatsapp')
-        .order('created_at', { ascending: false });
-
-      if (!waChannels?.length) return;
-
-      // Get latest message per channel
-      const channelIds = waChannels.map(c => c.id);
-      const { data: waMsgs } = await supabase
-        .from('messages')
-        .select('channel_id, content, sender_name, created_at')
-        .in('channel_id', channelIds)
-        .order('created_at', { ascending: false });
-
-      // Build thread objects matching INITIAL_THREADS shape
-      const waThreads = waChannels.map(ch => {
+    const buildThreads = (waChannels, waMsgs) =>
+      waChannels.map(ch => {
         const latestMsg = waMsgs?.find(m => m.channel_id === ch.id);
         const phone = ch.external_phone || ch.name;
         return {
-          id:        `wa-${ch.id}`,
-          _channelId: ch.id,
-          type:      'dm',
-          platform:  'whatsapp',
-          sender:    phone,
-          avatar:    phone.slice(-2),
-          color:     '#25D366',
-          snippet:   latestMsg?.content || 'New WhatsApp conversation',
-          time:      latestMsg ? new Date(latestMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
-          unread:    true,
-          messages:  [],  // loaded on demand below
-          _loaded:   false,
+          id: `wa-${ch.id}`, _channelId: ch.id, type: 'dm',
+          platform: 'whatsapp', sender: phone,
+          avatar: phone.slice(-2), color: '#25D366',
+          snippet:  latestMsg?.content || 'New WhatsApp message',
+          time: latestMsg ? new Date(latestMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+          unread: true, messages: [], _loaded: false,
         };
       });
 
-      setThreads(prev => {
-        // Remove stale WA threads, prepend fresh ones
-        const non_wa = prev.filter(th => !String(th.id).startsWith('wa-'));
-        return [...waThreads, ...non_wa];
-      });
+    const fetchAndSync = async (userId) => {
+      const { data: waChannels } = await supabase
+        .from('channels')
+        .select('id, name, external_phone, created_at')
+        .eq('user_id', userId)
+        .eq('platform', 'whatsapp')
+        .order('created_at', { ascending: false });
+
+      if (cancelled || !waChannels?.length) return;
+
+      const { data: waMsgs } = await supabase
+        .from('messages')
+        .select('channel_id, content, sender_name, created_at')
+        .in('channel_id', waChannels.map(c => c.id))
+        .order('created_at', { ascending: false });
+
+      if (!cancelled) applyWAThreads(buildThreads(waChannels, waMsgs));
     };
 
-    // Run immediately, then retry after 2s in case auth token wasn't ready
-    loadWAThreads();
-    const retryTimer = setTimeout(loadWAThreads, 2000);
+    const setupRealtime = (userId) => {
+      // Clean up any previous subscription
+      if (realtimeRef.current) supabase.removeChannel(realtimeRef.current);
 
-    // Realtime: watch both new WA channels AND new messages
-    const channel = supabase.channel('wa-realtime')
-      // New WhatsApp conversation started (new channel created by webhook)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'channels',
-        filter: `user_id=eq.${user.id}`,
-      }, (payload) => {
-        const ch = payload.new;
-        if (ch.platform !== 'whatsapp') return;
-        const phone = ch.external_phone || ch.name;
-        setThreads(prev => {
-          if (prev.find(t => t._channelId === ch.id)) return prev;
-          const newThread = {
-            id: `wa-${ch.id}`, _channelId: ch.id, type: 'dm',
-            platform: 'whatsapp', sender: phone,
-            avatar: phone.slice(-2), color: '#25D366',
-            snippet: 'New WhatsApp message', time: 'Just now',
-            unread: true, messages: [], _loaded: false,
-          };
-          return [newThread, ...prev];
-        });
-      })
-      // New message in any WA channel
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'messages',
-        filter: `user_id=eq.${user.id}`,
-      }, (payload) => {
-        const msg = payload.new;
-        if (msg.platform !== 'whatsapp') return;
+      const rt = supabase.channel('wa-realtime')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'channels', filter: `user_id=eq.${userId}` },
+          (payload) => {
+            const ch = payload.new;
+            if (ch.platform !== 'whatsapp') return;
+            const phone = ch.external_phone || ch.name;
+            setThreads(prev => {
+              if (prev.find(t => t._channelId === ch.id)) return prev;
+              const newThread = {
+                id: `wa-${ch.id}`, _channelId: ch.id, type: 'dm',
+                platform: 'whatsapp', sender: phone, avatar: phone.slice(-2),
+                color: '#25D366', snippet: 'New WhatsApp message',
+                time: 'Just now', unread: true, messages: [], _loaded: false,
+              };
+              const updated = [newThread, ...prev];
+              writeCache(updated.filter(t => String(t.id).startsWith('wa-')));
+              return updated;
+            });
+          })
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `user_id=eq.${userId}` },
+          (payload) => {
+            const msg = payload.new;
+            if (msg.platform !== 'whatsapp') return;
+            const newMsgObj = {
+              id: msg.id, from: msg.sender_name || msg.sender_phone,
+              text: msg.content,
+              time: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            };
+            setThreads(prev => {
+              const updated = prev.map(th => {
+                if (th._channelId !== msg.channel_id) return th;
+                return {
+                  ...th, snippet: msg.content, time: newMsgObj.time, unread: true,
+                  messages: th._loaded ? [...th.messages, newMsgObj] : th.messages,
+                };
+              });
+              writeCache(updated.filter(t => String(t.id).startsWith('wa-')));
+              return updated;
+            });
+          })
+        .subscribe();
 
-        const newMsgObj = {
-          id:   msg.id,
-          from: msg.sender_name || msg.sender_phone,
-          text: msg.content,
-          time: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        };
+      realtimeRef.current = rt;
+    };
 
-        setThreads(prev => prev.map(th => {
-          if (th._channelId !== msg.channel_id) return th;
-          return {
-            ...th,
-            snippet:  msg.content,
-            time:     newMsgObj.time,
-            unread:   true,
-            messages: th._loaded ? [...th.messages, newMsgObj] : th.messages,
-          };
-        }));
-      })
-      .subscribe();
+    // Gate everything behind a confirmed auth session
+    const init = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (cancelled || !session) return;
+      await fetchAndSync(session.user.id);
+      setupRealtime(session.user.id);
+    };
 
-    subscriptionRef.current = channel;
-    return () => { clearTimeout(retryTimer); supabase.removeChannel(channel); };
-  }, [user]);
+    init();
+
+    // Also re-init if auth state changes (e.g. token refresh)
+    const { data: { subscription: authListener } } = supabase.auth.onAuthStateChange((event, session) => {
+      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
+        fetchAndSync(session.user.id);
+        setupRealtime(session.user.id);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      authListener.unsubscribe();
+      if (realtimeRef.current) supabase.removeChannel(realtimeRef.current);
+    };
+  }, []); // runs once on mount — auth is handled internally
 
   // ── Load messages for a WA thread when opened ────────────────────────────
   const loadWAMessages = async (thread) => {
