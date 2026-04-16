@@ -150,13 +150,16 @@ export default function MessagesView({ t, dark, mobile, compact }) {
     if (!user) return;
 
     const loadWAThreads = async () => {
+      console.log('[messages] loading WA threads for user:', user.id);
       // Get all WhatsApp channels for this user
-      const { data: waChannels } = await supabase
+      const { data: waChannels, error: chanErr } = await supabase
         .from('channels')
         .select('id, name, external_phone, created_at')
         .eq('user_id', user.id)
         .eq('platform', 'whatsapp')
         .order('created_at', { ascending: false });
+
+      console.log('[messages] waChannels:', waChannels, 'error:', chanErr);
 
       if (!waChannels?.length) return;
 
