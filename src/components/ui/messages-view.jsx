@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Mail, MessageCircle, MessageSquare, Hash, MoreHorizontal, Archive, CheckCircle2, CornerUpLeft, Search, Sparkles, Send, Mic, Paperclip, Users } from "lucide-react";
+import { Mail, MessageCircle, MessageSquare, Hash, MoreHorizontal, Archive, CheckCircle2, CornerUpLeft, Search, Send, Mic, Paperclip, Users } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 
 // ── Platform config ────────────────────────────────────────────────────────────
@@ -153,6 +153,7 @@ export default function MessagesView({ t, dark, mobile, compact }) {
   const realtimeRef                           = useRef(null);
   const pollRef                               = useRef(null);
   const userIdRef                             = useRef(null);
+  const messagesEndRef                        = useRef(null);
 
   // Helper — merge fresh WA threads into state + write cache
   const applyWAThreads = (waThreads) => {
@@ -318,6 +319,11 @@ export default function MessagesView({ t, dark, mobile, compact }) {
   const activeChannel = activeChannelId ? channels.find(ch => ch.id === activeChannelId) : null;
   const activePaneItem = activeChannel || activeThread;
 
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [activePaneItem?.messages?.length]);
+
   const selectThread = (id) => {
     setActiveThreadId(id);
     setActiveChannelId(null);
@@ -326,11 +332,7 @@ export default function MessagesView({ t, dark, mobile, compact }) {
   };
   const selectChannel = (id) => { setActiveChannelId(id); setActiveThreadId(null); };
 
-  const aiSuggestion = activeThread?.platform === "whatsapp"
-    ? "Sounds good Alice. Let's sync tomorrow at 10 AM."
-    : activeThread?.platform === "gmail"
-    ? "Hi Bobby, thanks for sending this over. I'll review the Facebook ad spend and get back to you by EOD."
-    : "On it — will get back to you shortly.";
+
 
   const handleSendMessage = async () => {
     if (!messageText.trim() || !activePaneItem) return;
@@ -547,6 +549,11 @@ export default function MessagesView({ t, dark, mobile, compact }) {
 
           {/* Messages */}
           <div style={{ flex: 1, overflowY: "auto", padding: "22px", display: "flex", flexDirection: "column", gap: 14 }}>
+            {activePaneItem.messages.length === 0 && (
+              <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: t.muted, fontSize: 13 }}>
+                No messages yet
+              </div>
+            )}
             {activePaneItem.messages.map((msg) => {
               const isMe = msg.from === "Me";
 
@@ -610,21 +617,12 @@ export default function MessagesView({ t, dark, mobile, compact }) {
                 </div>
               );
             })}
+            <div ref={messagesEndRef} />
           </div>
 
-          {/* AI draft + composer */}
-          <div style={{ padding: "14px 22px", background: dark ? "rgba(255,255,255,0.015)" : "rgba(0,0,0,0.01)", borderTop: `1px solid ${t.divider}` }}>
-            {!activeChannel && (
-              <div style={{ display: "flex", alignItems: "flex-start", gap: 10, background: dark ? "rgba(204,253,1,0.08)" : "rgba(255,179,64,0.1)", border: `1px dashed ${dark ? "rgba(204,253,1,0.3)" : "rgba(255,179,64,0.4)"}`, padding: "11px 14px", borderRadius: 14, marginBottom: 12 }}>
-                <Sparkles size={15} color={dark ? "#ccfd01" : "#FFB340"} style={{ flexShrink: 0, marginTop: 2 }} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: dark ? "#ccfd01" : "#FFB340", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 3 }}>Kinso AI Draft</div>
-                  <div style={{ fontSize: 13, color: t.text, lineHeight: 1.4 }}>"{aiSuggestion}"</div>
-                </div>
-                <button style={{ background: t.text, color: t.shell, border: "none", borderRadius: 10, padding: "5px 11px", fontSize: 12, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>Use</button>
-              </div>
-            )}
-            <div style={{ display: "flex", alignItems: "center", gap: 10, background: t.card, border: `1px solid ${t.inputBorder}`, padding: "7px 12px", borderRadius: 24 }}>
+          {/* Composer */}
+          <div style={{ padding: "14px 22px", borderTop: `1px solid ${t.divider}` }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, background: t.input, border: `1px solid ${t.inputBorder}`, padding: "8px 14px", borderRadius: 24 }}>
               <button style={{ background: "transparent", border: "none", color: t.sub, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: "50%" }}>
                 <Paperclip size={15} />
               </button>
