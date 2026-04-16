@@ -134,6 +134,62 @@ const PlatformIcon = ({ platformId, size = 11 }) => {
   return <Icon size={size} />;
 };
 
+// ── Custom audio player ────────────────────────────────────────────────────
+function VoicePlayer({ src, isMe }) {
+  const audioRef = useRef(null);
+  const [playing, setPlaying]   = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
+
+  const fmt = s => `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+
+  const toggle = () => {
+    const a = audioRef.current;
+    if (!a) return;
+    if (playing) { a.pause(); setPlaying(false); }
+    else { a.play(); setPlaying(true); }
+  };
+
+  const accent = isMe ? 'rgba(0,0,0,0.5)' : '#25D366';
+  const bar    = isMe ? 'rgba(0,0,0,0.2)' : 'rgba(37,211,102,0.2)';
+
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap:10, minWidth:180, maxWidth:240 }}>
+      <audio ref={audioRef} src={src}
+        onTimeUpdate={e => setProgress(e.target.currentTime / (e.target.duration || 1))}
+        onLoadedMetadata={e => setDuration(e.target.duration)}
+        onEnded={() => { setPlaying(false); setProgress(0); }}
+      />
+      {/* Play/pause */}
+      <button onClick={toggle} style={{
+        width:34, height:34, borderRadius:'50%', flexShrink:0, border:'none', cursor:'pointer',
+        background: isMe ? 'rgba(0,0,0,0.25)' : 'rgba(37,211,102,0.2)',
+        color: isMe ? '#000' : '#25D366',
+        display:'flex', alignItems:'center', justifyContent:'center',
+      }}>
+        {playing
+          ? <svg width="12" height="14" viewBox="0 0 12 14" fill="currentColor"><rect x="0" y="0" width="4" height="14"/><rect x="8" y="0" width="4" height="14"/></svg>
+          : <svg width="12" height="14" viewBox="0 0 12 14" fill="currentColor"><polygon points="0,0 12,7 0,14"/></svg>
+        }
+      </button>
+      {/* Waveform bar */}
+      <div style={{ flex:1, display:'flex', flexDirection:'column', gap:4 }}>
+        <div style={{ height:4, borderRadius:2, background:bar, overflow:'hidden', cursor:'pointer' }}
+          onClick={e => {
+            const r = e.currentTarget.getBoundingClientRect();
+            const pct = (e.clientX - r.left) / r.width;
+            if (audioRef.current) { audioRef.current.currentTime = pct * audioRef.current.duration; }
+          }}>
+          <div style={{ height:'100%', width:`${progress*100}%`, background:accent, borderRadius:2, transition:'width 0.1s linear' }}/>
+        </div>
+        <span style={{ fontSize:10, color: isMe ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.5)' }}>
+          {duration ? fmt(duration) : '0:00'}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 // ── localStorage cache helpers ─────────────────────────────────────────────
 const WA_CACHE_KEY = 'nomaad_wa_threads';
 const readCache  = () => { try { return JSON.parse(localStorage.getItem(WA_CACHE_KEY) || '[]'); } catch { return []; } };
@@ -244,12 +300,14 @@ export default function MessagesView({ t, dark, mobile, compact }) {
             if (msg.platform !== 'whatsapp') return;
             const newMsgObj = {
               id: msg.id, from: msg.sender_name || msg.sender_phone,
-              text: msg.content,
+              text: msg.content, voice_url: msg.voice_url || null,
               time: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             };
             setThreads(prev => {
               const updated = prev.map(th => {
                 if (th._channelId !== msg.channel_id) return th;
+                // Deduplicate — skip if message ID already in state
+                if (th.messages.some(m => m.id === msg.id)) return th;
                 return {
                   ...th, snippet: msg.content, time: newMsgObj.time, unread: true,
                   messages: th._loaded ? [...th.messages, newMsgObj] : th.messages,
@@ -350,38 +408,32 @@ export default function MessagesView({ t, dark, mobile, compact }) {
 
   const handleSendMessage = async () => {
     if (!messageText.trim() || !activePaneItem) return;
-
     const text = messageText;
     setMessageText('');
 
-    const newMsg = { id: Date.now(), from: "Me", text, time: "Just now", color: "#34C759" };
+    const th = activeThreadId ? threads.find(t => t.id === activeThreadId) : null;
 
-    if (activeThreadId) {
-      setThreads(prev => prev.map(th => th.id === activeThreadId ? { ...th, messages: [...th.messages, newMsg], unread: false } : th));
+    if (th?.platform === 'whatsapp' && th._channelId) {
+      // Save to Supabase first — get real ID to prevent realtime dedup from doubling
+      const { data: saved } = await supabase.from('messages').insert({
+        channel_id: th._channelId, user_id: userIdRef.current,
+        content: text, sender_name: 'Me', platform: 'whatsapp',
+      }).select('id').single();
 
-      // If it's a real WhatsApp thread, persist + send via Twilio
-      const th = threads.find(t => t.id === activeThreadId);
-      if (th?.platform === 'whatsapp' && th._channelId) {
-        try {
-          // Save to Supabase so it survives polls
-          await supabase.from('messages').insert({
-            channel_id:  th._channelId,
-            user_id:     userIdRef.current,
-            content:     text,
-            sender_name: 'Me',
-            platform:    'whatsapp',
-          });
-          // Deliver via Twilio
-          await fetch('/api/whatsapp-send', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ to: th.sender, message: text }),
-          });
-        } catch (e) {
-          console.error('[messages] failed to send WhatsApp:', e);
-        }
-      }
+      const newMsg = { id: saved?.id ?? Date.now(), from: 'Me', text, time: 'Just now' };
+      setThreads(prev => prev.map(t => t.id === activeThreadId
+        ? { ...t, messages: [...t.messages, newMsg], snippet: text, time: 'Just now' } : t));
+
+      fetch('/api/whatsapp-send', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: th.sender, message: text }),
+      }).catch(e => console.error('Twilio send failed:', e));
+
+    } else if (activeThreadId) {
+      const newMsg = { id: Date.now(), from: 'Me', text, time: 'Just now' };
+      setThreads(prev => prev.map(t => t.id === activeThreadId ? { ...t, messages: [...t.messages, newMsg] } : t));
     } else if (activeChannelId) {
+      const newMsg = { id: Date.now(), from: 'Me', text, time: 'Just now', color: '#34C759' };
       setChannels(prev => prev.map(ch => ch.id === activeChannelId ? { ...ch, messages: [...ch.messages, newMsg] } : ch));
     }
   };
@@ -426,37 +478,33 @@ export default function MessagesView({ t, dark, mobile, compact }) {
   };
 
   const sendVoiceNote = async () => {
-    if (!audioBlob) return;
+    if (!audioBlob || !activeThreadId) return;
     const th = threads.find(t => t.id === activeThreadId);
     if (!th?._channelId) return;
 
     const fileName = `voice-${Date.now()}.webm`;
-
-    // Upload to Supabase Storage
     const { error: upErr } = await supabase.storage
       .from('voice-notes')
       .upload(fileName, audioBlob, { contentType: 'audio/webm', upsert: false });
 
-    if (upErr) { console.error('Upload failed:', upErr); return; }
+    if (upErr) { console.error('Voice upload failed:', upErr); return; }
 
     const { data: { publicUrl } } = supabase.storage.from('voice-notes').getPublicUrl(fileName);
 
-    const newMsg = { id: Date.now(), from: 'Me', text: '🎤 Voice message', voice_url: publicUrl, time: 'Just now' };
-    setThreads(prev => prev.map(t => t.id === activeThreadId ? { ...t, messages: [...t.messages, newMsg] } : t));
-
-    // Save to Supabase
-    await supabase.from('messages').insert({
+    // Save to Supabase and get real ID to prevent dedup doubling
+    const { data: saved } = await supabase.from('messages').insert({
       channel_id: th._channelId, user_id: userIdRef.current,
       content: '🎤 Voice message', sender_name: 'Me',
       platform: 'whatsapp', voice_url: publicUrl,
-    });
+    }).select('id').single();
 
-    // Send via Twilio with media
-    await fetch('/api/whatsapp-send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const newMsg = { id: saved?.id ?? Date.now(), from: 'Me', text: '🎤 Voice message', voice_url: publicUrl, time: 'Just now' };
+    setThreads(prev => prev.map(t => t.id === activeThreadId ? { ...t, messages: [...t.messages, newMsg] } : t));
+
+    fetch('/api/whatsapp-send', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ to: th.sender, message: '🎤 Voice message', mediaUrl: publicUrl }),
-    });
+    }).catch(console.error);
 
     discardVoice();
   };
@@ -705,11 +753,9 @@ export default function MessagesView({ t, dark, mobile, compact }) {
                     fontSize: 14, lineHeight: 1.4,
                     boxShadow: isMe ? t.accentGlow : "0 2px 5px rgba(0,0,0,0.02)",
                   }}>
-                    {msg.voice_url ? (
-                      <audio controls src={msg.voice_url}
-                        style={{ height: 36, maxWidth: 220, display: "block",
-                          filter: isMe ? "invert(1) brightness(0.8)" : "none" }} />
-                    ) : msg.text}
+                    {msg.voice_url
+                      ? <VoicePlayer src={msg.voice_url} isMe={isMe} />
+                      : msg.text}
                   </div>
                   <span style={{ fontSize: 10, color: t.muted, marginTop: 4, padding: "0 4px" }}>{msg.time}</span>
                 </div>
@@ -723,18 +769,23 @@ export default function MessagesView({ t, dark, mobile, compact }) {
 
             {/* Voice note preview */}
             {audioUrl && !recording && (
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10,
-                padding: "10px 14px", borderRadius: 16,
-                background: dark ? "rgba(37,211,102,0.08)" : "rgba(37,211,102,0.06)",
-                border: "1px solid rgba(37,211,102,0.25)" }}>
-                <audio controls src={audioUrl} style={{ flex: 1, height: 32 }} />
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10,
+                padding: "12px 16px", borderRadius: 18,
+                background: dark ? "rgba(37,211,102,0.07)" : "rgba(37,211,102,0.08)",
+                border: "1px solid rgba(37,211,102,0.2)" }}>
+                <div style={{ flex:1 }}>
+                  <VoicePlayer src={audioUrl} isMe={false} />
+                </div>
                 <button onClick={discardVoice}
-                  style={{ background: "transparent", border: "none", color: "#FF6259", cursor: "pointer", display: "flex", padding: 4 }}>
+                  style={{ background: "transparent", border: "none", color: "#FF6259",
+                    cursor: "pointer", display: "flex", padding: 4, flexShrink:0 }}>
                   <Trash2 size={15} />
                 </button>
                 <button onClick={sendVoiceNote}
                   style={{ background: "#25D366", border: "none", color: "#fff", cursor: "pointer",
-                    width: 32, height: 32, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    width: 34, height: 34, borderRadius: "50%", flexShrink:0,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    boxShadow: "0 2px 12px rgba(37,211,102,0.4)" }}>
                   <Send size={14} />
                 </button>
               </div>
