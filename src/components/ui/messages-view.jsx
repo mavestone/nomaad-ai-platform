@@ -190,27 +190,17 @@ function VoicePlayer({ src, isMe }) {
   );
 }
 
-// ── localStorage cache helpers ─────────────────────────────────────────────
-const WA_CACHE_KEY = 'nomaad_wa_threads';
-const readCache  = () => { try { return JSON.parse(localStorage.getItem(WA_CACHE_KEY) || '[]'); } catch { return []; } };
-const writeCache = (threads) => { try { localStorage.setItem(WA_CACHE_KEY, JSON.stringify(threads)); } catch {} };
-
 export default function MessagesView({ t, dark, mobile, compact }) {
   const [activePlatform, setActivePlatform]   = useState("all");
-  const [threads, setThreads]                 = useState(() => {
-    // Seed from cache immediately — no flicker on refresh
-    const cached = readCache();
-    return cached.length ? [...cached, ...INITIAL_THREADS] : INITIAL_THREADS;
-  });
+  const [threads, setThreads]                 = useState(INITIAL_THREADS);
   const [channels, setChannels]               = useState(INITIAL_CHANNELS);
   const [activeThreadId, setActiveThreadId]   = useState(INITIAL_THREADS[0].id);
   const [activeChannelId, setActiveChannelId] = useState(null);
   const [messageText, setMessageText]         = useState('');
   const realtimeRef                           = useRef(null);
   const pollRef                               = useRef(null);
-  const msgPollRef                            = useRef(null);
   const userIdRef                             = useRef(null);
-  const activeWAChanRef                       = useRef(null); // {threadId, channelId} for active WA thread
+  const activeWAChanRef                       = useRef(null); // tracks {threadId, channelId} of open WA thread
   const messagesEndRef                        = useRef(null);
   const mediaRecorderRef                      = useRef(null);
   const audioChunksRef                        = useRef([]);
@@ -221,39 +211,36 @@ export default function MessagesView({ t, dark, mobile, compact }) {
   const [recordSecs,  setRecordSecs]  = useState(0);
   const recordTimerRef                = useRef(null);
 
-  // Helper — merge fresh WA threads, PRESERVING already-loaded message history
-  const applyWAThreads = (waThreads) => {
-    setThreads(prev => {
-      const waWithHistory = waThreads.map(fresh => {
-        const existing = prev.find(t => t._channelId === fresh._channelId);
-        // Keep message history and loaded flag if already fetched
-        if (existing?._loaded) return { ...fresh, messages: existing.messages, _loaded: true };
-        return fresh;
-      });
-      const non_wa = prev.filter(th => !String(th.id).startsWith('wa-'));
-      writeCache(waWithHistory);
-      return [...waWithHistory, ...non_wa];
-    });
-  };
-
   // ── Single init effect — runs once on mount ───────────────────────────────
   useEffect(() => {
     let cancelled = false;
 
-    const buildThreads = (waChannels, waMsgs) =>
+    // Builds WA thread objects with full message history from one joined query
+    const buildWAThreads = (waChannels, allMsgs) =>
       waChannels.map(ch => {
-        const latestMsg = waMsgs?.find(m => m.channel_id === ch.id);
-        const phone = ch.external_phone || ch.name;
+        const chanMsgs = (allMsgs || []).filter(m => m.channel_id === ch.id);
+        const latest   = chanMsgs[chanMsgs.length - 1];
+        const phone    = ch.external_phone || ch.name;
         return {
           id: `wa-${ch.id}`, _channelId: ch.id, type: 'dm',
           platform: 'whatsapp', sender: phone,
           avatar: phone.slice(-2), color: '#25D366',
-          snippet:  latestMsg?.content || 'New WhatsApp message',
-          time: latestMsg ? new Date(latestMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
-          unread: true, messages: [], _loaded: false,
+          snippet: latest?.content || 'New WhatsApp message',
+          time: latest ? new Date(latest.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+          unread: false,
+          messages: chanMsgs.map(m => ({
+            id:        m.id,
+            from:      m.sender_name || m.sender_phone || phone,
+            text:      m.content,
+            voice_url: m.voice_url || null,
+            time:      new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          })),
+          _loaded: true,
         };
       });
 
+    // Fetches channels + all their messages, then replaces WA threads in state
+    // Preserves any optimistic messages (id starts with 'opt-') not yet in DB
     const fetchAndSync = async (userId) => {
       const { data: waChannels } = await supabase
         .from('channels')
@@ -264,86 +251,79 @@ export default function MessagesView({ t, dark, mobile, compact }) {
 
       if (cancelled || !waChannels?.length) return;
 
-      const { data: waMsgs } = await supabase
+      const { data: allMsgs } = await supabase
         .from('messages')
-        .select('channel_id, content, sender_name, created_at')
+        .select('id, channel_id, content, sender_name, sender_phone, created_at, voice_url')
         .in('channel_id', waChannels.map(c => c.id))
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: true });
 
-      if (!cancelled) applyWAThreads(buildThreads(waChannels, waMsgs));
+      if (cancelled) return;
+
+      const freshWA = buildWAThreads(waChannels, allMsgs || []);
+
+      setThreads(prev => {
+        // Keep any optimistic messages (not yet confirmed by DB) from the current open thread
+        const withOptimistic = freshWA.map(fresh => {
+          const existing = prev.find(p => p._channelId === fresh._channelId);
+          if (!existing) return fresh;
+          const optMsgs = existing.messages.filter(m => String(m.id).startsWith('opt-'));
+          if (!optMsgs.length) return fresh;
+          return { ...fresh, messages: [...fresh.messages, ...optMsgs] };
+        });
+        const nonWA = prev.filter(th => !String(th.id).startsWith('wa-'));
+        return [...withOptimistic, ...nonWA];
+      });
     };
 
     const setupRealtime = (userId) => {
-      // Clean up any previous subscription
       if (realtimeRef.current) supabase.removeChannel(realtimeRef.current);
 
       const rt = supabase.channel('wa-realtime')
+        // New channel (first message from a new contact)
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'channels', filter: `user_id=eq.${userId}` },
           (payload) => {
             const ch = payload.new;
             if (ch.platform !== 'whatsapp') return;
-            const phone = ch.external_phone || ch.name;
-            setThreads(prev => {
-              if (prev.find(t => t._channelId === ch.id)) return prev;
-              const newThread = {
-                id: `wa-${ch.id}`, _channelId: ch.id, type: 'dm',
-                platform: 'whatsapp', sender: phone, avatar: phone.slice(-2),
-                color: '#25D366', snippet: 'New WhatsApp message',
-                time: 'Just now', unread: true, messages: [], _loaded: false,
-              };
-              const updated = [newThread, ...prev];
-              writeCache(updated.filter(t => String(t.id).startsWith('wa-')));
-              return updated;
-            });
+            // Trigger a full sync to pick up the new channel with messages
+            fetchAndSync(userId);
           })
+        // Incoming message
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `user_id=eq.${userId}` },
           (payload) => {
             const msg = payload.new;
             if (msg.platform !== 'whatsapp') return;
-            // Skip our own sent messages — already shown optimistically
-            if (msg.sender_name === 'Me') return;
+            if (msg.sender_name === 'Me') return; // already shown optimistically
             const newMsgObj = {
               id: msg.id, from: msg.sender_name || msg.sender_phone,
               text: msg.content, voice_url: msg.voice_url || null,
               time: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             };
-            setThreads(prev => {
-              const updated = prev.map(th => {
-                if (th._channelId !== msg.channel_id) return th;
-                // Deduplicate — skip if message ID already in state
-                if (th.messages.some(m => m.id === msg.id)) return th;
-                return {
-                  ...th, snippet: msg.content, time: newMsgObj.time, unread: true,
-                  messages: th._loaded ? [...th.messages, newMsgObj] : th.messages,
-                };
-              });
-              writeCache(updated.filter(t => String(t.id).startsWith('wa-')));
-              return updated;
-            });
+            setThreads(prev => prev.map(th => {
+              if (th._channelId !== msg.channel_id) return th;
+              if (th.messages.some(m => m.id === msg.id)) return th; // dedup
+              return { ...th, snippet: msg.content, time: newMsgObj.time, unread: true,
+                messages: [...th.messages, newMsgObj] };
+            }));
           })
         .subscribe();
 
       realtimeRef.current = rt;
     };
 
-    // Gate everything behind a confirmed auth session
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (cancelled || !session) return;
       userIdRef.current = session.user.id;
       await fetchAndSync(session.user.id);
       setupRealtime(session.user.id);
-
-      // Polling fallback — every 8s, re-sync from Supabase
-      // Catches messages if realtime subscription misses anything
+      // Poll every 5s — catches incoming messages even if realtime misses them
       pollRef.current = setInterval(() => {
         if (userIdRef.current) fetchAndSync(userIdRef.current);
-      }, 8000);
+      }, 5000);
     };
 
     init();
 
-    // Also re-init if auth state changes (e.g. token refresh)
     const { data: { subscription: authListener } } = supabase.auth.onAuthStateChange((event, session) => {
       if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
         userIdRef.current = session.user.id;
@@ -357,37 +337,8 @@ export default function MessagesView({ t, dark, mobile, compact }) {
       authListener.unsubscribe();
       if (realtimeRef.current) supabase.removeChannel(realtimeRef.current);
       if (pollRef.current) clearInterval(pollRef.current);
-      if (msgPollRef.current) clearInterval(msgPollRef.current);
     };
-  }, []); // runs once on mount — auth is handled internally
-
-  // ── Load messages for a WA thread when opened ────────────────────────────
-  const loadWAMessages = async (thread) => {
-    if (!thread._channelId || thread._loaded) return;
-    const { data: msgs } = await supabase
-      .from('messages')
-      .select('id, content, sender_name, sender_phone, created_at, voice_url')
-      .eq('channel_id', thread._channelId)
-      .order('created_at', { ascending: true });
-
-    if (!msgs) return;
-    const formatted = msgs.map(m => ({
-      id:        m.id,
-      from:      m.sender_name || m.sender_phone,
-      text:      m.content,
-      voice_url: m.voice_url || null,
-      time:      new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    }));
-
-    setThreads(prev => {
-      const updated = prev.map(th =>
-        th.id === thread.id ? { ...th, messages: formatted, _loaded: true, unread: false } : th
-      );
-      // Persist loaded messages to cache so they survive page refresh
-      writeCache(updated.filter(t => String(t.id).startsWith('wa-')));
-      return updated;
-    });
-  };
+  }, []);
 
   const ease = "all 0.2s cubic-bezier(.4,0,.2,1)";
   const card = `1px solid ${t.cardBorder}`;
@@ -409,45 +360,11 @@ export default function MessagesView({ t, dark, mobile, compact }) {
   const selectThread = (id) => {
     setActiveThreadId(id);
     setActiveChannelId(null);
-    const th = threads.find(t => t.id === id);
-    // Track active WA channel for message polling
-    activeWAChanRef.current = th?._channelId ? { threadId: id, channelId: th._channelId } : null;
-    if (th?._channelId && !th._loaded) loadWAMessages(th);
   };
   const selectChannel = (id) => {
     setActiveChannelId(id);
     setActiveThreadId(null);
-    activeWAChanRef.current = null;
   };
-
-  // ── Poll messages for the open WA thread every 5s (realtime fallback) ──────
-  useEffect(() => {
-    const refreshOpenThread = async () => {
-      const cur = activeWAChanRef.current;
-      if (!cur || !userIdRef.current) return;
-      const { data: msgs } = await supabase
-        .from('messages')
-        .select('id, content, sender_name, sender_phone, created_at, voice_url')
-        .eq('channel_id', cur.channelId)
-        .order('created_at', { ascending: true });
-      if (!msgs) return;
-      const formatted = msgs.map(m => ({
-        id: m.id, from: m.sender_name || m.sender_phone,
-        text: m.content, voice_url: m.voice_url || null,
-        time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      }));
-      setThreads(prev => {
-        const updated = prev.map(th =>
-          th.id === cur.threadId ? { ...th, messages: formatted, _loaded: true, unread: false } : th
-        );
-        writeCache(updated.filter(t => String(t.id).startsWith('wa-')));
-        return updated;
-      });
-    };
-
-    msgPollRef.current = setInterval(refreshOpenThread, 5000);
-    return () => clearInterval(msgPollRef.current);
-  }, []);
 
 
 
