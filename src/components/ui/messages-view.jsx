@@ -151,6 +151,8 @@ export default function MessagesView({ t, dark, mobile, compact }) {
   const [activeChannelId, setActiveChannelId] = useState(null);
   const [messageText, setMessageText]         = useState('');
   const realtimeRef                           = useRef(null);
+  const pollRef                               = useRef(null);
+  const userIdRef                             = useRef(null);
 
   // Helper — merge fresh WA threads into state + write cache
   const applyWAThreads = (waThreads) => {
@@ -252,8 +254,15 @@ export default function MessagesView({ t, dark, mobile, compact }) {
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (cancelled || !session) return;
+      userIdRef.current = session.user.id;
       await fetchAndSync(session.user.id);
       setupRealtime(session.user.id);
+
+      // Polling fallback — every 8s, re-sync from Supabase
+      // Catches messages if realtime subscription misses anything
+      pollRef.current = setInterval(() => {
+        if (userIdRef.current) fetchAndSync(userIdRef.current);
+      }, 8000);
     };
 
     init();
@@ -261,6 +270,7 @@ export default function MessagesView({ t, dark, mobile, compact }) {
     // Also re-init if auth state changes (e.g. token refresh)
     const { data: { subscription: authListener } } = supabase.auth.onAuthStateChange((event, session) => {
       if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
+        userIdRef.current = session.user.id;
         fetchAndSync(session.user.id);
         setupRealtime(session.user.id);
       }
@@ -270,6 +280,7 @@ export default function MessagesView({ t, dark, mobile, compact }) {
       cancelled = true;
       authListener.unsubscribe();
       if (realtimeRef.current) supabase.removeChannel(realtimeRef.current);
+      if (pollRef.current) clearInterval(pollRef.current);
     };
   }, []); // runs once on mount — auth is handled internally
 
