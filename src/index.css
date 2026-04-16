@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+/* Calendar grid — hide scrollbar so header cols align with body cols */
+.cal-grid {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.cal-grid::-webkit-scrollbar {
+  display: none;
+}
+
 @theme inline {
   --color-chart-label: var(--chart-label);
   --color-chart-ring-background: var(--chart-ring-background);

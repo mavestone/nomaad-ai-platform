@@ -37,17 +37,17 @@ const CATS = {
 };
 const CAT_LIST = Object.keys(CATS);
 
-// ─── Templates ────────────────────────────────────────────────────────────────
-const TEMPLATES = [
-  { id: "t-deep",    name: "Deep Work",    dur: 120, cat: "Edit",     color: "#ccfd01", icon: <Target    size={12}/> },
-  { id: "t-shallow", name: "Shallow Work", dur: 30,  cat: "Admin",    color: "#AF52DE", icon: <Briefcase size={12}/> },
-  { id: "t-call",    name: "Client Call",  dur: 30,  cat: "Meeting",  color: "#FFB340", icon: <Users     size={12}/> },
-  { id: "t-shoot",   name: "Shoot Day",    dur: 480, cat: "Shoot",    color: "#FF9500", icon: <Camera    size={12}/> },
-  { id: "t-edit",    name: "Edit Session", dur: 180, cat: "Edit",     color: "#5AC8FA", icon: <Edit3     size={12}/> },
-  { id: "t-travel",  name: "Travel",       dur: 120, cat: "Personal", color: "#8E8E93", icon: <Plane     size={12}/> },
-  { id: "t-workout", name: "Workout",      dur: 45,  cat: "Personal", color: "#FF3B30", icon: <Activity  size={12}/> },
-  { id: "t-meal",    name: "Meal",         dur: 30,  cat: "Personal", color: "#F5E6C8", icon: <Coffee    size={12}/> },
-  { id: "t-buffer",  name: "Buffer",       dur: 15,  cat: "Admin",    color: "#3A3A3C", icon: <Clock     size={12}/> },
+// ─── Templates (serialisable — icons derived from CATS at render time) ────────
+const DEFAULT_TEMPLATES = [
+  { id: "t-deep",    name: "Deep Work",    dur: 120, cat: "Edit" },
+  { id: "t-shallow", name: "Shallow Work", dur: 30,  cat: "Admin" },
+  { id: "t-call",    name: "Client Call",  dur: 30,  cat: "Meeting" },
+  { id: "t-shoot",   name: "Shoot Day",    dur: 480, cat: "Shoot" },
+  { id: "t-edit",    name: "Edit Session", dur: 180, cat: "Edit" },
+  { id: "t-travel",  name: "Travel",       dur: 120, cat: "Personal" },
+  { id: "t-workout", name: "Workout",      dur: 45,  cat: "Personal" },
+  { id: "t-meal",    name: "Meal",         dur: 30,  cat: "Personal" },
+  { id: "t-buffer",  name: "Buffer",       dur: 15,  cat: "Admin" },
 ];
 
 const INBOX_TASKS = [
@@ -122,6 +122,10 @@ export default function CalendarView({ t, dark, mobile, compact }) {
   const [ctxMenu, setCtxMenu]         = useState(null);
   const [gConnecting, setGConnecting] = useState(false);
   const [gConnected, setGConnected]   = useState(() => !!localStorage.getItem("gCalToken"));
+
+  // ── Templates (user-editable, persisted) ────────────────────────────────────
+  const [userTemplates, setUserTemplates] = useState(() => lsGet("cal_user_tpls", DEFAULT_TEMPLATES));
+  const [newTplForm, setNewTplForm]       = useState(null); // null | { name, dur, cat }
 
   // ── Current time ──────────────────────────────────────────────────────────
   const [nowHr, setNowHr] = useState(() => { const n=new Date(); return n.getHours()+n.getMinutes()/60; });
@@ -218,7 +222,8 @@ export default function CalendarView({ t, dark, mobile, compact }) {
         const sH=sD.getHours()+sD.getMinutes()/60;
         const eH=eD.getHours()+eD.getMinutes()/60;
         if (eH<=sH) return [];
-        return [{ id:`g-${ev.id}`,title:ev.summary||"Busy",cat:"Meeting",startDate:sD,startHr:sH,endHr:eH,source:"google" }];
+        const meetEntry = ev.conferenceData?.entryPoints?.find(ep=>ep.entryPointType==="video");
+        return [{ id:`g-${ev.id}`,title:ev.summary||"Busy",cat:"Meeting",startDate:sD,startHr:sH,endHr:eH,source:"google",meetLink:meetEntry?.uri||null,meetCode:ev.conferenceData?.conferenceId||null }];
       });
       setBlocks(prev=>[...prev.filter(b=>b.source!=="google"),...gEvts]);
     } catch {}
@@ -355,8 +360,8 @@ export default function CalendarView({ t, dark, mobile, compact }) {
           setBlocks(prev => prev.map(b => b.id === d.original.id ? updated : b));
           await updatePosition(updated);
         } else if (!hasMoved) {
-          // plain click — open panel
-          openEvent(d.original, "edit");
+          // plain click — open popup near cursor
+          openEvent(d.original, "view", { x: e.clientX, y: e.clientY });
         }
       }
 
@@ -460,12 +465,13 @@ export default function CalendarView({ t, dark, mobile, compact }) {
   };
 
   // ─── Event panel helpers ──────────────────────────────────────────────────
-  const openEvent = (block, mode = "create") => setEventPanel({ block: { ...block }, mode });
+  // mode: "view" (popup near click) | "create" (form modal) | "editForm" (form modal for existing)
+  const openEvent = (block, mode = "create", pos = null) => setEventPanel({ block: { ...block }, mode, pos });
 
   const saveEventPanel = async () => {
     if (!eventPanel) return;
     const { block, mode } = eventPanel;
-    if (mode === "edit") {
+    if (mode === "editForm") {
       setBlocks(prev => prev.map(b => b.id === block.id ? block : b));
       await saveBlock(block);
     } else {
@@ -580,7 +586,7 @@ export default function CalendarView({ t, dark, mobile, compact }) {
       </div>
 
       {/* Scrollable grid body */}
-      <div ref={gridRef} style={{ flex:1, overflowY:"auto", display:"flex" }}>
+      <div ref={gridRef} className="cal-grid" style={{ flex:1, overflowY:"auto", display:"flex" }}>
         {/* Time gutter — absolute-positioned labels */}
         <div style={{ width:52, flexShrink:0, position:"relative", height:GRID_H }}>
           {HOURS.map(hr => (
@@ -662,7 +668,7 @@ export default function CalendarView({ t, dark, mobile, compact }) {
           {DOW.map(d=><div key={d} style={{ padding:"10px 0", textAlign:"center", fontSize:11, fontWeight:600, color:t.muted, letterSpacing:0.5, textTransform:"uppercase" }}>{d}</div>)}
         </div>
         {/* Day cells */}
-        <div style={{ flex:1, overflowY:"auto", display:"grid", gridTemplateColumns:"repeat(7,1fr)", gridAutoRows:"minmax(90px,1fr)", alignContent:"start" }}>
+        <div style={{ flex:1, overflowY:"auto", display:"grid", gridTemplateColumns:"repeat(7,1fr)", gridAutoRows:"1fr" }}>
           {allDays.map((day,i) => {
             const inMonth = day.getMonth()===currentDate.getMonth();
             const tod     = isSameDay(day,new Date());
@@ -672,7 +678,7 @@ export default function CalendarView({ t, dark, mobile, compact }) {
             return (
               <div key={i}
                 onClick={()=>{ setCurrentDate(day); setView("day"); }}
-                style={{ borderRight:(i+1)%7!==0?`1px solid ${t.divider}`:"none", borderBottom:`1px solid ${t.divider}`, padding:8, cursor:"pointer", opacity:inMonth?1:0.35, background:heat>0?`rgba(${hexRgb(VOLT)},${heat*0.07})`:"transparent", transition:ease }}
+                style={{ borderRight:(i+1)%7!==0?`1px solid ${t.divider}`:"none", borderBottom:`1px solid ${t.divider}`, padding:8, cursor:"pointer", opacity:inMonth?1:0.35, background:heat>0?`rgba(${hexRgb(VOLT)},${heat*0.07})`:"transparent", transition:ease, overflow:"hidden" }}
                 onMouseEnter={e=>{e.currentTarget.style.background=dark?"rgba(255,255,255,0.025)":"rgba(0,0,0,0.02)";}}
                 onMouseLeave={e=>{e.currentTarget.style.background=heat>0?`rgba(${hexRgb(VOLT)},${heat*0.07})`:"transparent";}}
               >
@@ -681,7 +687,7 @@ export default function CalendarView({ t, dark, mobile, compact }) {
                 </div>
                 {evts.slice(0,3).map(ev=>{
                   const c=CATS[ev.cat]||CATS.Edit;
-                  return <div key={ev.id} onClick={e=>{e.stopPropagation();openEvent(ev,"edit");}} style={{ fontSize:10,fontWeight:600,color:c.color,background:`rgba(${hexRgb(c.color)},0.12)`,borderRadius:4,padding:"1px 5px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginBottom:2,cursor:"pointer" }}>{fmt24(ev.startHr)} {ev.title}</div>;
+                  return <div key={ev.id} onClick={e=>{e.stopPropagation();openEvent(ev,"view",{x:e.clientX,y:e.clientY});}} style={{ fontSize:10,fontWeight:600,color:c.color,background:`rgba(${hexRgb(c.color)},0.12)`,borderRadius:4,padding:"1px 5px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginBottom:2,cursor:"pointer" }}>{fmt24(ev.startHr)} {ev.title}</div>;
                 })}
                 {evts.length>3&&<div style={{fontSize:10,color:t.muted,fontWeight:600}}>+{evts.length-3} more</div>}
               </div>
@@ -693,145 +699,220 @@ export default function CalendarView({ t, dark, mobile, compact }) {
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // EVENT PANEL (Notion Calendar-style)
+  // EVENT PANEL — view popup (near click) + create/edit modal (centered)
   // ─────────────────────────────────────────────────────────────────────────────
   const renderEventPanel = () => {
     if (!eventPanel) return null;
-    const { block, mode } = eventPanel;
+    const { block, mode, pos } = eventPanel;
     const cat = CATS[block.cat] || CATS.Edit;
-    const isCreate = mode === "create";
-
     const updateField = (key, val) => setEventPanel(prev => ({ ...prev, block: { ...prev.block, [key]: val } }));
+    const dur = block.endHr - block.startHr;
 
+    // ── VIEW POPUP (clicking existing event) ────────────────────────────────
+    if (mode === "view") {
+      const PW = 332;
+      const PH = block.meetLink ? 360 : 270;
+      let left, top;
+      if (pos) {
+        left = pos.x - PW - 14;
+        if (left < 14) left = pos.x + 14;
+        if (left + PW > window.innerWidth - 14) left = window.innerWidth - PW - 14;
+        top = pos.y - 40;
+        if (top < 14) top = 14;
+        if (top + PH > window.innerHeight - 14) top = window.innerHeight - PH - 14;
+      } else {
+        left = (window.innerWidth - PW) / 2;
+        top  = (window.innerHeight - PH) / 3;
+      }
+
+      return (
+        <>
+          <div style={{ position:"fixed",inset:0,zIndex:298 }} onClick={()=>setEventPanel(null)}/>
+          <motion.div
+            initial={{ opacity:0, scale:0.93 }}
+            animate={{ opacity:1, scale:1 }}
+            exit={{ opacity:0, scale:0.93 }}
+            transition={{ type:"spring", stiffness:440, damping:32 }}
+            style={{ position:"fixed", left, top, width:PW, zIndex:300, background:dark?"rgba(16,16,20,0.97)":"rgba(252,251,249,0.98)", backdropFilter:"blur(40px) saturate(1.8)", border:`1px solid ${t.cardBorder}`, borderRadius:18, boxShadow:dark?"0 20px 60px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.05) inset":"0 20px 60px rgba(0,0,0,0.15)", overflow:"hidden" }}
+            onClick={e=>e.stopPropagation()}
+          >
+            {/* Header row */}
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 14px 10px", borderBottom:`1px solid ${t.divider}` }}>
+              <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                <div style={{ width:9,height:9,borderRadius:"50%",background:cat.color,flexShrink:0 }}/>
+                <span style={{ fontSize:12,fontWeight:600,color:t.sub }}>{block.cat}</span>
+                {block.source==="google" && <span style={{ fontSize:10,color:"#4285F4",background:"rgba(66,133,244,0.12)",padding:"1px 6px",borderRadius:5,fontWeight:600 }}>Google</span>}
+              </div>
+              <div style={{ display:"flex", gap:5 }}>
+                {block.source!=="google" && (
+                  <button onClick={()=>setEventPanel(prev=>({...prev,mode:"editForm"}))} title="Edit" style={{ width:26,height:26,borderRadius:7,background:t.input,border:`1px solid ${t.inputBorder}`,color:t.sub,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer" }}>
+                    <Edit3 size={11}/>
+                  </button>
+                )}
+                <button onClick={()=>deleteBlock(block.id)} title="Delete" style={{ width:26,height:26,borderRadius:7,background:"rgba(255,59,48,0.06)",border:"1px solid rgba(255,59,48,0.14)",color:"#FF453A",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer" }}>
+                  <Trash2 size={11}/>
+                </button>
+                <button onClick={()=>setEventPanel(null)} style={{ width:26,height:26,borderRadius:7,background:t.input,border:`1px solid ${t.inputBorder}`,color:t.sub,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer" }}>
+                  <X size={11}/>
+                </button>
+              </div>
+            </div>
+
+            {/* Title */}
+            <div style={{ padding:"14px 14px 10px" }}>
+              <div style={{ fontSize:18,fontWeight:700,color:t.text,letterSpacing:-0.3,lineHeight:1.3 }}>{block.title||"Untitled"}</div>
+            </div>
+
+            {/* Time */}
+            <div style={{ padding:"0 14px 14px", display:"flex", alignItems:"flex-start", gap:10 }}>
+              <Clock size={13} style={{ color:t.muted,marginTop:2,flexShrink:0 }}/>
+              <div>
+                <div style={{ fontSize:13,fontWeight:500,color:t.text }}>
+                  {fmt24(block.startHr)} → {fmt24(block.endHr)}
+                  <span style={{ color:t.muted,marginLeft:8,fontWeight:400,fontSize:12 }}>{fmtDur(dur)}</span>
+                </div>
+                {block.startDate && <div style={{ fontSize:12,color:t.sub,marginTop:2 }}>{format(block.startDate,"EEE, dd MMM yyyy")}</div>}
+              </div>
+            </div>
+
+            {/* Google Meet */}
+            {block.meetLink && (
+              <div style={{ padding:"10px 14px 12px", borderTop:`1px solid ${t.divider}` }}>
+                <a href={block.meetLink} target="_blank" rel="noreferrer"
+                  style={{ display:"flex",alignItems:"center",justifyContent:"center",gap:8,padding:"9px 14px",borderRadius:12,background:"#1a73e8",color:"#fff",fontSize:13,fontWeight:600,textDecoration:"none",cursor:"pointer" }}
+                >
+                  <Video size={14}/> Join Google Meet
+                </a>
+                {block.meetCode && <div style={{ fontSize:11,color:t.muted,textAlign:"center",marginTop:5 }}>Code: {block.meetCode}</div>}
+              </div>
+            )}
+
+            {/* Calendar */}
+            <div style={{ padding:"10px 14px 12px", borderTop:`1px solid ${t.divider}`, display:"flex", alignItems:"center", gap:8 }}>
+              <div style={{ width:11,height:11,borderRadius:3,background:block.source==="google"?"#4285F4":cat.color,flexShrink:0 }}/>
+              <span style={{ fontSize:12,color:t.sub,fontWeight:500 }}>{block.source==="google"?"Google Calendar":"NOMAAD"}</span>
+              <span style={{ fontSize:11,color:t.muted }}>· Busy</span>
+            </div>
+          </motion.div>
+        </>
+      );
+    }
+
+    // ── CREATE / EDIT FORM (centered modal) ─────────────────────────────────
+    const isCreate = mode === "create";
     return (
       <motion.div
-        initial={{ x: "100%", opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        exit={{ x: "100%", opacity: 0 }}
-        transition={{ type: "spring", stiffness: 380, damping: 34 }}
-        style={{ position:"fixed", top:0, right:0, bottom:0, zIndex:300, width:mobile?"100vw":340, background:dark?"rgba(14,14,18,0.97)":"rgba(252,251,249,0.98)", backdropFilter:"blur(40px) saturate(1.8)", borderLeft:`1px solid ${t.cardBorder}`, boxShadow:dark?"-20px 0 60px rgba(0,0,0,0.5)":"-20px 0 60px rgba(0,0,0,0.07)", display:"flex", flexDirection:"column" }}
-        onClick={e=>e.stopPropagation()}
+        initial={{ opacity:0 }}
+        animate={{ opacity:1 }}
+        exit={{ opacity:0 }}
+        style={{ position:"fixed",inset:0,zIndex:298,display:"flex",alignItems:"center",justifyContent:"center",background:dark?"rgba(0,0,0,0.5)":"rgba(0,0,0,0.22)",backdropFilter:"blur(8px)" }}
+        onClick={e=>{ if(e.target===e.currentTarget) setEventPanel(null); }}
       >
-        {/* Panel header */}
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"16px 18px", borderBottom:`1px solid ${t.divider}`, flexShrink:0 }}>
-          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-            <div style={{ display:"flex", alignItems:"center", gap:6, padding:"5px 10px", borderRadius:10, background:t.input, border:`1px solid ${t.inputBorder}`, cursor:"pointer" }}>
-              <div style={{ width:10,height:10,borderRadius:3,background:cat.color }}/>
-              <select
-                value={block.cat||"Meeting"}
-                onChange={e=>updateField("cat",e.target.value)}
-                style={{ background:"transparent",border:"none",color:t.text,fontSize:13,fontWeight:600,outline:"none",cursor:"pointer",fontFamily:"inherit" }}
-              >
+        <motion.div
+          initial={{ opacity:0,scale:0.96,y:10 }}
+          animate={{ opacity:1,scale:1,y:0 }}
+          exit={{ opacity:0,scale:0.96 }}
+          transition={{ type:"spring",stiffness:420,damping:30 }}
+          style={{ width:Math.min(400,window.innerWidth-32), background:dark?"rgba(16,16,20,0.98)":"rgba(252,251,249,0.98)", backdropFilter:"blur(40px) saturate(1.8)", border:`1px solid ${t.cardBorder}`, borderRadius:20, boxShadow:dark?"0 24px 80px rgba(0,0,0,0.5)":"0 24px 80px rgba(0,0,0,0.15)", overflow:"hidden", maxHeight:"90vh", display:"flex", flexDirection:"column" }}
+          onClick={e=>e.stopPropagation()}
+        >
+          {/* Header */}
+          <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 16px",borderBottom:`1px solid ${t.divider}`,flexShrink:0 }}>
+            <div style={{ display:"flex",alignItems:"center",gap:6 }}>
+              <div style={{ width:9,height:9,borderRadius:"50%",background:cat.color }}/>
+              <select value={block.cat||"Meeting"} onChange={e=>updateField("cat",e.target.value)}
+                style={{ background:"transparent",border:"none",color:t.text,fontSize:13,fontWeight:600,outline:"none",cursor:"pointer",fontFamily:"inherit" }}>
                 {CAT_LIST.map(c=><option key={c} value={c}>{c}</option>)}
               </select>
               <ChevronDown size={11} style={{ color:t.muted }}/>
             </div>
+            <button onClick={()=>setEventPanel(null)} style={{ width:26,height:26,borderRadius:7,background:t.input,border:`1px solid ${t.inputBorder}`,color:t.sub,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer" }}>
+              <X size={11}/>
+            </button>
           </div>
-          <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-            {!isCreate && (
-              <button onClick={()=>deleteBlock(block.id)} style={{ width:28,height:28,borderRadius:8,background:"rgba(255,59,48,0.08)",border:"1px solid rgba(255,59,48,0.15)",color:"#FF453A",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer" }}>
+
+          <div style={{ flex:1,overflowY:"auto" }}>
+            {/* Title */}
+            <div style={{ padding:"16px 16px 10px" }}>
+              <input autoFocus={isCreate} value={block.title||""} onChange={e=>updateField("title",e.target.value)}
+                placeholder="Add title"
+                style={{ width:"100%",background:"transparent",border:"none",color:t.text,fontSize:21,fontWeight:700,outline:"none",fontFamily:"inherit",letterSpacing:-0.3,boxSizing:"border-box" }}
+              />
+            </div>
+
+            {/* Date / time */}
+            <div style={{ borderTop:`1px solid ${t.divider}`,padding:"12px 16px" }}>
+              <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:6 }}>
+                <Clock size={13} style={{ color:t.muted,flexShrink:0 }}/>
+                <div style={{ display:"flex",alignItems:"center",gap:6,flexWrap:"wrap" }}>
+                  <input type="date"
+                    defaultValue={block.startDate?format(block.startDate,"yyyy-MM-dd"):format(new Date(),"yyyy-MM-dd")}
+                    onChange={e=>{ const d=new Date(e.target.value+"T12:00:00"); updateField("startDate",d); }}
+                    style={{ background:t.input,border:`1px solid ${t.inputBorder}`,borderRadius:8,padding:"4px 8px",color:t.text,fontSize:12,outline:"none",fontFamily:"inherit",cursor:"pointer" }}
+                  />
+                  <select value={block.startHr||9} onChange={e=>updateField("startHr",parseFloat(e.target.value))}
+                    style={{ background:t.input,border:`1px solid ${t.inputBorder}`,borderRadius:8,padding:"4px 8px",color:t.text,fontSize:12,outline:"none",fontFamily:"inherit",cursor:"pointer" }}>
+                    {Array.from({length:(E_HR-S_HR)*4},(_,i)=>S_HR+i*0.25).map(h=><option key={h} value={h}>{fmt24(h)}</option>)}
+                  </select>
+                  <span style={{ color:t.muted,fontSize:12 }}>→</span>
+                  <select value={block.endHr||10} onChange={e=>updateField("endHr",parseFloat(e.target.value))}
+                    style={{ background:t.input,border:`1px solid ${t.inputBorder}`,borderRadius:8,padding:"4px 8px",color:t.text,fontSize:12,outline:"none",fontFamily:"inherit",cursor:"pointer" }}>
+                    {Array.from({length:(E_HR-S_HR)*4},(_,i)=>S_HR+i*0.25).map(h=><option key={h} value={h}>{fmt24(h)}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div style={{ display:"flex",alignItems:"center",gap:10,padding:"5px 0",color:t.muted,cursor:"pointer" }}>
+                <RefreshCw size={13} style={{ flexShrink:0 }}/>
+                <span style={{ fontSize:13 }}>Does not repeat</span>
+              </div>
+            </div>
+
+            {/* Fields */}
+            <div style={{ borderTop:`1px solid ${t.divider}`,padding:"4px 16px" }}>
+              {[
+                { icon:<Users size={13}/>,    ph:"Add participants", key:"participants" },
+                { icon:<MapPin size={13}/>,   ph:"Add location",     key:"location" },
+                { icon:<Bell size={13}/>,     ph:"Add reminder",     key:"reminder" },
+                { icon:<FileText size={13}/>, ph:"Add notes",        key:"notes" },
+              ].map(f=>(
+                <div key={f.key} style={{ display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:`1px solid ${t.divider}` }}>
+                  <span style={{ color:t.muted,flexShrink:0 }}>{f.icon}</span>
+                  <input placeholder={f.ph} style={{ flex:1,background:"transparent",border:"none",color:t.text,fontSize:13,outline:"none",fontFamily:"inherit" }}/>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div style={{ padding:"12px 16px",borderTop:`1px solid ${t.divider}`,display:"flex",gap:8,flexShrink:0 }}>
+            {mode==="editForm" && (
+              <button onClick={()=>deleteBlock(block.id)} style={{ width:34,height:34,borderRadius:10,border:"1px solid rgba(255,59,48,0.15)",background:"rgba(255,59,48,0.06)",color:"#FF453A",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0 }}>
                 <Trash2 size={13}/>
               </button>
             )}
-            <button onClick={()=>setEventPanel(null)} style={{ width:28,height:28,borderRadius:8,background:t.input,border:`1px solid ${t.inputBorder}`,color:t.sub,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer" }}>
-              <X size={13}/>
+            <button onClick={saveEventPanel}
+              style={{ flex:1,padding:"9px",borderRadius:12,border:"none",background:t.accentGrad,color:t.accentText,fontSize:13,fontWeight:700,cursor:"pointer",boxShadow:t.accentGlow }}>
+              {isCreate ? "Create Event" : "Save Changes"}
             </button>
           </div>
-        </div>
-
-        <div style={{ flex:1, overflowY:"auto", padding:"0 0 24px" }}>
-          {/* Title */}
-          <div style={{ padding:"18px 18px 10px" }}>
-            <input
-              autoFocus={isCreate}
-              value={block.title||""}
-              onChange={e=>updateField("title",e.target.value)}
-              placeholder="Add title"
-              style={{ width:"100%",background:"transparent",border:"none",color:t.text,fontSize:22,fontWeight:700,outline:"none",fontFamily:"inherit",letterSpacing:-0.3,boxSizing:"border-box" }}
-            />
-          </div>
-
-          {/* Date / time */}
-          <div style={{ borderTop:`1px solid ${t.divider}`, padding:"14px 18px" }}>
-            <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:10 }}>
-              <Clock size={15} style={{ color:t.muted, flexShrink:0 }}/>
-              <div style={{ display:"flex", alignItems:"center", gap:8, flex:1, flexWrap:"wrap" }}>
-                <input type="date" defaultValue={block.startDate ? format(block.startDate,"yyyy-MM-dd") : format(new Date(),"yyyy-MM-dd")} onChange={e=>{ const d=new Date(e.target.value+"T12:00:00"); updateField("startDate",d); }} style={{ background:t.input,border:`1px solid ${t.inputBorder}`,borderRadius:8,padding:"5px 10px",color:t.text,fontSize:13,outline:"none",fontFamily:"inherit",cursor:"pointer" }}/>
-                <div style={{ display:"flex", gap:6 }}>
-                  <select value={block.startHr||9} onChange={e=>updateField("startHr",parseFloat(e.target.value))} style={{ background:t.input,border:`1px solid ${t.inputBorder}`,borderRadius:8,padding:"5px 10px",color:t.text,fontSize:13,outline:"none",fontFamily:"inherit",cursor:"pointer" }}>
-                    {Array.from({length:(E_HR-S_HR)*4},(_,i)=>S_HR+i*0.25).map(h=><option key={h} value={h}>{fmt24(h)}</option>)}
-                  </select>
-                  <span style={{ color:t.muted,fontSize:13,alignSelf:"center" }}>-</span>
-                  <select value={block.endHr||10} onChange={e=>updateField("endHr",parseFloat(e.target.value))} style={{ background:t.input,border:`1px solid ${t.inputBorder}`,borderRadius:8,padding:"5px 10px",color:t.text,fontSize:13,outline:"none",fontFamily:"inherit",cursor:"pointer" }}>
-                    {Array.from({length:(E_HR-S_HR)*4},(_,i)=>S_HR+i*0.25).map(h=><option key={h} value={h}>{fmt24(h)}</option>)}
-                  </select>
-                </div>
-              </div>
-            </div>
-            {/* Repeat (stub) */}
-            <div style={{ display:"flex", alignItems:"center", gap:12, padding:"6px 0", color:t.muted, cursor:"pointer" }}>
-              <RefreshCw size={15} style={{ flexShrink:0 }}/>
-              <span style={{ fontSize:14 }}>Does not repeat</span>
-            </div>
-          </div>
-
-          {/* Detail fields */}
-          <div style={{ borderTop:`1px solid ${t.divider}`, padding:"8px 18px" }}>
-            {[
-              { icon:<Users size={15}/>,    ph:"Participants and rooms", key:"participants" },
-              { icon:<Video size={15}/>,    ph:"Conferencing",           key:"conferencing" },
-              { icon:<MapPin size={15}/>,   ph:"Location",               key:"location" },
-              { icon:<FileText size={15}/>, ph:"Notes",                  key:"notes" },
-            ].map(f=>(
-              <div key={f.key} style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 0", borderBottom:`1px solid ${t.divider}` }}>
-                <span style={{ color:t.muted, flexShrink:0 }}>{f.icon}</span>
-                <input placeholder={f.ph} style={{ flex:1,background:"transparent",border:"none",color:t.text,fontSize:14,outline:"none",fontFamily:"inherit" }}/>
-              </div>
-            ))}
-          </div>
-
-          {/* Description */}
-          <div style={{ borderTop:`1px solid ${t.divider}`, padding:"14px 18px" }}>
-            <textarea
-              placeholder="Add description..."
-              rows={3}
-              style={{ width:"100%",background:"transparent",border:"none",color:t.text,fontSize:14,outline:"none",fontFamily:"inherit",resize:"none",lineHeight:1.5,boxSizing:"border-box" }}
-            />
-          </div>
-
-          {/* Calendar + status */}
-          <div style={{ borderTop:`1px solid ${t.divider}`, padding:"14px 18px" }}>
-            <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:8 }}>
-              <div style={{ width:18,height:18,borderRadius:4,background:cat.color,flexShrink:0 }}/>
-              <div>
-                <div style={{ fontSize:13,fontWeight:600,color:t.text }}>NOMAAD</div>
-                <div style={{ display:"flex", gap:16, fontSize:12, color:t.muted, marginTop:1 }}>
-                  <span>Free</span><span>Default visibility</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Reminders */}
-          <div style={{ padding:"0 18px 10px" }}>
-            <div style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 12px", borderRadius:10, border:`1px solid ${t.inputBorder}`, background:t.input }}>
-              <Bell size={14} style={{ color:t.muted }}/>
-              <input placeholder="Add reminder..." style={{ flex:1,background:"transparent",border:"none",color:t.text,fontSize:13,outline:"none",fontFamily:"inherit" }}/>
-            </div>
-          </div>
-        </div>
-
-        {/* Save button */}
-        <div style={{ padding:"14px 18px", borderTop:`1px solid ${t.divider}`, flexShrink:0 }}>
-          <button
-            onClick={saveEventPanel}
-            style={{ width:"100%",padding:"11px",borderRadius:14,border:"none",background:t.accentGrad,color:t.accentText,fontSize:14,fontWeight:700,cursor:"pointer",boxShadow:t.accentGlow }}
-          >
-            {isCreate ? "Create Event" : "Save Changes"}
-          </button>
-        </div>
+        </motion.div>
       </motion.div>
     );
+  };
+
+  // ─── Template helpers ─────────────────────────────────────────────────────
+  const deleteTemplate = (id) => {
+    const next = userTemplates.filter(t=>t.id!==id);
+    setUserTemplates(next);
+    lsSet("cal_user_tpls", next);
+  };
+  const saveNewTemplate = () => {
+    if (!newTplForm?.name?.trim()) return;
+    const tpl = { id:`tpl-${Date.now()}`, name:newTplForm.name.trim(), dur:parseInt(newTplForm.dur)||60, cat:newTplForm.cat||"Edit" };
+    const next = [...userTemplates, tpl];
+    setUserTemplates(next);
+    lsSet("cal_user_tpls", next);
+    setNewTplForm(null);
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -839,38 +920,86 @@ export default function CalendarView({ t, dark, mobile, compact }) {
   // ─────────────────────────────────────────────────────────────────────────────
   const renderRail = () => (
     <motion.div
-      initial={{ width:0, opacity:0 }} animate={{ width:mobile?"100%":252, opacity:1 }} exit={{ width:0, opacity:0 }}
+      initial={{ width:0, opacity:0 }} animate={{ width:mobile?"100%":260, opacity:1 }} exit={{ width:0, opacity:0 }}
       transition={{ type:"spring", stiffness:350, damping:32 }}
       style={{ overflow:"hidden", flexShrink:0, paddingLeft:12 }}
     >
-      <div style={{ width:mobile?"100%":252, height:"100%", display:"flex", flexDirection:"column" }}>
+      <div style={{ width:mobile?"100%":260, height:"100%", display:"flex", flexDirection:"column" }}>
         <div style={{ ...card({padding:0}), flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
+
+          {/* Tabs */}
           <div style={{ display:"flex", borderBottom:`1px solid ${t.divider}`, padding:"8px 8px 0", gap:4, flexShrink:0 }}>
-            {["templates","tasks"].map(tab=>(
-              <button key={tab} onClick={()=>setRailTab(tab)} style={{ flex:1,padding:"7px 0",borderRadius:"10px 10px 0 0",border:"none",fontSize:12,fontWeight:600,cursor:"pointer",transition:ease,background:railTab===tab?(dark?"rgba(255,255,255,0.06)":"rgba(0,0,0,0.04)"):"transparent",color:railTab===tab?t.text:t.muted,borderBottom:railTab===tab?`2px solid ${t.accent}`:"2px solid transparent" }}>
+            {["templates","tasks","calendars"].map(tab=>(
+              <button key={tab} onClick={()=>setRailTab(tab)} style={{ flex:1,padding:"7px 0",borderRadius:"10px 10px 0 0",border:"none",fontSize:11,fontWeight:600,cursor:"pointer",transition:ease,background:railTab===tab?(dark?"rgba(255,255,255,0.06)":"rgba(0,0,0,0.04)"):"transparent",color:railTab===tab?t.text:t.muted,borderBottom:railTab===tab?`2px solid ${t.accent}`:"2px solid transparent" }}>
                 {tab.charAt(0).toUpperCase()+tab.slice(1)}
               </button>
             ))}
           </div>
+
           <div style={{ flex:1, overflowY:"auto", padding:"12px 10px" }}>
+
+            {/* ── TEMPLATES TAB ── */}
             {railTab==="templates" && (
               <div style={{ display:"flex",flexDirection:"column",gap:6 }}>
-                <p style={{ fontSize:10,fontWeight:600,color:t.muted,letterSpacing:0.5,textTransform:"uppercase",marginBottom:4 }}>Drag onto any time slot</p>
-                {TEMPLATES.map(tpl=>(
-                  <div key={tpl.id} draggable onDragStart={e=>onRailDragStart(e,tpl,"template")} onDragEnd={()=>{setRailDrag(null);setDropTarget(null);}}
-                    style={{ display:"flex",alignItems:"center",gap:10,padding:"10px 12px",borderRadius:12,border:`1px solid ${t.inputBorder}`,background:t.input,cursor:"grab",userSelect:"none" }}
-                    onMouseEnter={e=>{e.currentTarget.style.border=`1px solid ${tpl.color}44`;e.currentTarget.style.background=`rgba(${hexRgb(tpl.color)},0.06)`;}}
-                    onMouseLeave={e=>{e.currentTarget.style.border=`1px solid ${t.inputBorder}`;e.currentTarget.style.background=t.input;}}
-                  >
-                    <div style={{ width:28,height:28,borderRadius:8,background:`rgba(${hexRgb(tpl.color)},0.15)`,display:"flex",alignItems:"center",justifyContent:"center",color:tpl.color,flexShrink:0 }}>{tpl.icon}</div>
-                    <div style={{ flex:1,minWidth:0 }}>
-                      <div style={{ fontSize:12,fontWeight:600,color:t.text }}>{tpl.name}</div>
-                      <div style={{ fontSize:10,color:t.muted }}>{fmtDur(tpl.dur/60)}</div>
+                <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4 }}>
+                  <p style={{ fontSize:10,fontWeight:600,color:t.muted,letterSpacing:0.5,textTransform:"uppercase" }}>Drag to calendar</p>
+                  <button onClick={()=>setNewTplForm({ name:"", dur:60, cat:"Edit" })}
+                    style={{ display:"flex",alignItems:"center",gap:3,padding:"3px 8px",borderRadius:8,border:`1px solid ${t.inputBorder}`,background:t.input,color:t.muted,fontSize:10,fontWeight:600,cursor:"pointer" }}>
+                    <Plus size={9}/> New
+                  </button>
+                </div>
+
+                {/* New template form */}
+                {newTplForm && (
+                  <div style={{ padding:"10px",borderRadius:12,border:`1px solid ${t.accent}44`,background:`rgba(${hexRgb(VOLT)},0.05)`,display:"flex",flexDirection:"column",gap:8 }}>
+                    <input autoFocus value={newTplForm.name} onChange={e=>setNewTplForm(p=>({...p,name:e.target.value}))}
+                      placeholder="Template name" onKeyDown={e=>{ if(e.key==="Enter") saveNewTemplate(); if(e.key==="Escape") setNewTplForm(null); }}
+                      style={{ background:t.input,border:`1px solid ${t.inputBorder}`,borderRadius:8,padding:"5px 8px",color:t.text,fontSize:12,outline:"none",fontFamily:"inherit",width:"100%",boxSizing:"border-box" }}
+                    />
+                    <div style={{ display:"flex",gap:6 }}>
+                      <input type="number" value={newTplForm.dur} onChange={e=>setNewTplForm(p=>({...p,dur:e.target.value}))}
+                        min={15} max={480} step={15} placeholder="mins"
+                        style={{ flex:1,background:t.input,border:`1px solid ${t.inputBorder}`,borderRadius:8,padding:"5px 8px",color:t.text,fontSize:12,outline:"none",fontFamily:"inherit" }}
+                      />
+                      <select value={newTplForm.cat} onChange={e=>setNewTplForm(p=>({...p,cat:e.target.value}))}
+                        style={{ flex:1,background:t.input,border:`1px solid ${t.inputBorder}`,borderRadius:8,padding:"5px 6px",color:t.text,fontSize:12,outline:"none",fontFamily:"inherit",cursor:"pointer" }}>
+                        {CAT_LIST.map(c=><option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                    <div style={{ display:"flex",gap:6 }}>
+                      <button onClick={saveNewTemplate} style={{ flex:1,padding:"5px",borderRadius:8,border:"none",background:t.accentGrad,color:t.accentText,fontSize:11,fontWeight:700,cursor:"pointer" }}>Save</button>
+                      <button onClick={()=>setNewTplForm(null)} style={{ padding:"5px 10px",borderRadius:8,border:`1px solid ${t.inputBorder}`,background:"transparent",color:t.muted,fontSize:11,cursor:"pointer" }}>Cancel</button>
                     </div>
                   </div>
-                ))}
+                )}
+
+                {userTemplates.map(tpl=>{
+                  const tplColor = CATS[tpl.cat]?.color || VOLT;
+                  const tplIcon  = CATS[tpl.cat]?.icon;
+                  return (
+                    <div key={tpl.id} style={{ display:"flex",alignItems:"center",gap:8,padding:"9px 10px",borderRadius:12,border:`1px solid ${t.inputBorder}`,background:t.input,cursor:"grab",userSelect:"none",position:"relative" }}
+                      draggable onDragStart={e=>onRailDragStart(e,tpl,"template")} onDragEnd={()=>{setRailDrag(null);setDropTarget(null);}}
+                      onMouseEnter={e=>{ e.currentTarget.style.border=`1px solid ${tplColor}44`; e.currentTarget.style.background=`rgba(${hexRgb(tplColor)},0.06)`; e.currentTarget.querySelector(".del-tpl").style.opacity="1"; }}
+                      onMouseLeave={e=>{ e.currentTarget.style.border=`1px solid ${t.inputBorder}`; e.currentTarget.style.background=t.input; e.currentTarget.querySelector(".del-tpl").style.opacity="0"; }}
+                    >
+                      <div style={{ width:26,height:26,borderRadius:7,background:`rgba(${hexRgb(tplColor)},0.15)`,display:"flex",alignItems:"center",justifyContent:"center",color:tplColor,flexShrink:0 }}>{tplIcon}</div>
+                      <div style={{ flex:1,minWidth:0 }}>
+                        <div style={{ fontSize:12,fontWeight:600,color:t.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{tpl.name}</div>
+                        <div style={{ fontSize:10,color:t.muted }}>{fmtDur(tpl.dur/60)} · {tpl.cat}</div>
+                      </div>
+                      <button className="del-tpl" onClick={e=>{ e.stopPropagation(); deleteTemplate(tpl.id); }}
+                        style={{ opacity:0,transition:"opacity 0.15s",width:20,height:20,borderRadius:5,border:"none",background:"rgba(255,59,48,0.12)",color:"#FF453A",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0 }}>
+                        <X size={9}/>
+                      </button>
+                    </div>
+                  );
+                })}
+
+                {userTemplates.length===0 && <p style={{ fontSize:12,color:t.muted,fontStyle:"italic",textAlign:"center",marginTop:16 }}>No templates yet</p>}
               </div>
             )}
+
+            {/* ── TASKS TAB ── */}
             {railTab==="tasks" && (
               <div style={{ display:"flex",flexDirection:"column",gap:6 }}>
                 <p style={{ fontSize:10,fontWeight:600,color:t.muted,letterSpacing:0.5,textTransform:"uppercase",marginBottom:4 }}>Drag to timebox</p>
@@ -890,23 +1019,63 @@ export default function CalendarView({ t, dark, mobile, compact }) {
                     </div>
                   );
                 })}
-                {INBOX_TASKS.filter(tk=>!scheduled.has(tk.id)).length===0&&<p style={{fontSize:12,color:t.muted,fontStyle:"italic",textAlign:"center",marginTop:20}}>All tasks scheduled</p>}
+                {INBOX_TASKS.filter(tk=>!scheduled.has(tk.id)).length===0 && <p style={{ fontSize:12,color:t.muted,fontStyle:"italic",textAlign:"center",marginTop:20 }}>All tasks scheduled</p>}
               </div>
             )}
-          </div>
 
-          {/* Google Calendar connect */}
-          <div style={{ padding:"12px 10px", borderTop:`1px solid ${t.divider}`, flexShrink:0 }}>
-            {gConnected ? (
-              <button onClick={syncGoogle} style={{ width:"100%",display:"flex",alignItems:"center",justifyContent:"center",gap:7,padding:"9px",borderRadius:12,border:`1px solid ${t.inputBorder}`,background:t.input,color:t.sub,fontSize:12,fontWeight:600,cursor:"pointer" }}>
-                <CheckCircle size={13} style={{ color:"#34C759" }}/> Google synced
-                <RefreshCw size={11} style={{ marginLeft:2 }}/>
-              </button>
-            ) : (
-              <button onClick={connectGoogle} disabled={gConnecting} style={{ width:"100%",display:"flex",alignItems:"center",justifyContent:"center",gap:7,padding:"9px",borderRadius:12,border:`1px solid rgba(66,133,244,0.3)`,background:"rgba(66,133,244,0.06)",color:gConnecting?"#8E8E93":"#4285F4",fontSize:12,fontWeight:600,cursor:gConnecting?"wait":"pointer" }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-                {gConnecting ? "Connecting..." : "Connect Google Calendar"}
-              </button>
+            {/* ── CALENDARS TAB ── */}
+            {railTab==="calendars" && (
+              <div style={{ display:"flex",flexDirection:"column",gap:10 }}>
+                <p style={{ fontSize:10,fontWeight:600,color:t.muted,letterSpacing:0.5,textTransform:"uppercase",marginBottom:2 }}>Connected Calendars</p>
+
+                {/* NOMAAD */}
+                <div style={{ display:"flex",alignItems:"center",gap:10,padding:"10px 12px",borderRadius:12,border:`1px solid ${t.inputBorder}`,background:t.input }}>
+                  <div style={{ width:11,height:11,borderRadius:3,background:VOLT,flexShrink:0 }}/>
+                  <div style={{ flex:1,minWidth:0 }}>
+                    <div style={{ fontSize:12,fontWeight:600,color:t.text }}>NOMAAD</div>
+                    <div style={{ fontSize:10,color:"#34C759" }}>Active</div>
+                  </div>
+                  <CheckCircle size={13} style={{ color:"#34C759",flexShrink:0 }}/>
+                </div>
+
+                {/* Google Calendar */}
+                <div style={{ padding:"10px 12px",borderRadius:12,border:`1px solid ${gConnected?"rgba(66,133,244,0.3)":t.inputBorder}`,background:gConnected?"rgba(66,133,244,0.05)":t.input }}>
+                  <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:gConnected?10:0 }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                    <div style={{ flex:1,minWidth:0 }}>
+                      <div style={{ fontSize:12,fontWeight:600,color:t.text }}>Google Calendar</div>
+                      <div style={{ fontSize:10,color:gConnected?"#34C759":t.muted }}>{gConnected?"Connected":"Not connected"}</div>
+                    </div>
+                    {gConnected && <CheckCircle size={13} style={{ color:"#34C759",flexShrink:0 }}/>}
+                  </div>
+                  {gConnected ? (
+                    <div style={{ display:"flex",gap:6 }}>
+                      <button onClick={syncGoogle} style={{ flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:5,padding:"6px",borderRadius:8,border:`1px solid rgba(66,133,244,0.3)`,background:"transparent",color:"#4285F4",fontSize:11,fontWeight:600,cursor:"pointer" }}>
+                        <RefreshCw size={10}/> Sync now
+                      </button>
+                      <button onClick={()=>{ localStorage.removeItem("gCalToken"); setGConnected(false); setBlocks(prev=>prev.filter(b=>b.source!=="google")); }}
+                        style={{ padding:"6px 10px",borderRadius:8,border:"1px solid rgba(255,59,48,0.15)",background:"transparent",color:"#FF453A",fontSize:11,fontWeight:600,cursor:"pointer" }}>
+                        Disconnect
+                      </button>
+                    </div>
+                  ) : (
+                    <button onClick={connectGoogle} disabled={gConnecting}
+                      style={{ width:"100%",padding:"7px",borderRadius:8,border:"none",background:"#4285F4",color:"#fff",fontSize:12,fontWeight:600,cursor:gConnecting?"wait":"pointer",marginTop:0 }}>
+                      {gConnecting?"Connecting...":"Connect"}
+                    </button>
+                  )}
+                </div>
+
+                {/* Divider */}
+                <div style={{ height:1,background:t.divider,margin:"2px 0" }}/>
+                <p style={{ fontSize:10,fontWeight:600,color:t.muted,letterSpacing:0.5,textTransform:"uppercase" }}>Coming Soon</p>
+                {["iCloud Calendar","Outlook"].map(name=>(
+                  <div key={name} style={{ display:"flex",alignItems:"center",gap:10,padding:"9px 12px",borderRadius:12,border:`1px solid ${t.inputBorder}`,background:t.input,opacity:0.5 }}>
+                    <div style={{ width:11,height:11,borderRadius:3,background:t.muted,flexShrink:0 }}/>
+                    <div style={{ fontSize:12,fontWeight:600,color:t.text }}>{name}</div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </div>
@@ -1053,14 +1222,9 @@ export default function CalendarView({ t, dark, mobile, compact }) {
         )}
       </AnimatePresence>
 
-      {/* ── Event panel (Notion-style) ── */}
+      {/* ── Event panel ── */}
       <AnimatePresence>
-        {eventPanel && (
-          <>
-            <motion.div initial={{opacity:0}} animate={{opacity:0}} exit={{opacity:0}} onClick={()=>setEventPanel(null)} style={{ position:"fixed",inset:0,zIndex:290 }}/>
-            {renderEventPanel()}
-          </>
-        )}
+        {eventPanel && renderEventPanel()}
       </AnimatePresence>
     </div>
   );
