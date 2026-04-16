@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "./contexts/AuthContext";
 import AuthPage from "./components/AuthPage";
+import OnboardingView from "./components/OnboardingView";
 import AreaChartDemo from "./components/ui/demo";
 import CRMView from "./components/ui/crm-view";
 import MessagesView from "./components/ui/messages-view";
@@ -522,6 +523,9 @@ export default function Dashboard(){
 
   // Show auth page if not logged in
   if (!user) return <AuthPage />;
+
+  // Show onboarding for new users who haven't completed it
+  if (profile !== null && !profile?.onboarding_complete) return <OnboardingView />;
 
   const userName = profile?.full_name || user?.user_metadata?.full_name || '';
   const userEmail = user?.email || '';
