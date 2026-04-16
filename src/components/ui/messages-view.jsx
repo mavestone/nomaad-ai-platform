@@ -374,9 +374,14 @@ export default function MessagesView({ t, dark, mobile, compact }) {
       time:      new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     }));
 
-    setThreads(prev => prev.map(th =>
-      th.id === thread.id ? { ...th, messages: formatted, _loaded: true, unread: false } : th
-    ));
+    setThreads(prev => {
+      const updated = prev.map(th =>
+        th.id === thread.id ? { ...th, messages: formatted, _loaded: true, unread: false } : th
+      );
+      // Persist loaded messages to cache so they survive page refresh
+      writeCache(updated.filter(t => String(t.id).startsWith('wa-')));
+      return updated;
+    });
   };
 
   const ease = "all 0.2s cubic-bezier(.4,0,.2,1)";
