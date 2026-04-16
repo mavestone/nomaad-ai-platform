@@ -12,6 +12,7 @@ import DeliverablesView from "./components/ui/deliverables-view";
 import ClientPortalView from "./components/ui/client-portal-view";
 import AutomationsView from "./components/ui/automations-view";
 import FinancialsView from "./components/ui/financials-view";
+import SettingsView from "./components/ui/settings-view";
 import { supabase } from './lib/supabase';
 
 const salesData = [
@@ -626,6 +627,7 @@ export default function Dashboard(){
         
         {navSec === 1 && nav === 0 && <DocsView t={t} dark={dark} mobile={mobile} compact={compact} />}
         {navSec === 1 && nav === 1 && <MessagesView t={t} dark={dark} mobile={mobile} compact={compact} mode={mode} IC={IC} />}
+        {navSec === 1 && nav === 2 && <SettingsView t={t} dark={dark} mobile={mobile} compact={compact} />}
       </main>
 
       {showPortal && <ClientPortalView onClose={() => setShowPortal(false)} dark={dark} />}
