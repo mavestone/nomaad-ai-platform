@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Sparkles, Users, Filter, Briefcase, Plus, Search, ChevronRight, Copy, Send, Mail, X, Check, MapPin, Building, Target } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import NomaadConnect from './nomaad-connect';
 
 const INDUSTRIES = ['All', 'Ad agencies', 'Consumer brands', 'Media & production', 'PR firms'];
 const ROLES = ['All Roles', 'Creative Directors', 'Marketing Directors', 'Brand Managers', 'Agency Producers'];
@@ -16,6 +17,7 @@ const MOCK_LEADS = [
 ];
 
 export default function ProspectingView({ t, dark, mobile }) {
+  const [tab, setTab] = useState('prospects');
   const [ind, setInd] = useState('All');
   const [role, setRole] = useState('All Roles');
   const [query, setQuery] = useState('');
@@ -24,7 +26,7 @@ export default function ProspectingView({ t, dark, mobile }) {
   const [pitch, setPitch] = useState('');
   const [pushing, setPushing] = useState(false);
   const { user } = useAuth();
-  
+
   const ease = "all 0.45s cubic-bezier(.4,0,.2,1)";
 
   const filtered = MOCK_LEADS.filter(l => {
@@ -62,11 +64,29 @@ export default function ProspectingView({ t, dark, mobile }) {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: mobile ? 'column' : 'row', height: '100%', gap: 16 }}>
-      
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 16 }}>
+
+      {/* Top tab bar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: t.card, border: `1px solid ${t.cardBorder}`, borderRadius: 16, padding: '6px 8px', boxShadow: t.cardShadow, backdropFilter: 'blur(24px) saturate(1.6)', alignSelf: 'flex-start' }}>
+        {[{ id: 'prospects', label: 'Prospects' }, { id: 'connect', label: 'Connect' }].map(({ id, label }) => (
+          <button key={id} onClick={() => setTab(id)} style={{ padding: '7px 18px', borderRadius: 12, border: 'none', background: tab === id ? (dark ? 'rgba(204,253,1,0.12)' : '#f4fce3') : 'transparent', color: tab === id ? (dark ? '#CCFD01' : '#3a6000') : t.sub, fontSize: 13, fontWeight: tab === id ? 700 : 500, cursor: 'pointer', transition: ease, outline: 'none', boxShadow: tab === id ? (dark ? '0 0 0 1px rgba(204,253,1,0.3)' : '0 0 0 1px rgba(0,0,0,0.08)') : 'none' }}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'connect' && (
+        <div style={{ flex: 1, minHeight: 0 }}>
+          <NomaadConnect t={t} dark={dark} mobile={mobile} />
+        </div>
+      )}
+
+      {tab === 'prospects' && (
+      <div style={{ display: 'flex', flexDirection: mobile ? 'column' : 'row', flex: 1, minHeight: 0, gap: 16 }}>
+
       {/* Left: Lead Database */}
       <div style={{ flex: activeLead && !mobile ? '1.5' : 1, display: 'flex', flexDirection: 'column', gap: 16, transition: ease }}>
-        
+
         {/* Header & Filters */}
         <div style={{ background: t.card, border: `1px solid ${t.cardBorder}`, borderRadius: 20, padding: 20, boxShadow: t.cardShadow, backdropFilter: 'blur(24px) saturate(1.6)', display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -74,7 +94,7 @@ export default function ProspectingView({ t, dark, mobile }) {
               <h1 style={{ fontSize: 24, fontWeight: 700, letterSpacing: -0.5 }}>Prospecting</h1>
               <div style={{ fontSize: 13, color: t.sub, marginTop: 4 }}>B2B Creative Intent Database</div>
             </div>
-            
+
             <div style={{ position: 'relative', width: 240 }}>
               <Search size={14} style={{ position: 'absolute', left: 12, top: 11, color: t.sub }} />
               <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search companies or people..." style={{ width: '100%', padding: '9px 12px 9px 34px', borderRadius: 12, border: `1px solid ${t.inputBorder}`, background: t.input, color: t.text, fontSize: 13, outline: 'none' }} />
@@ -221,6 +241,8 @@ export default function ProspectingView({ t, dark, mobile }) {
         @keyframes fadeIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
       `}</style>
+      </div>
+      )}
     </div>
   );
 }
