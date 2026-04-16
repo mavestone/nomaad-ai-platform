@@ -102,7 +102,7 @@ export default function CalendarView({ t, dark, mobile, compact }) {
   const [view, setViewRaw]               = useState(() => lsGet("cal_view","week"));
   const [currentDate, setCurrentDateRaw] = useState(() => { const s=lsGet("cal_date",null); return s ? new Date(s) : new Date(); });
   const [railOpen, setRailOpenRaw]       = useState(() => lsGet("cal_rail", !mobile));
-  const [railTab, setRailTabRaw]         = useState(() => lsGet("cal_railtab","templates"));
+  const [railTab, setRailTabRaw]         = useState(() => lsGet("cal_railtab","calendars"));
 
   const setView        = (v) => { lsSet("cal_view",v);              setViewRaw(v); };
   const setCurrentDate = (d) => { lsSet("cal_date",d.toISOString()); setCurrentDateRaw(d); };
@@ -922,14 +922,14 @@ export default function CalendarView({ t, dark, mobile, compact }) {
     <motion.div
       initial={{ width:0, opacity:0 }} animate={{ width:mobile?"100%":260, opacity:1 }} exit={{ width:0, opacity:0 }}
       transition={{ type:"spring", stiffness:350, damping:32 }}
-      style={{ overflow:"hidden", flexShrink:0, paddingLeft:12 }}
+      style={{ overflow:"hidden", flexShrink:0, paddingLeft:12, minHeight:0 }}
     >
-      <div style={{ width:mobile?"100%":260, height:"100%", display:"flex", flexDirection:"column" }}>
-        <div style={{ ...card({padding:0}), flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
+      <div style={{ width:mobile?"100%":260, height:"100%", display:"flex", flexDirection:"column", minHeight:0 }}>
+        <div style={{ ...card({padding:0}), flex:1, display:"flex", flexDirection:"column", overflow:"hidden", minHeight:0 }}>
 
           {/* Tabs */}
           <div style={{ display:"flex", borderBottom:`1px solid ${t.divider}`, padding:"8px 8px 0", gap:4, flexShrink:0 }}>
-            {["templates","tasks","calendars"].map(tab=>(
+            {["calendars","tasks","templates"].map(tab=>(
               <button key={tab} onClick={()=>setRailTab(tab)} style={{ flex:1,padding:"7px 0",borderRadius:"10px 10px 0 0",border:"none",fontSize:11,fontWeight:600,cursor:"pointer",transition:ease,background:railTab===tab?(dark?"rgba(255,255,255,0.06)":"rgba(0,0,0,0.04)"):"transparent",color:railTab===tab?t.text:t.muted,borderBottom:railTab===tab?`2px solid ${t.accent}`:"2px solid transparent" }}>
                 {tab.charAt(0).toUpperCase()+tab.slice(1)}
               </button>
