@@ -1086,8 +1086,12 @@ export default function CalendarView({ t, dark, mobile, compact }) {
   // ─── Header label ─────────────────────────────────────────────────────────
   const headerLabel = () => {
     if (view==="month") return format(currentDate,"MMMM yyyy");
-    if (view==="day")   return format(currentDate,"EEEE, dd/MM/yyyy");
-    return `${format(weekStart,"dd MMM")} - ${format(addDays(weekStart,6),"dd MMM yyyy")}`;
+    if (view==="day")   return format(currentDate,"d MMMM yyyy");
+    // week: show month + year (or range if spans two months)
+    const wEnd = addDays(weekStart,6);
+    if (format(weekStart,"MMM yyyy")===format(wEnd,"MMM yyyy")) return format(weekStart,"MMMM yyyy");
+    if (format(weekStart,"yyyy")===format(wEnd,"yyyy")) return `${format(weekStart,"MMM")} – ${format(wEnd,"MMM yyyy")}`;
+    return `${format(weekStart,"MMM yyyy")} – ${format(wEnd,"MMM yyyy")}`;
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -1097,40 +1101,43 @@ export default function CalendarView({ t, dark, mobile, compact }) {
     <div style={{ display:"flex", flexDirection:"column", height:"100%", gap:0 }}>
 
       {/* ── Header ── */}
-      <header style={{ display:"flex", justifyContent:"space-between", alignItems:"center", flexShrink:0, gap:8, marginLeft:mobile?48:0, marginBottom:12, flexWrap:"wrap" }}>
-        <div style={{ display:"flex", alignItems:"center", gap:14 }}>
-          <div>
-            <h1 style={{ fontSize:compact?22:26, fontWeight:700, letterSpacing:-0.6, color:t.text }}>Calendar</h1>
-            <p style={{ fontSize:12, color:t.sub, marginTop:1 }}>{headerLabel()}</p>
-          </div>
-          {/* View switcher */}
-          <div style={{ display:"flex", background:t.input, borderRadius:12, border:`1px solid ${t.inputBorder}`, padding:3 }}>
-            {[
-              { id:"week",  label:"Week",  key:"W", icon:<LayoutGrid size={12}/> },
-              { id:"day",   label:"Day",   key:"D", icon:<AlignLeft  size={12}/> },
-              { id:"month", label:"Month", key:"M", icon:<CalIcon    size={12}/> },
-            ].map(v=>(
-              <button key={v.id} onClick={()=>setView(v.id)} title={`${v.label} (${v.key})`} style={{ display:"flex",alignItems:"center",gap:5,padding:"5px 11px",borderRadius:9,fontSize:12,fontWeight:view===v.id?600:500,color:view===v.id?t.accentText:t.sub,background:view===v.id?t.accentGrad:"transparent",boxShadow:view===v.id?t.accentGlow:"none",border:"none",cursor:"pointer",transition:ease }}>
-                {v.icon}{!mobile&&v.label}
-              </button>
-            ))}
-          </div>
-        </div>
+      <header style={{ display:"flex", justifyContent:"space-between", alignItems:"center", flexShrink:0, marginLeft:mobile?48:0, marginBottom:12 }}>
+        {/* Left: date title */}
+        <h1 style={{ fontSize:compact?22:28, fontWeight:700, letterSpacing:-0.7, color:t.text, margin:0 }}>{headerLabel()}</h1>
 
-        <div style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
-          {/* Nav */}
-          <div style={{ display:"flex", background:t.card, border:`1px solid ${t.cardBorder}`, borderRadius:12, padding:3, boxShadow:t.cardShadow }}>
-            <button onClick={()=>navigate(-1)} style={{ background:"transparent",border:"none",color:t.sub,padding:"4px 8px",cursor:"pointer",borderRadius:8,display:"flex",alignItems:"center" }}><ChevronLeft size={14}/></button>
-            <button onClick={goToday} style={{ background:"transparent",border:"none",padding:"4px 10px",cursor:"pointer",borderRadius:8,fontSize:12,fontWeight:600,color:t.text }}>Today</button>
-            <button onClick={()=>navigate(1)} style={{ background:"transparent",border:"none",color:t.sub,padding:"4px 8px",cursor:"pointer",borderRadius:8,display:"flex",alignItems:"center" }}><ChevronRight size={14}/></button>
+        {/* Right: controls */}
+        <div style={{ display:"flex", alignItems:"center", gap:6, flexShrink:0 }}>
+          {/* View dropdown pill */}
+          <div style={{ position:"relative" }}>
+            <select
+              value={view}
+              onChange={e=>setView(e.target.value)}
+              style={{ appearance:"none",WebkitAppearance:"none",background:t.input,border:`1px solid ${t.inputBorder}`,borderRadius:10,padding:"6px 28px 6px 12px",color:t.text,fontSize:13,fontWeight:600,cursor:"pointer",outline:"none",fontFamily:"inherit" }}
+            >
+              <option value="month">Month</option>
+              <option value="week">Week</option>
+              <option value="day">Day</option>
+            </select>
+            <ChevronDown size={12} style={{ position:"absolute",right:9,top:"50%",transform:"translateY(-50%)",color:t.muted,pointerEvents:"none" }}/>
           </div>
-          {/* New */}
-          <button onClick={()=>setQuickOpen(true)} style={{ height:34,padding:"0 14px",borderRadius:18,border:"none",background:t.accentGrad,color:t.accentText,fontSize:12,fontWeight:600,display:"flex",alignItems:"center",gap:5,cursor:"pointer",boxShadow:t.accentGlow }}>
-            <Plus size={14}/> {!mobile&&"New"}
+
+          {/* Today */}
+          <button onClick={goToday} style={{ height:32,padding:"0 13px",borderRadius:10,border:`1px solid ${t.inputBorder}`,background:t.input,color:t.text,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit" }}>Today</button>
+
+          {/* Prev / Next */}
+          <div style={{ display:"flex", gap:2 }}>
+            <button onClick={()=>navigate(-1)} style={{ width:28,height:32,borderRadius:8,border:`1px solid ${t.inputBorder}`,background:t.input,color:t.sub,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer" }}><ChevronLeft size={14}/></button>
+            <button onClick={()=>navigate(1)}  style={{ width:28,height:32,borderRadius:8,border:`1px solid ${t.inputBorder}`,background:t.input,color:t.sub,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer" }}><ChevronRight size={14}/></button>
+          </div>
+
+          {/* New event */}
+          <button onClick={()=>setQuickOpen(true)} style={{ height:32,padding:"0 13px",borderRadius:10,border:"none",background:t.accentGrad,color:t.accentText,fontSize:13,fontWeight:600,display:"flex",alignItems:"center",gap:5,cursor:"pointer",boxShadow:t.accentGlow }}>
+            <Plus size={13}/>{!mobile&&" New"}
           </button>
+
           {/* Rail toggle */}
-          <button onClick={()=>setRailOpen(v=>!v)} title="Toggle panel (P)" style={{ width:34,height:34,borderRadius:10,border:`1px solid ${railOpen?t.accent:t.cardBorder}`,background:railOpen?`rgba(${hexRgb(VOLT)},0.1)`:t.card,color:railOpen?t.accent:t.sub,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",transition:ease }}>
-            <PanelRight size={15}/>
+          <button onClick={()=>setRailOpen(v=>!v)} title="Toggle panel" style={{ width:32,height:32,borderRadius:9,border:`1px solid ${railOpen?t.accent:t.inputBorder}`,background:railOpen?`rgba(${hexRgb(VOLT)},0.1)`:t.input,color:railOpen?t.accent:t.sub,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",transition:ease }}>
+            <PanelRight size={14}/>
           </button>
         </div>
       </header>
