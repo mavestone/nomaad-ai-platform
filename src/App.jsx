@@ -3,6 +3,7 @@ import { useAuth } from "./contexts/AuthContext";
 import AuthPage from "./components/AuthPage";
 import OnboardingView from "./components/OnboardingView";
 import UserProfileView from "./components/UserProfileView";
+import AIFloater from "./components/AIFloater";
 import AreaChartDemo from "./components/ui/demo";
 import CRMView from "./components/ui/crm-view";
 import MessagesView from "./components/ui/messages-view";
@@ -659,6 +660,19 @@ export default function Dashboard(){
 
       {showPortal && <ClientPortalView onClose={() => setShowPortal(false)} dark={dark} />}
       {showProfile && <UserProfileView t={t} dark={dark} onClose={()=>setShowProfile(false)} user={user} profile={profile} updateProfile={updateProfile} signOut={signOut} />}
+
+      {/* ═══ AI FLOATER (⌘J) ═══ */}
+      <AIFloater
+        t={t}
+        dark={dark}
+        mobile={mobile}
+        context={{
+          view: (() => {
+            if (navSec === 0) return ["Today","Prospecting","Clients","Projects","Calendar","Automations","Money"][nav];
+            return ["Docs","Inbox","Settings"][nav];
+          })(),
+        }}
+      />
 
       <style>{`
         @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}

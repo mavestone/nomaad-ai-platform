@@ -197,5 +197,40 @@ npm run dev
 | 2026-04-16 | Claude (Sonnet 4.6) | Auth timeout fix, Calendar P0 rebuild + fixes, Google OAuth |
 | 2026-04-16 | Antigravity | Session handoff, context review |
 | 2026-04-16 | Claude (Sonnet 4.6) | Google OAuth fix (Web app type, test user); Calendar: floating event popup (near-click, not slide-in), Google Meet join button, Calendars rail tab (connect/disconnect/sync), user-creatable + deletable templates (localStorage), month view equal cell heights, grid scrollbar alignment fix |
+| 2026-04-17 | Claude (Sonnet 4.6) | Messages: ripped out localStorage cache, made send optimistic (`opt-` IDs), fixed "disappears on refresh" by driving data load off `INITIAL_SESSION` in `onAuthStateChange` (not `getSession()`). Built OnboardingView (5-step post-signup). Built UserProfileView (Linktree-style portfolio with edit mode, portfolio projects, availability, social links, shareable `/p/:username`). Moved profile button to sidebar bottom. Added `supabase/onboarding-migration.sql` (new profile columns: onboarding_complete, business_type, business_name, use_cases, bio, location, availability, portfolio_projects, social_links, username) — user must run in SQL Editor. Delivered 4-week MVP build plan: Tier 1 = finish Projects (wire tasks table, creative stages, client FK) + live Dashboard; Tier 2 = unified Tasks view, invoice↔project link, shareable portfolio public route; cut Automations/Prospecting/Client Portal/Content Planner from MVP. Positioning: "all-in-one OS for solo creatives — replace Notion + spreadsheets + Notes." |
 
 > **UPDATE THIS TABLE at the end of every session with what was accomplished.**
+
+---
+
+## Current MVP Priorities (as of 2026-04-17)
+
+**Target:** Ship MVP within 1 month. Test: "Can a solo filmmaker run 3 paid jobs end-to-end without Notion/Sheets/Notes?"
+
+**Week 1 — Data spine**
+- Wire `tasks` table in projects-view (currently unused)
+- Migrate project stages to: Briefing → Production → Review → Delivered → Invoiced
+- Add FKs: `projects.client_id`, `invoices.client_id`, `tasks.project_id`
+- Persist CRM notes + tags to Supabase
+- Hide nav: Automations, Prospecting, Client Portal, Deliverables
+
+**Week 2 — Live Dashboard**
+- Replace hardcoded `BusinessOverview` in App.jsx with real queries
+- KPIs: unpaid invoices $, month income, active projects, overdue tasks
+- Today widget, Attention widget, Recent activity
+
+**Week 3 — Tasks + polish**
+- New unified Tasks view (all tasks, filter by project/client/due)
+- Invoice prompt when project → Invoiced stage
+- Wire Financials summary sums (currently hardcoded)
+- Public route `/p/:username` for portfolio
+
+**Week 4 — Ship**
+- Mark-paid → creates transaction
+- Mobile polish (Dashboard/Projects/CRM/Invoices)
+- Empty states everywhere
+- ⌘K search (customers + projects + invoices)
+- Landing + Stripe checkout, £19/mo single plan
+- Soft launch to 10 solo filmmakers
+
+**Explicitly cut from MVP:** automations, email sequences, content planner, AI features, scheduling links, prospecting rebuild, settings page, realtime messaging upgrade, Stripe auto-reconciliation, mobile app.
