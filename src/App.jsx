@@ -301,13 +301,16 @@ function BusinessOverview({ t, dark, mobile, compact, mode, w, userName, userEma
       const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
       const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29); thirtyDaysAgo.setHours(0,0,0,0);
 
+      // Each query resolves independently — one failure never blocks the dashboard
+      const safe = (p) => p.catch(() => ({ data: null, count: 0 }));
+
       const [clientsR, projectsR, invoicesR, eventsR, tasksR, txsR] = await Promise.all([
-        supabase.from('clients').select('id', { count: 'exact', head: true }),
-        supabase.from('projects').select('id,status'),
-        supabase.from('invoices').select('id,amount,status,paid_at,issued_at,client_id,number'),
-        supabase.from('calendar_events').select('id,title,start_time,type').gte('start_time', todayStart.toISOString()).order('start_time', { ascending: true }).limit(5),
-        supabase.from('tasks').select('id,title,due_date,completed_at').is('completed_at', null).order('due_date', { ascending: true, nullsLast: true }).limit(5),
-        supabase.from('transactions').select('amount,type,date').gte('date', thirtyDaysAgo.toISOString()),
+        safe(supabase.from('clients').select('id', { count: 'exact', head: true })),
+        safe(supabase.from('projects').select('id,status')),
+        safe(supabase.from('invoices').select('id,amount,status,paid_at,issued_at,client_id,number')),
+        safe(supabase.from('calendar_events').select('id,title,start_time,type').gte('start_time', todayStart.toISOString()).order('start_time', { ascending: true }).limit(5)),
+        safe(supabase.from('tasks').select('id,title,due_date,completed_at').is('completed_at', null).order('due_date', { ascending: true, nullsLast: true }).limit(5)),
+        safe(supabase.from('transactions').select('amount,type,date').gte('date', thirtyDaysAgo.toISOString())),
       ]);
 
       if (!mounted) return;
@@ -333,7 +336,7 @@ function BusinessOverview({ t, dark, mobile, compact, mode, w, userName, userEma
       setTasks(tasksR.data || []);
       setInvoices(invs.slice(0,4));
 
-      // Build 30-day chart scaffold from transactions
+      // Build 30-day chart — always renders, just zeros if no transactions
       const buckets = {};
       for (let i = 29; i >= 0; i--) {
         const d = new Date(); d.setDate(d.getDate() - i); d.setHours(0,0,0,0);
@@ -350,7 +353,8 @@ function BusinessOverview({ t, dark, mobile, compact, mode, w, userName, userEma
 
       setLoading(false);
     }
-    load();
+    // Always clear loading even if something throws unexpectedly
+    load().catch(() => { if (mounted) setLoading(false); });
     return () => { mounted = false; };
   }, []);
 
@@ -409,11 +413,7 @@ function BusinessOverview({ t, dark, mobile, compact, mode, w, userName, userEma
           </div>
           <div style={{fontSize:11,color:t.muted}}>Last 30 days</div>
         </div>
-        {loading ? (
-          <div style={{display:"flex",flexDirection:"column",gap:8,padding:"8px 0"}}>
-            <Skeleton w="100%" h={160} radius={12} />
-          </div>
-        ) : <AreaChartDemo data={chartData} currencySymbol={currency.symbol} />}
+        <AreaChartDemo data={chartData} currencySymbol={currency.symbol} />
       </div>
 
       {/* Today + Upcoming */}
