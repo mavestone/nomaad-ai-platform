@@ -603,58 +603,61 @@ export default function UserProfileView({ t, dark, onClose, user, profile, updat
 
   return (
     <>
-      {/* ── Backdrop ── */}
+      {/* ── Inline page (no longer a floating modal) ── */}
       <div
-        ref={overlayRef}
-        onClick={handleOverlayClick}
         style={{
-          position: "fixed", inset: 0, zIndex: 9000,
-          background: "rgba(0,0,0,0.82)",
-          backdropFilter: "blur(20px) saturate(1.4)",
+          width: "100%",
+          height: "100%",
           overflowY: "auto",
-          animation: "profileOverlayIn 0.3s cubic-bezier(.4,0,.2,1)",
+          background: dark ? "rgba(8,8,10,0.4)" : "rgba(242,239,233,0.5)",
+          borderRadius: 20,
           fontFamily: "-apple-system,'SF Pro Display',system-ui,sans-serif",
           WebkitFontSmoothing: "antialiased",
+          color: dark ? "#f0f0f5" : "#1a1a1f",
         }}
       >
-        {/* Top-right buttons: Sign Out + Close */}
-        <div style={{ position: "fixed", top: 20, right: 20, zIndex: 9100, display: "flex", gap: 8 }}>
+        {/* Top bar: Back + Sign Out */}
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "14px 18px 0", gap: 8,
+        }}>
+          <button
+            onClick={onClose}
+            style={{
+              height: 38, padding: "0 14px", borderRadius: 19,
+              background: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+              border: `1px solid ${dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"}`,
+              display: "flex", alignItems: "center", gap: 6,
+              color: dark ? "rgba(255,255,255,0.75)" : "#1a1a1f",
+              cursor: "pointer", fontSize: 13, fontWeight: 500,
+              fontFamily: "inherit", transition: "all 0.2s ease",
+            }}
+            aria-label="Back"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Back
+          </button>
           {signOut && (
             <button
               onClick={() => { signOut(); onClose(); }}
               style={{
-                height: 40, padding: "0 16px", borderRadius: 20,
-                background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)",
-                backdropFilter: "blur(20px)",
+                height: 38, padding: "0 16px", borderRadius: 19,
+                background: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+                border: `1px solid ${dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"}`,
                 display: "flex", alignItems: "center", gap: 7,
-                color: "rgba(255,255,255,0.55)", cursor: "pointer", fontSize: 13, fontWeight: 500,
+                color: dark ? "rgba(255,255,255,0.55)" : "#6b7280",
+                cursor: "pointer", fontSize: 13, fontWeight: 500,
                 transition: "all 0.2s ease", fontFamily: "inherit",
               }}
-              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,98,89,0.15)"; e.currentTarget.style.color = "#FF6259"; e.currentTarget.style.borderColor = "rgba(255,98,89,0.3)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "rgba(255,255,255,0.55)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; }}
+              onMouseEnter={e => { e.currentTarget.style.color = "#FF6259"; e.currentTarget.style.borderColor = "rgba(255,98,89,0.3)"; }}
+              onMouseLeave={e => { e.currentTarget.style.color = dark ? "rgba(255,255,255,0.55)" : "#6b7280"; e.currentTarget.style.borderColor = dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"; }}
             >
               <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
               Sign Out
             </button>
           )}
-          <button
-            onClick={onClose}
-            style={{
-              width: 40, height: 40, borderRadius: "50%",
-              background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)",
-              backdropFilter: "blur(20px)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: "rgba(255,255,255,0.7)", cursor: "pointer",
-              transition: "all 0.2s ease",
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.14)"; e.currentTarget.style.color = "#fff"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
-            aria-label="Close profile"
-          >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <path d="M1.5 1.5L10.5 10.5M10.5 1.5L1.5 10.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-            </svg>
-          </button>
         </div>
 
         {/* Content container */}

@@ -18,40 +18,7 @@ import FinancialsView from "./components/ui/financials-view";
 import SettingsView from "./components/ui/settings-view";
 import { supabase } from './lib/supabase';
 
-const salesData = [
-  { month:"Jan",profit:3200,expense:1800 },{ month:"Feb",profit:4100,expense:2200 },
-  { month:"Mar",profit:5800,expense:2600 },{ month:"Apr",profit:4600,expense:3100 },
-  { month:"May",profit:7200,expense:2800 },{ month:"Jun",profit:9200,expense:2600 },
-  { month:"Jul",profit:6800,expense:3200 },{ month:"Aug",profit:5400,expense:2400 },
-  { month:"Sep",profit:4200,expense:1900 },{ month:"Oct",profit:3800,expense:2100 },
-  { month:"Nov",profit:5100,expense:2800 },{ month:"Dec",profit:6400,expense:3400 },
-];
-const scheduleItems = [
-  { time:"09:30 AM",date:"Wed, 11 Jan",title:"Business Analytics Press",who:"David McGuaire and 20+ more",done:true },
-  { time:"10:35 AM",date:"Wed, 11 Jan",title:"Business Sprint",who:"Jonas Kahnwald and 5+ more",done:false },
-  { time:"1:15 PM",date:"Wed, 11 Jan",title:"Customer Review Meeting",who:"Natashia Bahroff and 6+ more",done:false },
-  { time:"2:45 AM",date:"Wed, 11 Jan",title:"Daily Office Meeting",who:"Alexa Martha and 32+ more",done:false },
-  { time:"09:30 AM",date:"Thu, 12 Jan",title:"Sales Strategy Meeting",who:"Frederinn Kowalski and 12+ more",done:false },
-];
-const calDays=[8,9,10,11,12,13,14];
-const dayN=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-const mx=Math.max(...salesData.map(d=>d.profit));
 const VOLT="#ccfd01",VOLTD="#b8e300";
-
-const notifications = [
-  { id:1, app:"Calendar", color:VOLT, textColor:"#0a0a0a", title:"Business Analytics Press", body:"Starting in 15 minutes · Conference Room B", time:"2m ago",
-    icon:<svg width="16" height="16" fill="none" viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="11" rx="2" stroke="currentColor" strokeWidth="1.2"/><path d="M2 6.5H14" stroke="currentColor" strokeWidth="1.2"/><path d="M5 1.5V4M11 1.5V4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg> },
-  { id:2, app:"Calendar", color:VOLT, textColor:"#0a0a0a", title:"Business Sprint", body:"Starts at 10:35 AM · Jonas Kahnwald invited you", time:"5m ago",
-    icon:<svg width="16" height="16" fill="none" viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="11" rx="2" stroke="currentColor" strokeWidth="1.2"/><path d="M2 6.5H14" stroke="currentColor" strokeWidth="1.2"/><path d="M5 1.5V4M11 1.5V4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg> },
-  { id:3, app:"Mail", color:"#5AC8FA", textColor:"#fff", title:"New proposal from Acme Corp", body:"Hi Anthony, please review the attached proposal for Q2...", time:"18m ago",
-    icon:<svg width="16" height="16" fill="none" viewBox="0 0 16 16"><rect x="1.5" y="3.5" width="13" height="9" rx="2" stroke="currentColor" strokeWidth="1.2"/><path d="M1.5 5.5L8 9.5L14.5 5.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg> },
-  { id:4, app:"Mail", color:"#5AC8FA", textColor:"#fff", title:"Invoice #4821 paid", body:"Payment of $12,450.00 confirmed by Stripe", time:"1h ago",
-    icon:<svg width="16" height="16" fill="none" viewBox="0 0 16 16"><rect x="1.5" y="3.5" width="13" height="9" rx="2" stroke="currentColor" strokeWidth="1.2"/><path d="M1.5 5.5L8 9.5L14.5 5.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg> },
-  { id:5, app:"Analytics", color:"#FFB340", textColor:"#fff", title:"Weekly report ready", body:"Your business overview for Jan 2–8 is available", time:"2h ago",
-    icon:<svg width="16" height="16" fill="none" viewBox="0 0 16 16"><path d="M2 12L5.5 8L8.5 10.5L14 4.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg> },
-  { id:6, app:"System", color:"#FF6259", textColor:"#fff", title:"Storage almost full", body:"You've used 92% of your cloud storage. Manage files to free up space.", time:"3h ago",
-    icon:<svg width="16" height="16" fill="none" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.2"/><path d="M8 5V8.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/><circle cx="8" cy="11" r="0.6" fill="currentColor"/></svg> },
-];
 
 const pal={
   volt:{base:VOLT,dark:VOLTD,glow:"rgba(204,253,1,0.15)",grad:`linear-gradient(135deg,${VOLT},${VOLTD})`},
@@ -59,12 +26,6 @@ const pal={
   amber:{base:"#FFB340",glow:"rgba(255,179,64,0.15)",grad:"linear-gradient(135deg,#FFB340,#F5A623)"},
   teal:{base:"#5AC8FA",glow:"rgba(90,200,250,0.15)",grad:"linear-gradient(135deg,#5AC8FA,#40B4E5)"},
 };
-const statDefs=[
-  {ic:"cust",label:"Total Customers",val:"21,978",ch:"+15%",up:true,p:pal.volt},
-  {ic:"actCust",label:"Active Customers",val:"10,369",ch:"-9%",up:false,p:pal.teal},
-  {ic:"dollar",label:"Profit Total",val:"$64,981.97",ch:"+7.2%",up:true,p:pal.amber},
-  {ic:"expense",label:"Expense Total",val:"$18,158.21",ch:"-2%",up:false,p:pal.coral},
-];
 const cardGrads={
   light:[
     `linear-gradient(135deg,rgba(204,253,1,0.08) 0%,rgba(255,255,255,0.85) 60%)`,
@@ -169,8 +130,9 @@ function Toggle({dark,flip}){
   );
 }
 
-// ── iOS-Style Notification Panel ──
-function NotifPanel({open,onClose,t,dark}){
+// ── iOS-Style Notification Panel ── (disabled — awaiting real notifications source)
+function NotifPanel_DISABLED({open,onClose,t,dark}){
+  const notifications = [];
   const ref=useRef();
   const[dismissed,setDismissed]=useState([]);
   useEffect(()=>{
@@ -255,7 +217,8 @@ function NotifPanel({open,onClose,t,dark}){
   );
 }
 
-function SalesChart({t,dark,hBar,setHBar,compact}){
+function SalesChart_DISABLED({t,dark,hBar,setHBar,compact}){
+  const salesData = []; const mx = 1;
   const chartH=compact?160:200;const pad={top:10,bottom:28};const innerH=chartH-pad.top-pad.bottom;
   const barW=compact?18:28;const gap=compact?6:12;const totalW=salesData.length*(barW+gap)-gap;const scale=mx*1.1;
   const linePoints=salesData.map((d,i)=>{const x=i*(barW+gap)+barW/2;const y=pad.top+innerH-(d.expense/scale)*innerH;return`${x},${y}`;}).join(" ");
@@ -311,199 +274,174 @@ function DonutRing({pct,color,size=72,strokeW=7,t}){
 }
 
 
-function BusinessOverview({ t, dark, mobile, compact, mode, notifOpen, setNotifOpen, w, userName, userEmail, sidebarOpen }) {
+function BusinessOverview({ t, dark, mobile, compact, mode, w, userName, userEmail, sidebarOpen }) {
   const ease="all 0.45s cubic-bezier(.4,0,.2,1)";
   const card=(ex={})=>({background:t.card,border:`1px solid ${t.cardBorder}`,borderRadius:20,boxShadow:t.cardShadow,transition:ease,backdropFilter:"blur(24px) saturate(1.6)",...ex});
-  
-  const [dbSalesData, setDbSalesData] = useState(salesData);
-  const [dbSchedule, setDbSchedule] = useState(scheduleItems);
-  const [dbStats, setDbStats] = useState(statDefs);
+
+  const [stats, setStats] = useState([
+    {ic:"cust",label:"Clients",val:"—",sub:"active",p:pal.volt},
+    {ic:"actCust",label:"Active Projects",val:"—",sub:"in progress",p:pal.teal},
+    {ic:"dollar",label:"Unpaid Invoices",val:"—",sub:"awaiting payment",p:pal.amber},
+    {ic:"expense",label:"Month Income",val:"—",sub:"received this month",p:pal.coral},
+  ]);
+  const [events, setEvents] = useState([]);
+  const [tasks, setTasks] = useState([]);
+  const [invoices, setInvoices] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadDashboard() {
-      // 1. Load Calendar Events for the next few items
-      const { data: events } = await supabase.from('calendar_events')
-        .select('*')
-        .gte('start_time', new Date().toISOString())
-        .order('start_time', { ascending: true })
-        .limit(5);
+    let mounted = true;
+    async function load() {
+      const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+      const todayEnd = new Date(); todayEnd.setHours(23,59,59,999);
+      const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
 
-      if (events && events.length > 0) {
-        setDbSchedule(events.map(e => {
-          const d = new Date(e.start_time);
-          return {
-            time: d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            date: d.toLocaleDateString([], { weekday: 'short', day: '2-digit', month: 'short' }),
-            title: e.title,
-            who: e.type.charAt(0).toUpperCase() + e.type.slice(1),
-            done: false
-          };
-        }));
-      }
-
-      // 2. Load Stats: Prospects (Total Customers)
-      const { count: prospectCount } = await supabase.from('prospects')
-        .select('*', { count: 'exact', head: true });
-        
-      const { data: projects } = await supabase.from('projects').select('*');
-      const activeProjects = projects ? projects.filter(p => !['done','cancelled'].includes(p.status)).length : 0;
-
-      // 3. Load Financials
-      const { data: txs } = await supabase.from('transactions').select('*');
-      let totalExpense = 0;
-      let totalProfit = 0;
-      if (txs) {
-        txs.forEach(t => {
-          if (t.type === 'expense') totalExpense += t.amount;
-          if (t.type === 'income') totalProfit += t.amount;
-        });
-      }
-
-      setDbStats([
-        {ic:"cust",label:"Total CRM Contacts",val:prospectCount?.toString() || "0",ch:"+0%",up:true,p:pal.volt},
-        {ic:"actCust",label:"Active Projects",val:activeProjects.toString(),ch:"+0%",up:true,p:pal.teal},
-        {ic:"dollar",label:"Profit Total",val:`$${totalProfit.toLocaleString()}`,ch:"+0%",up:true,p:pal.amber},
-        {ic:"expense",label:"Expense Total",val:`$${totalExpense.toLocaleString()}`,ch:"-0%",up:false,p:pal.coral},
+      const [clientsR, projectsR, invoicesR, eventsR, tasksR] = await Promise.all([
+        supabase.from('clients').select('id', { count: 'exact', head: true }),
+        supabase.from('projects').select('id,status'),
+        supabase.from('invoices').select('id,amount,status,paid_at,issued_at,client_id,number'),
+        supabase.from('calendar_events').select('id,title,start_time,type').gte('start_time', todayStart.toISOString()).order('start_time', { ascending: true }).limit(5),
+        supabase.from('tasks').select('id,title,due_date,completed_at').is('completed_at', null).order('due_date', { ascending: true, nullsLast: true }).limit(5),
       ]);
+
+      if (!mounted) return;
+
+      const clientCount = clientsR.count || 0;
+      const projects = projectsR.data || [];
+      const activeProjects = projects.filter(p => !['delivered','invoiced','done','cancelled','archived'].includes(p.status)).length;
+
+      const invs = invoicesR.data || [];
+      const unpaid = invs.filter(i => i.status !== 'paid');
+      const unpaidTotal = unpaid.reduce((s,i) => s + (Number(i.amount)||0), 0);
+      const monthIncome = invs
+        .filter(i => i.paid_at && new Date(i.paid_at) >= monthStart)
+        .reduce((s,i) => s + (Number(i.amount)||0), 0);
+
+      const fmt = (n) => `£${Math.round(n).toLocaleString()}`;
+
+      setStats([
+        {ic:"cust",label:"Clients",val:String(clientCount),sub:"on your roster",p:pal.volt},
+        {ic:"actCust",label:"Active Projects",val:String(activeProjects),sub:"in progress",p:pal.teal},
+        {ic:"dollar",label:"Unpaid Invoices",val:fmt(unpaidTotal),sub:`${unpaid.length} awaiting payment`,p:pal.amber},
+        {ic:"expense",label:"Month Income",val:fmt(monthIncome),sub:"received this month",p:pal.coral},
+      ]);
+      setEvents(eventsR.data || []);
+      setTasks(tasksR.data || []);
+      setInvoices(invs.slice(0,4));
+      setLoading(false);
     }
-    loadDashboard();
+    load();
+    return () => { mounted = false; };
   }, []);
+
+  const fmtEvent = (iso) => {
+    const d = new Date(iso);
+    return {
+      date: d.toLocaleDateString([], { weekday: 'short', day: '2-digit', month: 'short' }),
+      time: d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+  };
 
   return (
     <>
-
-
-        <header style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:mobile?"4px 2px 0":"8px 4px 0",flexShrink:0,gap:8}}>
-          <div style={{minWidth:0,flex:1,marginLeft:mobile&&!sidebarOpen?48:0}}>
-            <h1 style={{fontSize:mobile?22:28,fontWeight:700,letterSpacing:-0.6}}>Hello, {(typeof userName === 'string' && userName) || 'there'}!</h1>
-            <p style={{fontSize:mobile?12:14,color:t.sub,marginTop:3,fontWeight:400}}>Here's your overview of your business!</p>
-          </div>
+      <header style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:mobile?"4px 2px 0":"8px 4px 0",flexShrink:0,gap:8}}>
+        <div style={{minWidth:0,flex:1,marginLeft:mobile&&!sidebarOpen?48:0}}>
+          <h1 style={{fontSize:mobile?22:28,fontWeight:700,letterSpacing:-0.6}}>Hello, {(typeof userName === 'string' && userName) || 'there'}!</h1>
+          <p style={{fontSize:mobile?12:14,color:t.sub,marginTop:3,fontWeight:400}}>Here's your business at a glance.</p>
+        </div>
+        {!mobile&&(
           <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
-            <button style={{width:38,height:38,borderRadius:"50%",border:`1px solid ${t.cardBorder}`,background:t.card,backdropFilter:"blur(20px)",display:"flex",alignItems:"center",justifyContent:"center",color:t.sub,cursor:"pointer",transition:ease,boxShadow:t.cardShadow}}>
-              {IC.phone}</button>
-            <div style={{position:"relative"}}>
-              <button onClick={()=>setNotifOpen(!notifOpen)} style={{
-                width:38,height:38,borderRadius:"50%",border:`1px solid ${t.cardBorder}`,
-                background:notifOpen?(dark?"rgba(255,255,255,0.08)":"rgba(0,0,0,0.05)"):t.card,
-                backdropFilter:"blur(20px)",display:"flex",alignItems:"center",justifyContent:"center",
-                color:notifOpen?t.accent:t.sub,cursor:"pointer",transition:ease,boxShadow:t.cardShadow}}>
-                {IC.bell}
-                <div style={{position:"absolute",top:6,right:7,width:8,height:8,borderRadius:4,background:pal.coral.base,border:`2px solid ${t.shell}`}}/>
-              </button>
-              <NotifPanel open={notifOpen} onClose={()=>setNotifOpen(false)} t={t} dark={dark}/>
-            </div>
-            {!mobile&&(
-              <div style={{display:"flex",alignItems:"center",gap:10,marginLeft:4,paddingLeft:14,borderLeft:`1px solid ${t.divider}`}}>
-                <div style={{width:38,height:38,borderRadius:"50%",background:t.accentGrad,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,fontWeight:600,color:t.accentText,boxShadow:t.accentGlow}}>{(userName || 'U')[0].toUpperCase()}</div>
-                <div><div style={{fontSize:13,fontWeight:600}}>{userName || 'User'}</div><div style={{fontSize:11,color:t.sub}}>{userEmail || ''}</div></div>
-              </div>)}
+            <div style={{width:38,height:38,borderRadius:"50%",background:t.accentGrad,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,fontWeight:600,color:t.accentText,boxShadow:t.accentGlow}}>{(userName || 'U')[0].toUpperCase()}</div>
+            <div><div style={{fontSize:13,fontWeight:600}}>{userName || 'User'}</div><div style={{fontSize:11,color:t.sub}}>{userEmail || ''}</div></div>
           </div>
-        </header>
+        )}
+      </header>
 
-        {/* Stats */}
-        <div style={{display:"grid",gridTemplateColumns:mobile?"1fr 1fr":compact?"repeat(2,1fr)":"repeat(4,1fr)",gap:compact?10:12,flexShrink:0}}>
-          {dbStats.map((s,i)=>(
-            <div key={i} style={{background:cardGrads[mode][i],border:`1px solid ${t.cardBorder}`,borderRadius:20,boxShadow:t.cardShadow,
-              padding:compact?"14px":"16px 18px",transition:ease,backdropFilter:"blur(24px) saturate(1.6)",
-              position:"relative",overflow:"hidden",animation:`fadeUp 0.45s ease ${i*.06}s backwards`,minWidth:0}}>
-              <div style={{position:"absolute",top:-30,left:-30,width:100,height:100,borderRadius:"50%",filter:"blur(40px)",background:s.p.base,opacity:dark?0.06:0.04,pointerEvents:"none"}}/>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",position:"relative"}}>
-                <span style={{fontSize:compact?11:12.5,color:t.sub,fontWeight:400,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0}}>{s.label}</span>
-                <div style={{width:compact?30:34,height:compact?30:34,borderRadius:"50%",background:s.p.glow,display:"flex",alignItems:"center",justifyContent:"center",color:s.p.base,flexShrink:0}}>{IC[s.ic]}</div>
-              </div>
-              <div style={{fontSize:compact?20:26,fontWeight:700,marginTop:6,letterSpacing:-0.5,position:"relative"}}>{s.val}</div>
-              <div style={{display:"flex",alignItems:"center",gap:4,marginTop:7,position:"relative",flexWrap:"wrap"}}>
-                <span style={{color:s.up?pal.volt.base:pal.coral.base,display:"flex"}}>{s.up?IC.tUp:IC.tDn}</span>
-                <span style={{fontSize:12,fontWeight:500,color:s.up?pal.volt.base:pal.coral.base}}>{s.ch}</span>
-                {!compact&&<span style={{fontSize:11,color:t.sub}}>from last month</span>}
-              </div>
-            </div>))}
-        </div>
+      {/* Stats */}
+      <div style={{display:"grid",gridTemplateColumns:mobile?"1fr 1fr":compact?"repeat(2,1fr)":"repeat(4,1fr)",gap:compact?10:12,flexShrink:0}}>
+        {stats.map((s,i)=>(
+          <div key={i} style={{background:cardGrads[mode][i],border:`1px solid ${t.cardBorder}`,borderRadius:20,boxShadow:t.cardShadow,
+            padding:compact?"14px":"16px 18px",transition:ease,backdropFilter:"blur(24px) saturate(1.6)",
+            position:"relative",overflow:"hidden",animation:`fadeUp 0.45s ease ${i*.06}s backwards`,minWidth:0}}>
+            <div style={{position:"absolute",top:-30,left:-30,width:100,height:100,borderRadius:"50%",filter:"blur(40px)",background:s.p.base,opacity:dark?0.06:0.04,pointerEvents:"none"}}/>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",position:"relative"}}>
+              <span style={{fontSize:compact?11:12.5,color:t.sub,fontWeight:400,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0}}>{s.label}</span>
+              <div style={{width:compact?30:34,height:compact?30:34,borderRadius:"50%",background:s.p.glow,display:"flex",alignItems:"center",justifyContent:"center",color:s.p.base,flexShrink:0}}>{IC[s.ic]}</div>
+            </div>
+            <div style={{fontSize:compact?20:26,fontWeight:700,marginTop:6,letterSpacing:-0.5,position:"relative"}}>{s.val}</div>
+            <div style={{fontSize:11,color:t.sub,marginTop:7,position:"relative"}}>{s.sub}</div>
+          </div>))}
+      </div>
 
-        {/* Middle */}
-        <div style={{display:"grid",gridTemplateColumns:compact?"1fr":"1fr 350px",gap:12,flexShrink:0,minWidth:0}}>
-          <div style={{...card({padding:compact?"16px 14px":"20px 22px",minWidth:0,overflow:"hidden"}),animation:"fadeUp 0.45s ease 0.25s backwards"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:compact?14:20,gap:8}}>
-              <div>
-                <h3 style={{fontSize:15,fontWeight:600}}>Sales Overview</h3>
-                <div style={{display:"flex",alignItems:"center",gap:14,marginTop:6}}>
-                  {[{c:VOLT,l:"Profit"},{c:pal.amber.base,l:"Expense"}].map((lg,i)=>(
-                    <div key={i} style={{display:"flex",alignItems:"center",gap:5}}>
-                      <div style={{width:7,height:7,borderRadius:"50%",background:lg.c}}/><span style={{fontSize:11.5,color:t.sub}}>{lg.l}</span>
-                    </div>))}
+      {/* Today + Upcoming */}
+      <div style={{display:"grid",gridTemplateColumns:compact?"1fr":"1fr 1fr",gap:12,flexShrink:0,minWidth:0}}>
+        <div style={{...card({padding:"16px 18px",minWidth:0}),animation:"fadeUp 0.45s ease 0.25s backwards"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+            <h3 style={{fontSize:15,fontWeight:600}}>Upcoming</h3>
+            <span style={{fontSize:11,color:t.muted}}>{events.length} scheduled</span>
+          </div>
+          {loading && <div style={{fontSize:13,color:t.sub,padding:"20px 0",textAlign:"center"}}>Loading…</div>}
+          {!loading && events.length === 0 && (
+            <div style={{fontSize:13,color:t.sub,padding:"20px 0",textAlign:"center"}}>No upcoming events. Add one from Calendar.</div>
+          )}
+          {events.map((e,i) => {
+            const f = fmtEvent(e.start_time);
+            return (
+              <div key={e.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:i<events.length-1?`1px solid ${t.divider}`:"none",minWidth:0}}>
+                <div style={{minWidth:62,flexShrink:0}}>
+                  <div style={{fontSize:10,color:t.muted}}>{f.date}</div>
+                  <div style={{fontSize:12,fontWeight:500,color:t.sub,fontVariantNumeric:"tabular-nums"}}>{f.time}</div>
+                </div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:13,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{e.title}</div>
+                  <div style={{fontSize:11,color:t.muted,marginTop:1,textTransform:"capitalize"}}>{e.type || "event"}</div>
                 </div>
               </div>
-              <div style={{background:t.input,border:`1px solid ${t.inputBorder}`,borderRadius:8,padding:"5px 12px",color:t.sub,fontSize:12,flexShrink:0}}>Month ▾</div>
-            </div>
-            <AreaChartDemo />
-          </div>
-
-          <div style={{display:"flex",flexDirection:"column",gap:12,minWidth:0}}>
-            <div style={{...card({padding:"15px 17px"}),animation:"fadeUp 0.45s ease 0.3s backwards"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-                <h3 style={{fontSize:15,fontWeight:600}}>January 2023</h3>
-                <div style={{display:"flex",gap:4}}>
-                  {[IC.chevL,IC.chevR].map((ic,i)=>(<button key={i} style={{width:28,height:28,borderRadius:"50%",border:`1px solid ${t.inputBorder}`,background:"transparent",display:"flex",alignItems:"center",justifyContent:"center",color:t.sub,cursor:"pointer"}}>{ic}</button>))}
-                </div>
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,textAlign:"center"}}>
-                {dayN.map(d=>(<span key={d} style={{fontSize:11,color:t.muted,fontWeight:500,padding:"3px 0"}}>{d}</span>))}
-                {calDays.map(d=>(<div key={d} style={{fontSize:14,fontWeight:d===11?600:400,color:d===11?t.accentText:t.sub,
-                  padding:"7px 0",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",
-                  background:d===11?t.accentGrad:"transparent",boxShadow:d===11?t.accentGlow:"none",transition:ease,aspectRatio:"1"}}>{d}</div>))}
-              </div>
-            </div>
-
-            <div style={{...card({padding:"15px 17px",flex:1,overflowY:"auto",minHeight:180}),animation:"fadeUp 0.45s ease 0.35s backwards"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-                <h3 style={{fontSize:15,fontWeight:600}}>Upcoming Schedule</h3>
-                <button style={{color:t.muted,background:"none",border:"none",cursor:"pointer"}}>{IC.dots}</button>
-              </div>
-              {dbSchedule.length === 0 && <div style={{fontSize:13,color:t.sub,marginTop:20,textAlign:'center'}}>No upcoming events</div>}
-              {dbSchedule.map((item,i)=>(
-                <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:i<dbSchedule.length-1?`1px solid ${t.divider}`:"none",minWidth:0}}>
-                  <div style={{width:22,height:22,borderRadius:"50%",flexShrink:0,border:item.done?"none":`1.5px solid ${t.chk}`,background:item.done?pal.volt.grad:"transparent",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:item.done?`0 2px 8px ${pal.volt.glow}`:"none"}}>
-                    {item.done&&<svg width="11" height="11" fill="none" viewBox="0 0 11 11"><path d="M2.5 5.5L4.5 7.5L8.5 3.5" stroke="#0a0a0a" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-                  </div>
-                  <div style={{minWidth:58,flexShrink:0}}>
-                    <div style={{fontSize:10,color:t.muted}}>{item.date}</div>
-                    <div style={{fontSize:12,fontWeight:500,color:t.sub,fontVariantNumeric:"tabular-nums"}}>{item.time}</div>
-                  </div>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:13,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{item.title}</div>
-                    <div style={{fontSize:11,color:t.muted,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{item.who}</div>
-                  </div>
-                </div>))}
-            </div>
-          </div>
+            );
+          })}
         </div>
 
-        {/* Bottom */}
-        <div style={{...card({padding:compact?"16px 18px":"20px 24px",flexShrink:0}),animation:"fadeUp 0.45s ease 0.4s backwards"}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
-            <h3 style={{fontSize:15,fontWeight:600}}>Device Usage</h3>
-            <button style={{color:t.muted,background:"none",border:"none",cursor:"pointer"}}>{IC.dots}</button>
+        <div style={{...card({padding:"16px 18px",minWidth:0}),animation:"fadeUp 0.45s ease 0.3s backwards"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+            <h3 style={{fontSize:15,fontWeight:600}}>Open Tasks</h3>
+            <span style={{fontSize:11,color:t.muted}}>{tasks.length} open</span>
           </div>
-          <div style={{display:"flex",gap:mobile?20:40,alignItems:"center",flexWrap:mobile?"wrap":"nowrap"}}>
-            <div style={{position:"relative",width:100,height:100,flexShrink:0}}>
-              <div style={{position:"absolute",top:0,left:0}}><DonutRing pct={62.88} color={VOLT} size={100} strokeW={9} t={t}/></div>
-              <div style={{position:"absolute",top:14,left:14}}><DonutRing pct={31.12} color={pal.teal.base} size={72} strokeW={9} t={t}/></div>
+          {loading && <div style={{fontSize:13,color:t.sub,padding:"20px 0",textAlign:"center"}}>Loading…</div>}
+          {!loading && tasks.length === 0 && (
+            <div style={{fontSize:13,color:t.sub,padding:"20px 0",textAlign:"center"}}>No open tasks. You're all clear.</div>
+          )}
+          {tasks.map((task,i) => (
+            <div key={task.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:i<tasks.length-1?`1px solid ${t.divider}`:"none",minWidth:0}}>
+              <div style={{width:20,height:20,borderRadius:"50%",border:`1.5px solid ${t.chk}`,flexShrink:0}}/>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:13,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{task.title}</div>
+                {task.due_date && <div style={{fontSize:11,color:t.muted,marginTop:1}}>Due {new Date(task.due_date).toLocaleDateString([], {day:"2-digit",month:"short"})}</div>}
+              </div>
             </div>
-            <div style={{display:"flex",gap:mobile?24:48,flex:1}}>
-              {[{l:"Mobile Users",v:"62.88%",c:VOLT},{l:"Desktop Users",v:"31.12%",c:pal.teal.base}].map((u,i)=>(
-                <div key={i} style={{flex:1,minWidth:0}}>
-                  <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
-                    <div style={{width:8,height:8,borderRadius:"50%",background:u.c,flexShrink:0}}/>
-                    <span style={{fontSize:13,color:t.sub,fontWeight:400}}>{u.l}</span>
-                  </div>
-                  <div style={{fontSize:mobile?24:30,fontWeight:700,letterSpacing:-0.5,fontVariantNumeric:"tabular-nums"}}>{u.v}</div>
-                  <div style={{fontSize:12,color:t.muted,marginTop:4}}>-15% from last month</div>
-                </div>))}
-            </div>
-          </div>
+          ))}
         </div>
-        <div style={{height:4,flexShrink:0}}/>
-      
+      </div>
+
+      {/* Recent Invoices */}
+      <div style={{...card({padding:"16px 18px",flexShrink:0}),animation:"fadeUp 0.45s ease 0.4s backwards"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+          <h3 style={{fontSize:15,fontWeight:600}}>Recent Invoices</h3>
+        </div>
+        {loading && <div style={{fontSize:13,color:t.sub,padding:"20px 0",textAlign:"center"}}>Loading…</div>}
+        {!loading && invoices.length === 0 && (
+          <div style={{fontSize:13,color:t.sub,padding:"20px 0",textAlign:"center"}}>No invoices yet. Create one from Money.</div>
+        )}
+        {invoices.map((inv,i) => (
+          <div key={inv.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:i<invoices.length-1?`1px solid ${t.divider}`:"none",minWidth:0}}>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:13,fontWeight:500}}>{inv.number || `Invoice ${inv.id.slice(0,8)}`}</div>
+              <div style={{fontSize:11,color:t.muted,marginTop:1,textTransform:"capitalize"}}>{inv.status || "draft"}</div>
+            </div>
+            <div style={{fontSize:14,fontWeight:600,fontVariantNumeric:"tabular-nums"}}>£{Number(inv.amount||0).toLocaleString()}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{height:4,flexShrink:0}}/>
     </>
   );
 }
@@ -539,10 +477,8 @@ export default function Dashboard(){
   const [showPortal, setShowPortal] = useState(false);
 
   const[showProfile,setShowProfile]=useState(false);
-  const[hBar,setHBar]=useState(null);
   const[nav,setNav]=useState(0);
   const[navSec,setNavSec]=useState(0);
-  const[notifOpen,setNotifOpen]=useState(false);
   const[sidebarOpen,setSidebarOpen]=useState(true);
   const w=useWidth();
   const t=T[dark?"dark":"light"];
@@ -645,21 +581,24 @@ export default function Dashboard(){
       <main style={{flex:1,display:"flex",flexDirection:"column",gap:12,
         height:mobile?"calc(100vh - 16px)":"calc(100vh - 28px)",
         overflowY:"auto",overflowX:"hidden",minWidth:0}}>
-        {navSec === 0 && nav === 0 && <BusinessOverview t={t} dark={dark} mobile={mobile} compact={compact} mode={mode} notifOpen={notifOpen} setNotifOpen={setNotifOpen} w={w} userName={userName} userEmail={userEmail} sidebarOpen={sidebarOpen} />}
-        {navSec === 0 && nav === 1 && <ProspectingView t={t} dark={dark} mobile={mobile} compact={compact} />}
-        {navSec === 0 && nav === 2 && <CRMView t={t} dark={dark} mobile={mobile} compact={compact} mode={mode} notifOpen={notifOpen} setNotifOpen={setNotifOpen} w={w} IC={IC} pal={pal} VOLT={VOLT} VOLTD={VOLTD} />}
-        {navSec === 0 && nav === 3 && <ProjectsView t={t} dark={dark} mobile={mobile} compact={compact} onLaunchPortal={() => setShowPortal(true)} />}
-        {navSec === 0 && nav === 4 && <CalendarView t={t} dark={dark} mobile={mobile} compact={compact} />}
-        {navSec === 0 && nav === 5 && <AutomationsView t={t} dark={dark} mobile={mobile} compact={compact} />}
-        {navSec === 0 && nav === 6 && <FinancialsView t={t} dark={dark} mobile={mobile} compact={compact} mode={mode} IC={IC} pal={pal} VOLT={VOLT} VOLTD={VOLTD} />}
-        
-        {navSec === 1 && nav === 0 && <DocsView t={t} dark={dark} mobile={mobile} compact={compact} />}
-        {navSec === 1 && nav === 1 && <MessagesView t={t} dark={dark} mobile={mobile} compact={compact} mode={mode} IC={IC} />}
-        {navSec === 1 && nav === 2 && <SettingsView t={t} dark={dark} mobile={mobile} compact={compact} />}
+        {showProfile ? (
+          <UserProfileView t={t} dark={dark} onClose={()=>setShowProfile(false)} user={user} profile={profile} updateProfile={updateProfile} signOut={signOut} />
+        ) : (<>
+          {navSec === 0 && nav === 0 && <BusinessOverview t={t} dark={dark} mobile={mobile} compact={compact} mode={mode} w={w} userName={userName} userEmail={userEmail} sidebarOpen={sidebarOpen} />}
+          {navSec === 0 && nav === 1 && <ProspectingView t={t} dark={dark} mobile={mobile} compact={compact} />}
+          {navSec === 0 && nav === 2 && <CRMView t={t} dark={dark} mobile={mobile} compact={compact} mode={mode} w={w} IC={IC} pal={pal} VOLT={VOLT} VOLTD={VOLTD} />}
+          {navSec === 0 && nav === 3 && <ProjectsView t={t} dark={dark} mobile={mobile} compact={compact} onLaunchPortal={() => setShowPortal(true)} />}
+          {navSec === 0 && nav === 4 && <CalendarView t={t} dark={dark} mobile={mobile} compact={compact} />}
+          {navSec === 0 && nav === 5 && <AutomationsView t={t} dark={dark} mobile={mobile} compact={compact} />}
+          {navSec === 0 && nav === 6 && <FinancialsView t={t} dark={dark} mobile={mobile} compact={compact} mode={mode} IC={IC} pal={pal} VOLT={VOLT} VOLTD={VOLTD} />}
+
+          {navSec === 1 && nav === 0 && <DocsView t={t} dark={dark} mobile={mobile} compact={compact} />}
+          {navSec === 1 && nav === 1 && <MessagesView t={t} dark={dark} mobile={mobile} compact={compact} mode={mode} IC={IC} />}
+          {navSec === 1 && nav === 2 && <SettingsView t={t} dark={dark} mobile={mobile} compact={compact} />}
+        </>)}
       </main>
 
       {showPortal && <ClientPortalView onClose={() => setShowPortal(false)} dark={dark} />}
-      {showProfile && <UserProfileView t={t} dark={dark} onClose={()=>setShowProfile(false)} user={user} profile={profile} updateProfile={updateProfile} signOut={signOut} />}
 
       {/* ═══ AI FLOATER (⌘J) ═══ */}
       <AIFloater
