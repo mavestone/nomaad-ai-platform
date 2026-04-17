@@ -338,7 +338,7 @@ export default function AIFloater({ t, dark, mobile, context }) {
               )}
             </div>
             <div style={{ fontSize: 10, color: t.muted, marginTop: 8, textAlign: "center" }}>
-              Claude Sonnet 4.5 · ⌘J to toggle · Shift+Enter for newline
+              ⌘J to toggle · Shift+Enter for newline
             </div>
           </div>
         </aside>

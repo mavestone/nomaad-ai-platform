@@ -1,26 +1,39 @@
-// Vercel serverless function — streams Anthropic responses to the client.
+// Vercel serverless function — streams AI responses to the client.
 // POST /api/ai/chat
 // Body: {
 //   messages: [{ role: 'user'|'assistant', content: string }, ...],
-//   system?: string,           // optional system prompt override
-//   context?: object,          // { view, selectedId, selectedName } — injected into system
-//   model?: string             // override; default claude-sonnet-4-5
+//   system?: string,
+//   context?: object,          // { view, selectedId, selectedName }
+//   model?: string             // provider-specific override
 // }
 //
-// Streams Server-Sent Events. Each `data:` line is a JSON blob:
+// Streams Server-Sent Events:
 //   { type: 'text_delta', text: '...' }
 //   { type: 'message_stop' }
 //   { type: 'error', error: '...' }
 //
-// Required env: ANTHROPIC_API_KEY
+// Provider switching via env vars:
+//   AI_PROVIDER=groq      -> GROQ_API_KEY + model like "openai/gpt-oss-120b"
+//   AI_PROVIDER=anthropic -> ANTHROPIC_API_KEY + model like "claude-sonnet-4-5"
 //
-// NOTE: Tool use (read_clients, create_task, etc.) will be added in the
-// next iteration. This first cut is pure chat to get the surface live.
+// Defaults to 'groq' if unset (free tier for dev/testing).
 
 export const config = { runtime: 'nodejs' };
 
-const DEFAULT_MODEL = 'claude-sonnet-4-5';
-const DEFAULT_MAX_TOKENS = 2048;
+const PROVIDERS = {
+  groq: {
+    url: 'https://api.groq.com/openai/v1/chat/completions',
+    envKey: 'GROQ_API_KEY',
+    defaultModel: 'openai/gpt-oss-120b',
+    format: 'openai',
+  },
+  anthropic: {
+    url: 'https://api.anthropic.com/v1/messages',
+    envKey: 'ANTHROPIC_API_KEY',
+    defaultModel: 'claude-sonnet-4-5',
+    format: 'anthropic',
+  },
+};
 
 const SYSTEM_BASE = `You are Nomaad's built-in AI assistant for solo creatives and freelancers.
 You help with running a creative business: clients, projects, invoices, messages, and calendar.
@@ -31,13 +44,11 @@ Style:
 - If you need data you don't have, ask for exactly what you need — don't hallucinate records.
 - Never invent client names, invoice amounts, or project details. If you're unsure, say so.
 
-You're currently embedded inside the Nomaad app. The user can see the same screen you're helping with.`;
+You're embedded inside the Nomaad app. The user can see the same screen you're helping with.`;
 
 function buildSystem(userSystem, context) {
   const parts = [SYSTEM_BASE];
-  if (context?.view) {
-    parts.push(`Current view: ${context.view}`);
-  }
+  if (context?.view) parts.push(`Current view: ${context.view}`);
   if (context?.selectedName) {
     parts.push(`Selected: ${context.selectedName}${context.selectedId ? ` (id: ${context.selectedId})` : ''}`);
   }
@@ -48,7 +59,7 @@ function buildSystem(userSystem, context) {
 async function readBody(req) {
   return new Promise((resolve, reject) => {
     let data = '';
-    req.on('data', (chunk) => { data += chunk; });
+    req.on('data', (c) => { data += c; });
     req.on('end', () => {
       try { resolve(JSON.parse(data || '{}')); }
       catch (e) { reject(e); }
@@ -63,39 +74,35 @@ export default async function handler(req, res) {
     return;
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const providerName = (process.env.AI_PROVIDER || 'groq').toLowerCase();
+  const provider = PROVIDERS[providerName];
+  if (!provider) {
+    res.status(500).json({ error: `Unknown AI_PROVIDER: ${providerName}` });
+    return;
+  }
+
+  const apiKey = process.env[provider.envKey];
   if (!apiKey) {
-    res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' });
+    res.status(500).json({ error: `${provider.envKey} not configured` });
     return;
   }
 
   let payload;
-  try {
-    payload = await readBody(req);
-  } catch {
-    res.status(400).json({ error: 'Invalid JSON body' });
-    return;
-  }
+  try { payload = await readBody(req); }
+  catch { res.status(400).json({ error: 'Invalid JSON' }); return; }
 
-  const {
-    messages,
-    system,
-    context,
-    model = DEFAULT_MODEL,
-    max_tokens = DEFAULT_MAX_TOKENS,
-  } = payload;
+  const { messages, system, context, model, max_tokens = 2048 } = payload;
 
   if (!Array.isArray(messages) || messages.length === 0) {
-    res.status(400).json({ error: 'messages[] is required' });
+    res.status(400).json({ error: 'messages[] required' });
     return;
   }
 
-  // Sanitise — strip any roles other than user/assistant, coerce content to string
-  const cleanMessages = messages
+  const clean = messages
     .filter((m) => m && (m.role === 'user' || m.role === 'assistant') && m.content)
     .map((m) => ({ role: m.role, content: String(m.content) }));
 
-  if (cleanMessages.length === 0) {
+  if (clean.length === 0) {
     res.status(400).json({ error: 'No valid messages' });
     return;
   }
@@ -106,28 +113,49 @@ export default async function handler(req, res) {
   res.setHeader('Connection', 'keep-alive');
   res.setHeader('X-Accel-Buffering', 'no');
   if (typeof res.flushHeaders === 'function') res.flushHeaders();
+  const send = (o) => res.write(`data: ${JSON.stringify(o)}\n\n`);
 
-  const send = (obj) => {
-    res.write(`data: ${JSON.stringify(obj)}\n\n`);
-  };
+  const systemPrompt = buildSystem(system, context);
+  const chosenModel = model || provider.defaultModel;
 
+  // ── Build request for provider ─────────────────────────────────
   let upstream;
   try {
-    upstream = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model,
-        max_tokens,
-        stream: true,
-        system: buildSystem(system, context),
-        messages: cleanMessages,
-      }),
-    });
+    if (provider.format === 'anthropic') {
+      upstream = await fetch(provider.url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: chosenModel,
+          max_tokens,
+          stream: true,
+          system: systemPrompt,
+          messages: clean,
+        }),
+      });
+    } else {
+      // OpenAI-compatible (Groq, OpenRouter, etc.)
+      upstream = await fetch(provider.url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: chosenModel,
+          max_tokens,
+          stream: true,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            ...clean,
+          ],
+        }),
+      });
+    }
   } catch (err) {
     send({ type: 'error', error: `Upstream fetch failed: ${err.message}` });
     res.end();
@@ -136,12 +164,11 @@ export default async function handler(req, res) {
 
   if (!upstream.ok) {
     const errText = await upstream.text().catch(() => '');
-    send({ type: 'error', error: `Anthropic ${upstream.status}: ${errText.slice(0, 500)}` });
+    send({ type: 'error', error: `${providerName} ${upstream.status}: ${errText.slice(0, 500)}` });
     res.end();
     return;
   }
 
-  // Parse Anthropic's SSE stream and forward just the text deltas.
   const reader = upstream.body.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
@@ -152,30 +179,41 @@ export default async function handler(req, res) {
       if (done) break;
       buffer += decoder.decode(value, { stream: true });
 
-      // Anthropic SSE frames are separated by blank lines
       let idx;
       while ((idx = buffer.indexOf('\n\n')) !== -1) {
         const frame = buffer.slice(0, idx);
         buffer = buffer.slice(idx + 2);
 
-        // Each frame has lines like:
-        //   event: content_block_delta
-        //   data: {...}
         const dataLine = frame.split('\n').find((l) => l.startsWith('data:'));
         if (!dataLine) continue;
 
         const raw = dataLine.slice(5).trim();
         if (!raw) continue;
 
+        // OpenAI-style [DONE] sentinel
+        if (raw === '[DONE]') {
+          send({ type: 'message_stop' });
+          continue;
+        }
+
         let evt;
         try { evt = JSON.parse(raw); } catch { continue; }
 
-        if (evt.type === 'content_block_delta' && evt.delta?.type === 'text_delta') {
-          send({ type: 'text_delta', text: evt.delta.text });
-        } else if (evt.type === 'message_stop') {
-          send({ type: 'message_stop' });
-        } else if (evt.type === 'error') {
-          send({ type: 'error', error: evt.error?.message || 'Unknown upstream error' });
+        if (provider.format === 'anthropic') {
+          if (evt.type === 'content_block_delta' && evt.delta?.type === 'text_delta') {
+            send({ type: 'text_delta', text: evt.delta.text });
+          } else if (evt.type === 'message_stop') {
+            send({ type: 'message_stop' });
+          } else if (evt.type === 'error') {
+            send({ type: 'error', error: evt.error?.message || 'Unknown error' });
+          }
+        } else {
+          // OpenAI-compatible format
+          const delta = evt.choices?.[0]?.delta?.content;
+          if (delta) send({ type: 'text_delta', text: delta });
+          if (evt.choices?.[0]?.finish_reason) {
+            send({ type: 'message_stop' });
+          }
         }
       }
     }
