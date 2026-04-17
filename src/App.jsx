@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useAuth } from "./contexts/AuthContext";
 import AuthPage from "./components/AuthPage";
 import OnboardingView from "./components/OnboardingView";
+import UserProfileView from "./components/UserProfileView";
 import AreaChartDemo from "./components/ui/demo";
 import CRMView from "./components/ui/crm-view";
 import MessagesView from "./components/ui/messages-view";
@@ -507,7 +508,7 @@ function BusinessOverview({ t, dark, mobile, compact, mode, notifOpen, setNotifO
 }
 
 export default function Dashboard(){
-  const { user, profile, loading, signOut } = useAuth();
+  const { user, profile, loading, signOut, updateProfile } = useAuth();
 
   // Show loading spinner while checking session
   if (loading) {
@@ -536,6 +537,7 @@ export default function Dashboard(){
   // We can render Client Portal directly as a full screen modal mock if user clicks a button 
   const [showPortal, setShowPortal] = useState(false);
 
+  const[showProfile,setShowProfile]=useState(false);
   const[hBar,setHBar]=useState(null);
   const[nav,setNav]=useState(0);
   const[navSec,setNavSec]=useState(0);
@@ -598,20 +600,41 @@ export default function Dashboard(){
                   }}>{IC[item.ic]}<span>{item.label}</span></button>);})}
               </div>))}
           </div>
-          <div style={{position:"relative",zIndex:1,background:dark?"rgba(255,255,255,0.035)":"rgba(0,0,0,0.02)",border:`1px solid ${t.cardBorder}`,borderRadius:16,padding:14,marginTop:12,transition:ease,overflow:"hidden"}}>
-            <div style={{position:"absolute",top:0,left:16,right:16,height:2,background:t.accentGrad,borderRadius:2}}/>
-            <div style={{fontSize:9,fontWeight:600,color:t.muted,letterSpacing:1.4,marginTop:4}}>UPCOMING EVENT</div>
-            <div style={{fontSize:14,fontWeight:600,marginTop:5}}>Business Sprint</div>
-            <div style={{fontSize:12,color:t.sub,marginTop:2}}>10:35 AM – 11:30 AM</div>
-            <div style={{display:"flex",alignItems:"center",gap:6,marginTop:10}}>
-              {["Business","Meeting"].map(tg=>(<span key={tg} style={{fontSize:10,padding:"3px 10px",borderRadius:20,background:t.input,color:t.sub,border:`1px solid ${t.inputBorder}`}}>{tg}</span>))}
-              <div style={{marginLeft:"auto",width:26,height:26,borderRadius:"50%",background:t.accentGrad,display:"flex",alignItems:"center",justifyContent:"center",color:t.accentText,boxShadow:t.accentGlow}}>{IC.arrow}</div>
+          {/* ── User profile button ── */}
+          <button onClick={()=>setShowProfile(true)} style={{
+            display:"flex",alignItems:"center",gap:10,padding:"10px 12px",
+            borderRadius:16,width:"100%",background:dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.03)",
+            border:`1px solid ${t.cardBorder}`,cursor:"pointer",fontFamily:"inherit",
+            transition:ease,marginTop:12,textAlign:"left",
+          }}>
+            {/* Avatar */}
+            <div style={{position:"relative",flexShrink:0}}>
+              <div style={{
+                width:36,height:36,borderRadius:"50%",flexShrink:0,
+                background:profile?.avatar_url?`url(${profile.avatar_url}) center/cover`:`linear-gradient(135deg,${VOLT},#b8e300)`,
+                display:"flex",alignItems:"center",justifyContent:"center",
+                fontSize:13,fontWeight:800,color:"#0a0a0a",
+              }}>
+                {!profile?.avatar_url&&(userName?.[0]?.toUpperCase()||"N")}
+              </div>
+              {/* Availability dot */}
+              <div style={{
+                position:"absolute",bottom:1,right:1,width:9,height:9,borderRadius:"50%",
+                background:profile?.availability==="busy"?"#FFB340":profile?.availability==="away"?"#8b8fa3":"#34C759",
+                border:`1.5px solid ${dark?"#0f0f12":"#f0ede8"}`,
+              }}/>
             </div>
-          </div>
-          {/* Sign Out */}
-          <button onClick={signOut} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 12px",borderRadius:12,width:"100%",fontSize:12,fontWeight:500,color:t.sub,background:dark?"rgba(255,255,255,0.03)":"rgba(0,0,0,0.03)",border:`1px solid ${t.inputBorder}`,cursor:"pointer",fontFamily:"inherit",transition:ease,marginTop:8}}>
-            <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            Sign Out
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:13,fontWeight:600,color:t.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                {userName||"Your Profile"}
+              </div>
+              <div style={{fontSize:11,color:t.muted,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                {profile?.business_name||userEmail}
+              </div>
+            </div>
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" style={{color:t.muted,flexShrink:0}}>
+              <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </button>
         </aside>
       )}
@@ -635,6 +658,7 @@ export default function Dashboard(){
       </main>
 
       {showPortal && <ClientPortalView onClose={() => setShowPortal(false)} dark={dark} />}
+      {showProfile && <UserProfileView t={t} dark={dark} onClose={()=>setShowProfile(false)} user={user} profile={profile} updateProfile={updateProfile} signOut={signOut} />}
 
       <style>{`
         @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
