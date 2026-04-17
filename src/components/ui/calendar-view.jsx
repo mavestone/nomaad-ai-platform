@@ -50,13 +50,7 @@ const DEFAULT_TEMPLATES = [
   { id: "t-buffer",  name: "Buffer",       dur: 15,  cat: "Admin" },
 ];
 
-const INBOX_TASKS = [
-  { id: "it-1", title: "Edit Brandon wedding highlights", project: "Brandon Wedding",  pri: "high",   dur: 180, cat: "Edit" },
-  { id: "it-2", title: "Send invoice to Kyle",            project: "Admin",            pri: "high",   dur: 30,  cat: "Admin" },
-  { id: "it-3", title: "Review Amara shot list",          project: "Amara Bali Shoot", pri: "medium", dur: 60,  cat: "Shoot" },
-  { id: "it-4", title: "Nomaad landing page copy",        project: "Nomaad Build",     pri: "medium", dur: 120, cat: "Edit" },
-  { id: "it-5", title: "Follow up with Harvey",           project: "CRM",              pri: "low",    dur: 30,  cat: "Meeting" },
-];
+// INBOX_TASKS is now state
 const PRI = { high: "#FF3B30", medium: "#FFB340", low: "#34C759" };
 
 // ─── NL parser (stubs to Claude API Phase 2) ──────────────────────────────────
@@ -111,6 +105,7 @@ export default function CalendarView({ t, dark, mobile, compact }) {
 
   // ── Core state ──────────────────────────────────────────────────────────────
   const [blocks, setBlocks]           = useState([]);
+  const [inboxTasks, setInboxTasks]   = useState([]);
   const [selectedCat]                 = useState("Edit");
   const [scheduled, setScheduled]     = useState(new Set());
 
@@ -156,13 +151,29 @@ export default function CalendarView({ t, dark, mobile, compact }) {
     if (view==="month") { from=startOfMonth(currentDate); to=endOfMonth(currentDate); }
     else if (view==="day") { from=startOfDay(currentDate); to=addDays(from,1); }
     else { from=weekStart; to=addDays(weekStart,7); }
-    const {data} = await supabase.from("calendar_events").select("*").gte("start_time",from.toISOString()).lt("start_time",to.toISOString());
-    if (data) {
+    
+    const [eventsRes, tasksRes] = await Promise.all([
+      supabase.from("calendar_events").select("*").gte("start_time",from.toISOString()).lt("start_time",to.toISOString()),
+      supabase.from("tasks").select("id,title,priority,project_id").eq("status", "todo")
+    ]);
+    
+    if (eventsRes.data) {
       setBlocks(prev => {
         const google = prev.filter(b=>b.source==="google");
-        const fresh = data.map(d=>{ const s=new Date(d.start_time),e=new Date(d.end_time); return { id:d.id,title:d.title,cat:d.type?(d.type.charAt(0).toUpperCase()+d.type.slice(1)):"Edit",startDate:s,startHr:s.getHours()+s.getMinutes()/60,endHr:e.getHours()+e.getMinutes()/60,source:"nomaad" }; });
+        const fresh = eventsRes.data.map(d=>{ const s=new Date(d.start_time),e=new Date(d.end_time); return { id:d.id,title:d.title,cat:d.type?(d.type.charAt(0).toUpperCase()+d.type.slice(1)):"Edit",startDate:s,startHr:s.getHours()+s.getMinutes()/60,endHr:e.getHours()+e.getMinutes()/60,source:"nomaad" }; });
         return [...fresh,...google];
       });
+    }
+    
+    if (tasksRes.data) {
+      setInboxTasks(tasksRes.data.map((t, i) => ({
+        id: t.id,
+        title: t.title,
+        project: "Project", // We can fetch project name in a more advanced query if needed
+        pri: t.priority === "urgent" || t.priority === "high" ? "high" : t.priority === "low" ? "low" : "medium",
+        dur: 60,
+        cat: "Edit"
+      })));
     }
   }, [user, view, currentDate, weekStart]);
 
@@ -1003,7 +1014,7 @@ export default function CalendarView({ t, dark, mobile, compact }) {
             {railTab==="tasks" && (
               <div style={{ display:"flex",flexDirection:"column",gap:6 }}>
                 <p style={{ fontSize:10,fontWeight:600,color:t.muted,letterSpacing:0.5,textTransform:"uppercase",marginBottom:4 }}>Drag to timebox</p>
-                {INBOX_TASKS.filter(tk=>!scheduled.has(tk.id)).map(tk=>{
+                {inboxTasks.filter(tk=>!scheduled.has(tk.id)).map(tk=>{
                   const c=CATS[tk.cat]||CATS.Edit;
                   return (
                     <div key={tk.id} draggable onDragStart={e=>onRailDragStart(e,tk,"task")} onDragEnd={()=>{setRailDrag(null);setDropTarget(null);}}
@@ -1019,7 +1030,7 @@ export default function CalendarView({ t, dark, mobile, compact }) {
                     </div>
                   );
                 })}
-                {INBOX_TASKS.filter(tk=>!scheduled.has(tk.id)).length===0 && <p style={{ fontSize:12,color:t.muted,fontStyle:"italic",textAlign:"center",marginTop:20 }}>All tasks scheduled</p>}
+                {inboxTasks.filter(tk=>!scheduled.has(tk.id)).length===0 && <p style={{ fontSize:12,color:t.muted,fontStyle:"italic",textAlign:"center",marginTop:20 }}>All tasks scheduled</p>}
               </div>
             )}
 

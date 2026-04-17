@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Skeleton } from '../Skeleton';
 import { Sparkles, Users, Filter, Briefcase, Plus, Search, ChevronRight, Copy, Send, Mail, X, Check, MapPin, Building, Target } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
@@ -6,15 +7,6 @@ import NomaadConnect from './nomaad-connect';
 
 const INDUSTRIES = ['All', 'Ad agencies', 'Consumer brands', 'Media & production', 'PR firms'];
 const ROLES = ['All Roles', 'Creative Directors', 'Marketing Directors', 'Brand Managers', 'Agency Producers'];
-
-const MOCK_LEADS = [
-  { id: 1, name: 'Sarah Jenkins', role: 'Creative Director', company: 'Ogilvy', industry: 'Ad agencies', loc: 'New York', match: 98, bio: 'Award-winning CD focused on automotive and luxury brands. Recently launched the global campaign for Porsche.' },
-  { id: 2, name: 'Marcus Chen', role: 'Brand Manager', company: 'Nike', industry: 'Consumer brands', loc: 'Portland', match: 94, bio: 'Oversees Nike Running digital campaigns. Heavy emphasis on documentary-style storytelling.' },
-  { id: 3, name: 'Elena Rodriguez', role: 'Agency Producer', company: 'Wieden+Kennedy', industry: 'Ad agencies', loc: 'Portland', match: 91, bio: 'Senior producer managing multi-million dollar broadcast spots. Always looking for fresh directorial talent.' },
-  { id: 4, name: 'James Wilson', role: 'Head of Content', company: 'Sony Music', industry: 'Media & production', loc: 'Los Angeles', match: 89, bio: 'Leading visual content strategy for flagship artists. Needs rapid-turnaround music video treatments.' },
-  { id: 5, name: 'Chloe Dubois', role: 'Marketing Director', company: 'L\'Oréal', industry: 'Consumer brands', loc: 'Paris', match: 85, bio: 'Driving the new Gen-Z cosmetics line. Aesthetic is highly vibrant, fast-paced, and TikTok-native.' },
-  { id: 6, name: 'Tyler Durden', role: 'Creative Director', company: 'Paper Street', industry: 'Ad agencies', loc: 'Delaware', match: 72, bio: 'Disruptive advertising. Gritty, cinematic style.' },
-];
 
 export default function ProspectingView({ t, dark, mobile }) {
   const [tab, setTab] = useState('prospects');
@@ -25,14 +17,40 @@ export default function ProspectingView({ t, dark, mobile }) {
   const [generating, setGenerating] = useState(false);
   const [pitch, setPitch] = useState('');
   const [pushing, setPushing] = useState(false);
+  const [leads, setLeads] = useState([]);
+  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
   const ease = "all 0.45s cubic-bezier(.4,0,.2,1)";
 
-  const filtered = MOCK_LEADS.filter(l => {
+  useEffect(() => {
+    if (!user) return;
+    let mounted = true;
+    (async () => {
+      const { data } = await supabase.from('prospects')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      if (!mounted) return;
+      setLeads((data || []).map(p => ({
+        id: p.id,
+        name: p.name || 'Unknown',
+        role: p.role || p.title || '',
+        company: p.company || '',
+        industry: p.industry || '',
+        loc: p.location || p.city || '',
+        match: p.match_score || p.score || 0,
+        bio: p.notes || p.bio || '',
+      })));
+      setLoading(false);
+    })();
+    return () => { mounted = false; };
+  }, [user]);
+
+  const filtered = leads.filter(l => {
     if (ind !== 'All' && l.industry !== ind) return false;
     if (role !== 'All Roles' && l.role !== role) return false;
-    if (query && !l.name.toLowerCase().includes(query.toLowerCase()) && !l.company.toLowerCase().includes(query.toLowerCase())) return false;
+    if (query && !l.name.toLowerCase().includes(query.toLowerCase()) && !(l.company||'').toLowerCase().includes(query.toLowerCase())) return false;
     return true;
   });
 
@@ -130,6 +148,21 @@ export default function ProspectingView({ t, dark, mobile }) {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {loading && Array.from({length:5}).map((_,i)=>(
+              <div key={i} style={{display:'grid',gridTemplateColumns:'2fr 1.5fr 1fr 1fr auto',padding:'16px 20px',borderBottom:`1px solid ${t.divider}`,alignItems:'center',gap:12}}>
+                <div style={{display:'flex',flexDirection:'column',gap:6}}><Skeleton w="60%" h={13}/><Skeleton w="40%" h={10}/></div>
+                <div style={{display:'flex',flexDirection:'column',gap:6}}><Skeleton w="55%" h={13}/><Skeleton w="35%" h={10}/></div>
+                <Skeleton w="50%" h={13}/>
+                <Skeleton w={40} h={40} radius={20}/>
+                <Skeleton w={90} h={34} radius={12}/>
+              </div>
+            ))}
+            {!loading && filtered.length === 0 && (
+              <div style={{padding:'48px 20px',textAlign:'center',color:t.sub}}>
+                <div style={{fontSize:15,fontWeight:600,marginBottom:8}}>No prospects yet</div>
+                <div style={{fontSize:13}}>Use the Connect tab to find creatives, or push contacts from the AI Pitch panel.</div>
+              </div>
+            )}
             {filtered.map(lead => (
               <div key={lead.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 1fr 1fr auto', padding: '16px 20px', borderBottom: `1px solid ${t.divider}`, alignItems: 'center', transition: ease, background: activeLead?.id === lead.id ? (dark ? 'rgba(204,253,1,0.05)' : '#fcfef7') : 'transparent', ':hover': { background: t.input } }}>
                 

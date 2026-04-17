@@ -17,7 +17,7 @@ const STAGES = [
   { id: 'archived', title: 'Archived', ic: <Package size={15} />, color: '#ccfd01' }
 ];
 
-const MOCK_USERS = ['AA', 'SJ', 'MC', 'ER', 'JD', 'KP'];
+// Members are now managed individually
 
 const INIT_TASKS = []; // Fetched dynamically
 
@@ -555,18 +555,31 @@ export default function ProjectsView({ t, dark, mobile, onLaunchPortal }) {
                   {showMembers && (
                     <div style={{ position: 'absolute', top: 60, left: 0, width: 200, background: t.card, border: `1px solid ${t.cardBorder}`, borderRadius: 12, boxShadow: t.cardShadow, zIndex: 10, overflow: 'hidden', backdropFilter: 'blur(20px)' }}>
                       <div style={{ padding: '8px 12px', fontSize: 11, fontWeight: 600, color: t.muted, borderBottom: `1px solid ${t.divider}` }}>Add / Remove Members</div>
-                      {MOCK_USERS.map(u => {
-                        const isMem = (openedTask.members || []).includes(u);
+                      {/* Add Member Quick Input */}
+                      <div style={{ padding: '8px 12px', borderBottom: `1px solid ${t.divider}` }}>
+                        <input
+                          placeholder="Type initials and press enter..."
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && e.target.value.trim()) {
+                              const nm = [...(openedTask.members||[]), e.target.value.trim().substring(0, 2).toUpperCase()];
+                              saveTaskDetails('members', nm);
+                              e.target.value = '';
+                            }
+                          }}
+                          style={{ width: '100%', background: 'transparent', border: `1px solid ${t.inputBorder}`, padding: '6px 10px', borderRadius: 6, color: t.text, fontSize: 13, outline: 'none' }}
+                        />
+                      </div>
+                      {(openedTask.members || []).map(u => {
                         return (
                           <div key={u} onClick={() => {
-                            const nm = isMem ? openedTask.members.filter(x=>x!==u) : [...(openedTask.members||[]), u];
+                            const nm = openedTask.members.filter(x=>x!==u);
                             saveTaskDetails('members', nm);
                           }} style={{ padding: '8px 12px', fontSize: 13, color: t.text, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: t.card, borderBottom: `1px solid ${t.divider}`, transition: ease, ':hover': { background: t.input } }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                               <div style={{ width: 24, height: 24, borderRadius: '50%', background: t.accentGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', color: t.accentText, fontSize: 9, fontWeight: 800 }}>{u}</div>
                               {u}
                             </div>
-                            {isMem && <CheckCircle2 size={14} color="#34C759" />}
+                            <CheckCircle2 size={14} color="#34C759" />
                           </div>
                         );
                       })}

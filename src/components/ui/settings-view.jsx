@@ -16,10 +16,36 @@ const DEFAULT_SETTINGS = {
   timeFormat:   "24h",
   dateFormat:   "DD/MM/YYYY",
   weekStartsOn: 1,
+  currency:     "GBP",
 };
+export const CURRENCIES = [
+  { code: "GBP", symbol: "£", label: "British Pound" },
+  { code: "USD", symbol: "$", label: "US Dollar" },
+  { code: "EUR", symbol: "€", label: "Euro" },
+  { code: "CAD", symbol: "CA$", label: "Canadian Dollar" },
+  { code: "AUD", symbol: "A$", label: "Australian Dollar" },
+  { code: "JPY", symbol: "¥", label: "Japanese Yen" },
+  { code: "CHF", symbol: "CHF", label: "Swiss Franc" },
+  { code: "SEK", symbol: "kr", label: "Swedish Krona" },
+  { code: "NOK", symbol: "kr", label: "Norwegian Krone" },
+  { code: "DKK", symbol: "kr", label: "Danish Krone" },
+  { code: "NZD", symbol: "NZ$", label: "New Zealand Dollar" },
+  { code: "ZAR", symbol: "R",  label: "South African Rand" },
+  { code: "INR", symbol: "₹",  label: "Indian Rupee" },
+  { code: "SGD", symbol: "S$", label: "Singapore Dollar" },
+  { code: "HKD", symbol: "HK$", label: "Hong Kong Dollar" },
+];
 export const getSettings = () => {
   try { return { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(SETTINGS_KEY)) }; }
   catch { return { ...DEFAULT_SETTINGS }; }
+};
+export const getCurrency = () => {
+  const s = getSettings();
+  return CURRENCIES.find(c => c.code === s.currency) || CURRENCIES[0];
+};
+export const formatMoney = (n) => {
+  const c = getCurrency();
+  return `${c.symbol}${Math.round(Number(n) || 0).toLocaleString()}`;
 };
 const persist = (patch) => {
   const next = { ...getSettings(), ...patch };
@@ -329,6 +355,29 @@ export default function SettingsView({ t, dark, mobile, compact }) {
           control={
             <Seg t={t} ease={ease} value={settings.weekStartsOn} onChange={v=>update("weekStartsOn",v)}
               options={[{label:"Sunday",value:0},{label:"Monday",value:1}]}/>
+          }
+        />
+      </PrefSection>
+
+      <PrefSection title="Currency" t={t}>
+        <PrefRow last t={t}
+          label="Display Currency"
+          sub="Used for invoices, financials, and dashboard totals"
+          control={
+            <select
+              value={settings.currency}
+              onChange={(e)=>update("currency", e.target.value)}
+              style={{
+                padding:"7px 10px", borderRadius:8,
+                border:`1px solid ${t.inputBorder}`, background:t.input,
+                color:t.text, fontSize:13, fontWeight:500, outline:"none",
+                cursor:"pointer", fontFamily:"inherit", minWidth:180,
+              }}
+            >
+              {CURRENCIES.map(c => (
+                <option key={c.code} value={c.code}>{c.symbol}  {c.code} — {c.label}</option>
+              ))}
+            </select>
           }
         />
       </PrefSection>

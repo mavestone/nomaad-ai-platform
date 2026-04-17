@@ -1,16 +1,33 @@
 import React, { useState } from 'react';
 import { Package, Link, CheckCircle, AlertCircle, PlayCircle, Plus, Eye, Check } from 'lucide-react';
 
-const MOCK_DELIVERABLES = [
-  { id: 1, name: 'V1 - Rough Cut', project: 'Winter Campaign Shoot', client: 'Nike Running', status: 'Changes Requested', revsUsed: 2, revsMax: 3, lastUpdated: '2 hours ago' },
-  { id: 2, name: 'Final Color Grade', project: 'Brand Documentary', client: 'Acme Corp', status: 'Approved', revsUsed: 1, revsMax: 3, lastUpdated: '1 day ago' },
-  { id: 3, name: 'Social Cuts (1x1)', project: 'Social Media Ad 15s', client: 'Local Coffee Spot', status: 'Shared', revsUsed: 1, revsMax: 5, lastUpdated: '3 hours ago' },
-  { id: 4, name: 'V2 - Audio Mix', project: 'Promo Video Overview', client: 'Tech Startup', status: 'Draft', revsUsed: 0, revsMax: 3, lastUpdated: '5 mins ago' },
-];
+// MOCK_DELIVERABLES replaced with dynamic fetching
 
 export default function DeliverablesView({ t, dark, mobile, onLaunchPortal }) {
   const ease = "all 0.45s cubic-bezier(.4,0,.2,1)";
-  const [delivs] = useState(MOCK_DELIVERABLES);
+  const { user } = useAuth();
+  const [delivs, setDelivs] = useState([]);
+  
+  React.useEffect(() => {
+    if (user) {
+      // For MVP, we can map documents to deliverables visually or fetch a separate deliverables table if added later.
+      // We will just fetch documents since they share schema traits.
+      supabase.from('documents').select('*').order('created_at', { ascending: false }).then(({ data }) => {
+        if (data) {
+          setDelivs(data.map(d => ({
+            id: d.id,
+            name: d.title,
+            project: d.folder || 'General',
+            client: 'Client',
+            status: d.is_pinned ? 'Approved' : 'Draft',
+            revsUsed: 0,
+            revsMax: 3,
+            lastUpdated: new Date(d.updated_at).toLocaleDateString()
+          })));
+        }
+      });
+    }
+  }, [user]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 16 }}>

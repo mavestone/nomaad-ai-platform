@@ -17,6 +17,8 @@ import AutomationsView from "./components/ui/automations-view";
 import FinancialsView from "./components/ui/financials-view";
 import SettingsView from "./components/ui/settings-view";
 import { supabase } from './lib/supabase';
+import { getCurrency, formatMoney } from './components/ui/settings-view';
+import { Skeleton, SkeletonRow, SkeletonStatCard } from './components/Skeleton';
 
 const VOLT="#ccfd01",VOLTD="#b8e300";
 
@@ -278,6 +280,8 @@ function BusinessOverview({ t, dark, mobile, compact, mode, w, userName, userEma
   const ease="all 0.45s cubic-bezier(.4,0,.2,1)";
   const card=(ex={})=>({background:t.card,border:`1px solid ${t.cardBorder}`,borderRadius:20,boxShadow:t.cardShadow,transition:ease,backdropFilter:"blur(24px) saturate(1.6)",...ex});
 
+  const currency = getCurrency();
+
   const [stats, setStats] = useState([
     {ic:"cust",label:"Clients",val:"—",sub:"active",p:pal.volt},
     {ic:"actCust",label:"Active Projects",val:"—",sub:"in progress",p:pal.teal},
@@ -287,21 +291,23 @@ function BusinessOverview({ t, dark, mobile, compact, mode, w, userName, userEma
   const [events, setEvents] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [invoices, setInvoices] = useState([]);
+  const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
     async function load() {
       const todayStart = new Date(); todayStart.setHours(0,0,0,0);
-      const todayEnd = new Date(); todayEnd.setHours(23,59,59,999);
       const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
+      const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29); thirtyDaysAgo.setHours(0,0,0,0);
 
-      const [clientsR, projectsR, invoicesR, eventsR, tasksR] = await Promise.all([
+      const [clientsR, projectsR, invoicesR, eventsR, tasksR, txsR] = await Promise.all([
         supabase.from('clients').select('id', { count: 'exact', head: true }),
         supabase.from('projects').select('id,status'),
         supabase.from('invoices').select('id,amount,status,paid_at,issued_at,client_id,number'),
         supabase.from('calendar_events').select('id,title,start_time,type').gte('start_time', todayStart.toISOString()).order('start_time', { ascending: true }).limit(5),
         supabase.from('tasks').select('id,title,due_date,completed_at').is('completed_at', null).order('due_date', { ascending: true, nullsLast: true }).limit(5),
+        supabase.from('transactions').select('amount,type,date').gte('date', thirtyDaysAgo.toISOString()),
       ]);
 
       if (!mounted) return;
@@ -317,17 +323,31 @@ function BusinessOverview({ t, dark, mobile, compact, mode, w, userName, userEma
         .filter(i => i.paid_at && new Date(i.paid_at) >= monthStart)
         .reduce((s,i) => s + (Number(i.amount)||0), 0);
 
-      const fmt = (n) => `£${Math.round(n).toLocaleString()}`;
-
       setStats([
         {ic:"cust",label:"Clients",val:String(clientCount),sub:"on your roster",p:pal.volt},
         {ic:"actCust",label:"Active Projects",val:String(activeProjects),sub:"in progress",p:pal.teal},
-        {ic:"dollar",label:"Unpaid Invoices",val:fmt(unpaidTotal),sub:`${unpaid.length} awaiting payment`,p:pal.amber},
-        {ic:"expense",label:"Month Income",val:fmt(monthIncome),sub:"received this month",p:pal.coral},
+        {ic:"dollar",label:"Unpaid Invoices",val:formatMoney(unpaidTotal),sub:`${unpaid.length} awaiting payment`,p:pal.amber},
+        {ic:"expense",label:"Month Income",val:formatMoney(monthIncome),sub:"received this month",p:pal.coral},
       ]);
       setEvents(eventsR.data || []);
       setTasks(tasksR.data || []);
       setInvoices(invs.slice(0,4));
+
+      // Build 30-day chart scaffold from transactions
+      const buckets = {};
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date(); d.setDate(d.getDate() - i); d.setHours(0,0,0,0);
+        buckets[d.toISOString().slice(0,10)] = { date: d, revenue: 0, costs: 0 };
+      }
+      (txsR.data || []).forEach(tx => {
+        const k = new Date(tx.date).toISOString().slice(0,10);
+        if (!buckets[k]) return;
+        const amt = Number(tx.amount) || 0;
+        if (tx.type === 'income') buckets[k].revenue += amt;
+        else if (tx.type === 'expense') buckets[k].costs += amt;
+      });
+      setChartData(Object.values(buckets));
+
       setLoading(false);
     }
     load();
@@ -359,7 +379,9 @@ function BusinessOverview({ t, dark, mobile, compact, mode, w, userName, userEma
 
       {/* Stats */}
       <div style={{display:"grid",gridTemplateColumns:mobile?"1fr 1fr":compact?"repeat(2,1fr)":"repeat(4,1fr)",gap:compact?10:12,flexShrink:0}}>
-        {stats.map((s,i)=>(
+        {loading ? Array.from({length:4}).map((_,i)=>(
+          <SkeletonStatCard key={i} t={t} dark={dark} />
+        )) : stats.map((s,i)=>(
           <div key={i} style={{background:cardGrads[mode][i],border:`1px solid ${t.cardBorder}`,borderRadius:20,boxShadow:t.cardShadow,
             padding:compact?"14px":"16px 18px",transition:ease,backdropFilter:"blur(24px) saturate(1.6)",
             position:"relative",overflow:"hidden",animation:`fadeUp 0.45s ease ${i*.06}s backwards`,minWidth:0}}>
@@ -373,6 +395,27 @@ function BusinessOverview({ t, dark, mobile, compact, mode, w, userName, userEma
           </div>))}
       </div>
 
+      {/* Cashflow chart */}
+      <div style={{...card({padding:compact?"16px 14px":"20px 22px",minWidth:0,overflow:"hidden",flexShrink:0}),animation:"fadeUp 0.45s ease 0.2s backwards"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:compact?14:20,gap:8}}>
+          <div>
+            <h3 style={{fontSize:15,fontWeight:600}}>Cashflow</h3>
+            <div style={{display:"flex",alignItems:"center",gap:14,marginTop:6}}>
+              {[{c:VOLT,l:"Income"},{c:pal.amber.base,l:"Expenses"}].map((lg,i)=>(
+                <div key={i} style={{display:"flex",alignItems:"center",gap:5}}>
+                  <div style={{width:7,height:7,borderRadius:"50%",background:lg.c}}/><span style={{fontSize:11.5,color:t.sub}}>{lg.l}</span>
+                </div>))}
+            </div>
+          </div>
+          <div style={{fontSize:11,color:t.muted}}>Last 30 days</div>
+        </div>
+        {loading ? (
+          <div style={{display:"flex",flexDirection:"column",gap:8,padding:"8px 0"}}>
+            <Skeleton w="100%" h={160} radius={12} />
+          </div>
+        ) : <AreaChartDemo data={chartData} currencySymbol={currency.symbol} />}
+      </div>
+
       {/* Today + Upcoming */}
       <div style={{display:"grid",gridTemplateColumns:compact?"1fr":"1fr 1fr",gap:12,flexShrink:0,minWidth:0}}>
         <div style={{...card({padding:"16px 18px",minWidth:0}),animation:"fadeUp 0.45s ease 0.25s backwards"}}>
@@ -380,7 +423,7 @@ function BusinessOverview({ t, dark, mobile, compact, mode, w, userName, userEma
             <h3 style={{fontSize:15,fontWeight:600}}>Upcoming</h3>
             <span style={{fontSize:11,color:t.muted}}>{events.length} scheduled</span>
           </div>
-          {loading && <div style={{fontSize:13,color:t.sub,padding:"20px 0",textAlign:"center"}}>Loading…</div>}
+          {loading && Array.from({length:3}).map((_,i)=><SkeletonRow key={i} t={t} last={i===2}/>)}
           {!loading && events.length === 0 && (
             <div style={{fontSize:13,color:t.sub,padding:"20px 0",textAlign:"center"}}>No upcoming events. Add one from Calendar.</div>
           )}
@@ -406,7 +449,7 @@ function BusinessOverview({ t, dark, mobile, compact, mode, w, userName, userEma
             <h3 style={{fontSize:15,fontWeight:600}}>Open Tasks</h3>
             <span style={{fontSize:11,color:t.muted}}>{tasks.length} open</span>
           </div>
-          {loading && <div style={{fontSize:13,color:t.sub,padding:"20px 0",textAlign:"center"}}>Loading…</div>}
+          {loading && Array.from({length:3}).map((_,i)=><SkeletonRow key={i} t={t} last={i===2}/>)}
           {!loading && tasks.length === 0 && (
             <div style={{fontSize:13,color:t.sub,padding:"20px 0",textAlign:"center"}}>No open tasks. You're all clear.</div>
           )}
@@ -427,7 +470,7 @@ function BusinessOverview({ t, dark, mobile, compact, mode, w, userName, userEma
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
           <h3 style={{fontSize:15,fontWeight:600}}>Recent Invoices</h3>
         </div>
-        {loading && <div style={{fontSize:13,color:t.sub,padding:"20px 0",textAlign:"center"}}>Loading…</div>}
+        {loading && Array.from({length:3}).map((_,i)=><SkeletonRow key={i} t={t} last={i===2}/>)}
         {!loading && invoices.length === 0 && (
           <div style={{fontSize:13,color:t.sub,padding:"20px 0",textAlign:"center"}}>No invoices yet. Create one from Money.</div>
         )}
@@ -437,7 +480,7 @@ function BusinessOverview({ t, dark, mobile, compact, mode, w, userName, userEma
               <div style={{fontSize:13,fontWeight:500}}>{inv.number || `Invoice ${inv.id.slice(0,8)}`}</div>
               <div style={{fontSize:11,color:t.muted,marginTop:1,textTransform:"capitalize"}}>{inv.status || "draft"}</div>
             </div>
-            <div style={{fontSize:14,fontWeight:600,fontVariantNumeric:"tabular-nums"}}>£{Number(inv.amount||0).toLocaleString()}</div>
+            <div style={{fontSize:14,fontWeight:600,fontVariantNumeric:"tabular-nums"}}>{formatMoney(inv.amount)}</div>
           </div>
         ))}
       </div>

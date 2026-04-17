@@ -1,5 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../contexts/AuthContext";
 import {
   Search, ArrowLeft, UserPlus, Check, MapPin,
@@ -7,109 +8,7 @@ import {
 } from "lucide-react";
 
 // ─── Mock community data ───────────────────────────────────────────────────────
-const MEMBERS = [
-  {
-    id: "m1", name: "Ava Mitchell", role: "Photographer", type: "photo",
-    online: true, status: "Online now", loc: "Sydney, AU",
-    img: "https://i.pravatar.cc/150?img=47",
-    bio: "Award-winning commercial photographer specialising in lifestyle and editorial. Clients include Vogue, Adidas, and Tourism Australia.",
-    mutuals: ["Luca Ferretti", "Maya Patel"],
-    connections: 284,
-    projects: [
-      { id: 1, title: "Adidas SS24 Campaign", cat: "Commercial", img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80", year: "2024" },
-      { id: 2, title: "Vogue Australia Editorial", cat: "Editorial", img: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=400&q=80", year: "2024" },
-      { id: 3, title: "Tourism AU Landscapes", cat: "Travel", img: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80", year: "2023" },
-      { id: 4, title: "Urban Portraits Series", cat: "Portrait", img: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400&q=80", year: "2023" },
-    ],
-  },
-  {
-    id: "m2", name: "Luca Ferretti", role: "Videographer", type: "video",
-    online: true, status: "Online now", loc: "Milan, IT",
-    img: "https://i.pravatar.cc/150?img=11",
-    bio: "Director of photography and commercial videographer with 10+ years in automotive and luxury fashion. Collaborated with Ferrari, Valentino, and Prada.",
-    mutuals: ["Ava Mitchell", "James Whitfield"],
-    connections: 412,
-    projects: [
-      { id: 1, title: "Ferrari Purosangue Launch", cat: "Automotive", img: "https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?w=400&q=80", year: "2024" },
-      { id: 2, title: "Valentino FW24 Film", cat: "Fashion", img: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80", year: "2024" },
-      { id: 3, title: "Prada Linea Rossa", cat: "Commercial", img: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=400&q=80", year: "2023" },
-    ],
-  },
-  {
-    id: "m3", name: "Maya Patel", role: "Graphic Designer", type: "design",
-    online: true, status: "Online now", loc: "London, UK",
-    img: "https://i.pravatar.cc/150?img=48",
-    bio: "Brand identity and motion designer. Obsessed with typography and systems thinking. Previously at Pentagram, now freelance.",
-    mutuals: ["Ava Mitchell", "Noah Klein"],
-    connections: 198,
-    projects: [
-      { id: 1, title: "Oatly Rebrand", cat: "Branding", img: "https://images.unsplash.com/photo-1561069934-eee225952461?w=400&q=80", year: "2024" },
-      { id: 2, title: "Notion Design System", cat: "UI/UX", img: "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=400&q=80", year: "2023" },
-      { id: 3, title: "Motion Manifesto", cat: "Motion", img: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80", year: "2023" },
-    ],
-  },
-  {
-    id: "m4", name: "Noah Klein", role: "Film Editor", type: "edit",
-    online: false, status: "45 min ago", loc: "Berlin, DE",
-    img: "https://i.pravatar.cc/150?img=12",
-    bio: "Post-production specialist. Colour grading and offline editing for commercials and feature films. DaVinci Resolve certified.",
-    mutuals: ["Maya Patel"],
-    connections: 156,
-    projects: [
-      { id: 1, title: "BMW i7 Global TVC", cat: "Automotive", img: "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&q=80", year: "2024" },
-      { id: 2, title: "Spotify Wrapped 2023", cat: "Digital", img: "https://images.unsplash.com/photo-1611339555312-e607c8352fd7?w=400&q=80", year: "2023" },
-    ],
-  },
-  {
-    id: "m5", name: "Sara Oduya", role: "Content Creator", type: "create",
-    online: false, status: "2 hrs ago", loc: "Lagos, NG",
-    img: "https://i.pravatar.cc/150?img=49",
-    bio: "Social-first storytelling with a Gen-Z lens. 2.4M across platforms. Brand partnerships with Nike, Spotify, and Apple.",
-    mutuals: ["Ava Mitchell", "James Whitfield"],
-    connections: 1820,
-    projects: [
-      { id: 1, title: "Nike x Africa Campaign", cat: "Social", img: "https://images.unsplash.com/photo-1552066344-2464c1135c32?w=400&q=80", year: "2024" },
-      { id: 2, title: "Spotify Africa Unwrapped", cat: "Content", img: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&q=80", year: "2023" },
-    ],
-  },
-  {
-    id: "m6", name: "James Whitfield", role: "Producer", type: "produce",
-    online: false, status: "3 hrs ago", loc: "Los Angeles, US",
-    img: "https://i.pravatar.cc/150?img=13",
-    bio: "Commercial and music video producer. Line producer for 200+ spots. Roster of top-tier directors. Always looking for fresh talent.",
-    mutuals: ["Luca Ferretti", "Sara Oduya"],
-    connections: 634,
-    projects: [
-      { id: 1, title: "Beyoncé 'Cowboy Carter' Visuals", cat: "Music Video", img: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&q=80", year: "2024" },
-      { id: 2, title: "Apple iPhone 16 Launch", cat: "Commercial", img: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=400&q=80", year: "2024" },
-      { id: 3, title: "Mercedes EQS TVC", cat: "Automotive", img: "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=400&q=80", year: "2023" },
-    ],
-  },
-  {
-    id: "m7", name: "Cleo Dubois", role: "Photographer", type: "photo",
-    online: false, status: "Yesterday", loc: "Paris, FR",
-    img: "https://i.pravatar.cc/150?img=44",
-    bio: "Editorial and fashion photographer based in Paris. Regular contributor to Vogue Paris, Harper's Bazaar, and Elle.",
-    mutuals: ["Ava Mitchell"],
-    connections: 347,
-    projects: [
-      { id: 1, title: "Dior Cruise Collection", cat: "Fashion", img: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&q=80", year: "2024" },
-      { id: 2, title: "Hermès Silk Stories", cat: "Editorial", img: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=400&q=80", year: "2023" },
-    ],
-  },
-  {
-    id: "m8", name: "Raj Sharma", role: "Videographer", type: "video",
-    online: false, status: "Yesterday", loc: "Mumbai, IN",
-    img: "https://i.pravatar.cc/150?img=14",
-    bio: "Documentary and branded content director. 15 years telling South Asian stories for global brands. Sundance alumni.",
-    mutuals: ["Luca Ferretti"],
-    connections: 278,
-    projects: [
-      { id: 1, title: "Tata Motors Documentary", cat: "Documentary", img: "https://images.unsplash.com/photo-1449130275-c7f2e4ca23f1?w=400&q=80", year: "2024" },
-      { id: 2, title: "Bollywood BTS Series", cat: "Behind-the-Scenes", img: "https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=400&q=80", year: "2023" },
-    ],
-  },
-];
+// Members fetched from profiles table
 
 const ROLE_STYLES = {
   photo:   { color: "#ccfd01", bg: "rgba(204,253,1,0.1)",   icon: <Camera   size={11} strokeWidth={2.5}/> },
@@ -202,15 +101,15 @@ function MemberCard({ member, onNameClick, onConnect, connected, t, dark, idx })
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}>
                 <div style={{ display: "flex" }}>
                   {member.mutuals.slice(0, 2).map((name, i) => {
-                    const m = MEMBERS.find(x => x.name === name);
-                    return m ? (
-                      <img key={i} src={m.img} alt={name}
-                        style={{ width: 18, height: 18, borderRadius: "50%", objectFit: "cover",
+                    return (
+                      <div key={i}
+                        style={{ width: 18, height: 18, borderRadius: "50%", background: "#444",
                           border: `1.5px solid ${dark ? "#0d0d12" : "#fff"}`,
-                          marginLeft: i === 0 ? 0 : -6 }}
-                        onError={e => { e.target.style.display = "none"; }}
-                      />
-                    ) : null;
+                          marginLeft: i === 0 ? 0 : -6, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, color: "#fff" }}
+                      >
+                       {name.charAt(0)}
+                      </div>
+                    );
                   })}
                 </div>
                 <span style={{ fontSize: 11, color: t.muted }}>
@@ -343,14 +242,14 @@ function ProfilePage({ member, onBack, onConnect, connected, t, dark }) {
                 border: `1px solid ${t.divider}`, alignSelf: "flex-start", width: "fit-content" }}>
                 <div style={{ display: "flex" }}>
                   {member.mutuals.slice(0, 3).map((name, i) => {
-                    const m = MEMBERS.find(x => x.name === name);
-                    return m ? (
-                      <img key={i} src={m.img} alt={name}
-                        style={{ width: 22, height: 22, borderRadius: "50%", objectFit: "cover",
-                          border: `2px solid ${dark ? "#0d0d12" : "#fff"}`, marginLeft: i === 0 ? 0 : -8 }}
-                        onError={e => { e.target.style.display = "none"; }}
-                      />
-                    ) : null;
+                    return (
+                      <div key={i}
+                        style={{ width: 22, height: 22, borderRadius: "50%", background: "#444",
+                          border: `2px solid ${dark ? "#0d0d12" : "#fff"}`, marginLeft: i === 0 ? 0 : -8, display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontSize: 10 }}
+                      >
+                       {name.charAt(0)}
+                      </div>
+                    );
                   })}
                 </div>
                 <span style={{ fontSize: 12, color: t.sub }}>
@@ -434,8 +333,31 @@ export default function NomaadConnect({ t, dark, mobile }) {
   const [connected, setConnected]     = useState(new Set());
   const [profileMember, setProfileMember] = useState(null);
 
+  const [members, setMembers] = useState([]);
+
+  useEffect(() => {
+    supabase.from('profiles').select('*').then(({ data }) => {
+      if (data) {
+        setMembers(data.map(p => ({
+          id: p.id,
+          name: p.full_name || 'Nomaad User',
+          role: p.role || 'Member',
+          type: 'photo', // default
+          online: true,
+          status: 'Online',
+          loc: p.company || 'Global',
+          img: p.avatar_url,
+          bio: 'Nomaad Member',
+          mutuals: [],
+          connections: 0,
+          projects: []
+        })));
+      }
+    });
+  }, []);
+
   const filtered = useMemo(() => {
-    return MEMBERS.filter(m => {
+    return members.filter(m => {
       if (catFilter !== "All" && m.type !== catFilter) return false;
       if (query) {
         const q = query.toLowerCase();
@@ -443,7 +365,7 @@ export default function NomaadConnect({ t, dark, mobile }) {
       }
       return true;
     });
-  }, [query, catFilter]);
+  }, [members, query, catFilter]);
 
   const toggleConnect = (id) => {
     setConnected(prev => {
@@ -453,7 +375,7 @@ export default function NomaadConnect({ t, dark, mobile }) {
     });
   };
 
-  const online = MEMBERS.filter(m => m.online).length;
+  const online = members.filter(m => m.online).length;
 
   const cardStyle = {
     background: t.card, border: `1px solid ${t.cardBorder}`, borderRadius: 24,
