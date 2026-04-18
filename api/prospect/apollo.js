@@ -90,8 +90,9 @@ export default async function handler(req, res) {
     per_page = 25,
   } = payload;
 
-  // Build Apollo request body — only include filters that are non-empty
+  // Build Apollo request body — api_key goes in body (Apollo's supported auth method)
   const body = {
+    api_key: apiKey,
     page: Math.max(1, Number(page) || 1),
     per_page: Math.min(Math.max(Number(per_page) || 25, 1), 100),
   };
@@ -109,8 +110,8 @@ export default async function handler(req, res) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
         'Cache-Control': 'no-cache',
+        'X-Api-Key': apiKey,
       },
       body: JSON.stringify(body),
     });
