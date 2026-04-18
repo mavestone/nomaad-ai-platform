@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "./contexts/AuthContext";
 import AuthPage from "./components/AuthPage";
+import LandingPage from "./components/LandingPage";
 import OnboardingView from "./components/OnboardingView";
 import UserProfileView from "./components/UserProfileView";
 import AIFloater from "./components/AIFloater";
@@ -589,6 +590,7 @@ function BusinessOverview({ t, dark, mobile, compact, mode, w, userName, userEma
 
 export default function Dashboard(){
   const { user, profile, loading, signOut, updateProfile } = useAuth();
+  const [showAuth, setShowAuth] = useState(false);
 
   // Show loading spinner while checking session
   if (loading) {
@@ -602,8 +604,11 @@ export default function Dashboard(){
     );
   }
 
-  // Show auth page if not logged in
-  if (!user) return <AuthPage />;
+  // Show landing or auth for logged-out users
+  if (!user) {
+    if (!showAuth) return <LandingPage onGetStarted={() => setShowAuth(true)} />;
+    return <AuthPage />;
+  }
 
   // Show onboarding for new users who haven't completed it
   if (profile !== null && !profile?.onboarding_complete) return <OnboardingView />;
