@@ -70,11 +70,15 @@ export default function CRMView({ t, dark, mobile, compact, IC, pal }) {
   }, [user]);
 
   async function fetchProspects() {
-    const { data } = await supabase.from("prospects").select("*").order("created_at", { ascending: false });
-    if (data) {
-      setContacts(data.map(formatContact));
+    try {
+      const { data, error } = await supabase.from("prospects").select("*").order("created_at", { ascending: false });
+      if (error) throw error;
+      if (data) setContacts(data.map(formatContact));
+    } catch (err) {
+      console.error("fetchProspects:", err.message);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   function formatContact(d) {
@@ -95,7 +99,7 @@ export default function CRMView({ t, dark, mobile, compact, IC, pal }) {
     const { name, company, email, value, stage } = formData;
     const { data, error } = await supabase.from("prospects").insert([{
       user_id: user.id, name, company, email,
-      value: parseFloat(value) || 0, stage, status: "active",
+      value: parseFloat(value) || 0, stage,
     }]).select().single();
     if (error) {
       console.error("Add lead error:", error.message);
@@ -429,11 +433,11 @@ export default function CRMView({ t, dark, mobile, compact, IC, pal }) {
                 <div style={{ display: "flex", gap: 12 }}>
                   <div style={{ flex: 1 }}>
                     <label style={{ display: "block", fontSize: 12, color: t.sub, marginBottom: 4 }}>Company</label>
-                    <input required value={formData.company} onChange={e => setFormData({ ...formData, company: e.target.value })} style={{ width: "100%", padding: "10px", borderRadius: 10, border: `1px solid ${t.inputBorder}`, background: t.input, color: t.text, outline: "none", fontSize: 14, boxSizing: "border-box" }} />
+                    <input value={formData.company} onChange={e => setFormData({ ...formData, company: e.target.value })} style={{ width: "100%", padding: "10px", borderRadius: 10, border: `1px solid ${t.inputBorder}`, background: t.input, color: t.text, outline: "none", fontSize: 14, boxSizing: "border-box" }} />
                   </div>
                   <div style={{ flex: 1 }}>
                     <label style={{ display: "block", fontSize: 12, color: t.sub, marginBottom: 4 }}>Deal Value ($)</label>
-                    <input required type="number" value={formData.value} onChange={e => setFormData({ ...formData, value: e.target.value })} style={{ width: "100%", padding: "10px", borderRadius: 10, border: `1px solid ${t.inputBorder}`, background: t.input, color: t.text, outline: "none", fontSize: 14, boxSizing: "border-box" }} />
+                    <input type="number" min="0" step="any" placeholder="0" value={formData.value} onChange={e => setFormData({ ...formData, value: e.target.value })} style={{ width: "100%", padding: "10px", borderRadius: 10, border: `1px solid ${t.inputBorder}`, background: t.input, color: t.text, outline: "none", fontSize: 14, boxSizing: "border-box" }} />
                   </div>
                 </div>
                 <div>
