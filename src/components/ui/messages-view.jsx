@@ -41,90 +41,10 @@ const PLATFORMS = [
 ];
 
 // ── Threads (DMs) ──────────────────────────────────────────────────────────────
-const INITIAL_THREADS = [
-  {
-    id: 1, type: "dm", platform: "whatsapp",
-    sender: "Alice Freeman", avatar: "A", color: "#25D366",
-    snippet: "That proposal looks great. Should we sync tomorrow?", time: "10:42 AM", unread: true,
-    messages: [
-      { id: 101, from: "Alice", text: "Hey! Did you get a chance to look over the new pricing proposal?", time: "10:30 AM" },
-      { id: 102, from: "Me", text: "Yes! Currently reviewing it with the team. Looks promising so far.", time: "10:35 AM" },
-      { id: 103, from: "Alice", text: "That proposal looks great. Should we sync tomorrow?", time: "10:42 AM" },
-    ],
-  },
-  {
-    id: 2, type: "dm", platform: "gmail",
-    sender: "Bobby Tables", subject: "RE: Q3 Marketing Budget", avatar: "B", color: "#EA4335",
-    snippet: "I've attached the revised budget constraints for next quarter...", time: "Yesterday", unread: false,
-    messages: [
-      { id: 201, from: "Bobby", text: "Hi,\n\nI've attached the revised budget constraints for next quarter. Let me know if we need to adjust the Facebook ad spend.\n\nBest,\nBobby", time: "Yesterday, 4:15 PM" },
-    ],
-  },
-  {
-    id: 3, type: "dm", platform: "imessage",
-    sender: "Carolina Herr", avatar: "C", color: "#34AADC",
-    snippet: "Perfect. Send me the coordinates.", time: "Tuesday", unread: false,
-    messages: [
-      { id: 301, from: "Carolina", text: "Are we still on for the site visit?", time: "Tuesday, 9:00 AM" },
-      { id: 302, from: "Me", text: "Yes, definitely! I'll be there at 2PM.", time: "Tuesday, 9:05 AM" },
-      { id: 303, from: "Carolina", text: "Perfect. Send me the coordinates.", time: "Tuesday, 9:10 AM" },
-    ],
-  },
-  {
-    id: 4, type: "dm", platform: "gmail",
-    sender: "David Kim", subject: "Project Phoenix Launch", avatar: "D", color: "#EA4335",
-    snippet: "Staging is fully deployed and migration is complete.", time: "Mon", unread: true,
-    messages: [
-      { id: 401, from: "David Kim", text: "Hi,\n\nJust confirming that the staging environment is fully deployed and the migration is complete. We are ready for UAT.\n\nThanks,\nDavid", time: "Monday, 11:20 AM" },
-    ],
-  },
-  {
-    id: 5, type: "dm", platform: "slack",
-    sender: "Emma Wright", avatar: "E", color: "#7B68EE",
-    snippet: "Can you review the new onboarding flow before EOD?", time: "Mon", unread: false,
-    messages: [
-      { id: 501, from: "Emma Wright", text: "Hey! Can you review the new onboarding flow before EOD? Added some nice micro-animations.", time: "Monday, 2:30 PM" },
-      { id: 502, from: "Me", text: "On it — will send feedback by 5.", time: "Monday, 2:45 PM" },
-    ],
-  },
-];
+const INITIAL_THREADS = [];
 
 // ── Channels (team group chats) ────────────────────────────────────────────────
-const INITIAL_CHANNELS = [
-  {
-    id: 101, type: "channel",
-    name: "general", color: "#5AC8FA",
-    members: ["A", "B", "C", "D", "E"], memberCount: 12,
-    snippet: "Bobby: Q3 targets are ahead of schedule 📈", time: "11:30 AM", unread: 4,
-    messages: [
-      { id: 1001, from: "Alice", avatar: "A", color: "#AF52DE", text: "Morning everyone! Just sent over the client deck for review.", time: "9:15 AM" },
-      { id: 1002, from: "Bobby", avatar: "B", color: "#EA4335", text: "Thanks Alice. The new case study section looks really sharp.", time: "10:00 AM" },
-      { id: 1003, from: "Emma", avatar: "E", color: "#7B68EE", text: "Agreed. Clients are going to love the before/after section.", time: "10:45 AM" },
-      { id: 1004, from: "Bobby", avatar: "B", color: "#EA4335", text: "Q3 targets are ahead of schedule 📈", time: "11:30 AM" },
-    ],
-  },
-  {
-    id: 102, type: "channel",
-    name: "design", color: "#FF6259",
-    members: ["A", "C", "E"], memberCount: 4,
-    snippet: "Emma: Just pushed the new card designs 🎨", time: "10:20 AM", unread: 0,
-    messages: [
-      { id: 1011, from: "Emma", avatar: "E", color: "#7B68EE", text: "Just pushed the new card designs 🎨 — check Figma for the updated components.", time: "10:05 AM" },
-      { id: 1012, from: "Alice", avatar: "A", color: "#AF52DE", text: "Love the gradient treatment on the stats cards. Very clean.", time: "10:15 AM" },
-      { id: 1013, from: "Me", avatar: "M", color: "#34C759", text: "Merging this into main after QA signs off.", time: "10:20 AM" },
-    ],
-  },
-  {
-    id: 103, type: "channel",
-    name: "sales", color: "#FFB340",
-    members: ["B", "D"], memberCount: 6,
-    snippet: "David: Proposal sent to Meridian Group ✓", time: "Yesterday", unread: 1,
-    messages: [
-      { id: 1021, from: "David Kim", avatar: "D", color: "#EA4335", text: "Proposal sent to Meridian Group ✓ — they want a call next Thursday.", time: "Yesterday, 3:40 PM" },
-      { id: 1022, from: "Bobby", avatar: "B", color: "#EA4335", text: "Great work. I'll prep the pricing deck for the call.", time: "Yesterday, 4:00 PM" },
-    ],
-  },
-];
+const INITIAL_CHANNELS = [];
 
 // ── Platform icon helper ───────────────────────────────────────────────────────
 const PlatformIcon = ({ platformId, size = 11 }) => {
@@ -194,7 +114,7 @@ export default function MessagesView({ t, dark, mobile, compact }) {
   const [activePlatform, setActivePlatform]   = useState("all");
   const [threads, setThreads]                 = useState(INITIAL_THREADS);
   const [channels, setChannels]               = useState(INITIAL_CHANNELS);
-  const [activeThreadId, setActiveThreadId]   = useState(INITIAL_THREADS[0].id);
+  const [activeThreadId, setActiveThreadId]   = useState(INITIAL_THREADS[0]?.id ?? null);
   const [activeChannelId, setActiveChannelId] = useState(null);
   const [messageText, setMessageText]         = useState('');
   const realtimeRef                           = useRef(null);
@@ -554,6 +474,17 @@ export default function MessagesView({ t, dark, mobile, compact }) {
 
         {/* Thread list + Channels */}
         <div style={{ flex: 1, overflowY: "auto" }}>
+
+          {/* Empty state */}
+          {filteredThreads.length === 0 && channels.length === 0 && (
+            <div style={{ padding: "32px 20px", textAlign: "center" }}>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>💬</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: dark ? "#f0f0f5" : "#1a1a1f", marginBottom: 6 }}>No messages yet</div>
+              <div style={{ fontSize: 12, color: dark ? "rgba(255,255,255,0.45)" : "#6b7280", lineHeight: 1.6 }}>
+                Connect WhatsApp via Settings to see your conversations here.
+              </div>
+            </div>
+          )}
 
           {/* DMs */}
           <div style={{ padding: "6px 0" }}>

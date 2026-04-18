@@ -93,10 +93,16 @@ export default function CRMView({ t, dark, mobile, compact, IC, pal }) {
     e.preventDefault();
     if (!user) return;
     const { name, company, email, value, stage } = formData;
-    const { data } = await supabase.from("prospects").insert([{
+    const { data, error } = await supabase.from("prospects").insert([{
       user_id: user.id, name, company, email,
       value: parseFloat(value) || 0, stage, status: "active",
     }]).select().single();
+    if (error) {
+      console.error("Add lead error:", error.message);
+      // Surface error to user
+      alert(`Could not add contact: ${error.message}`);
+      return;
+    }
     if (data) {
       setContacts(prev => [formatContact(data), ...prev]);
     }

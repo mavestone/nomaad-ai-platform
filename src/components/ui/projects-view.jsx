@@ -227,6 +227,35 @@ export default function ProjectsView({ t, dark, mobile, onLaunchPortal }) {
 
   const [showMembers, setShowMembers] = useState(false);
 
+  // ── Add Project modal ──────────────────────────────────────────────────────
+  const [addProjectModal, setAddProjectModal] = useState(false);
+  const [addProjectForm, setAddProjectForm] = useState({ name: '', status: 'planning' });
+  const [addProjectSaving, setAddProjectSaving] = useState(false);
+
+  const handleAddProject = async (e) => {
+    e.preventDefault();
+    if (!user || !addProjectForm.name.trim()) return;
+    setAddProjectSaving(true);
+    const todayStr = format(new Date(), 'yyyy-MM-dd');
+    const { data, error } = await supabase.from('projects').insert([{
+      user_id: user.id,
+      name: addProjectForm.name.trim(),
+      title: addProjectForm.name.trim(),
+      status: addProjectForm.status,
+      due_date: new Date().toISOString(),
+      color: '#ccfd01',
+    }]).select().single();
+    setAddProjectSaving(false);
+    if (error) { console.error('Add project error:', error.message); return; }
+    if (data) {
+      const newTask = { id: data.id, columnId: data.status, client: '', title: data.name || data.title, value: 0, dueDate: todayStr, deliverables: [], members: [] };
+      setTasks(prev => [...prev, newTask]);
+      setOpenedTask(newTask);
+    }
+    setAddProjectModal(false);
+    setAddProjectForm({ name: '', status: 'planning' });
+  };
+
   // Weekly Calendar Strip Logic
   const today = new Date('2023-11-20');
   const startOfWk = startOfWeek(today, { weekStartsOn: 1 });
@@ -292,21 +321,9 @@ export default function ProjectsView({ t, dark, mobile, onLaunchPortal }) {
                   
                   {/* Add Button */}
                   <button onClick={async () => {
-                    const todayStr = format(new Date(), 'yyyy-MM-dd');
-                    const { data, error } = await supabase.from('projects').insert([{
-                      user_id: user.id,
-                      name: 'New Project',
-                      title: 'New Project',
-                      status: col.id,
-                      due_date: new Date().toISOString(),
-                      color: '#ccfd01',
-                    }]).select().single();
-                    if (data) {
-                      const newTask = { id: data.id, columnId: data.status, client: '', title: data.name || data.title || 'New Project', value: 0, dueDate: todayStr, deliverables: [], members: [] };
-                      setTasks([...tasks, newTask]);
-                      setOpenedTask(newTask);
-                    } else if (error) { console.error('Add project:', error.message); }
-                  }} style={{ padding: "14px", borderRadius: 16, border: `1px dashed ${t.cardBorder}`, background: "transparent", color: t.sub, fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, cursor: "pointer", transition: ease, ':hover': { background: t.input } }}>
+                    setAddProjectForm(f => ({ ...f, status: col.id }));
+                    setAddProjectModal(true);
+                  }} style={{ padding: "14px", borderRadius: 16, border: `1px dashed ${t.cardBorder}`, background: "transparent", color: t.sub, fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, cursor: "pointer", transition: ease }}>
                     <Plus size={14} /> Add Project
                   </button>
                 </DroppableColumn>
@@ -320,6 +337,45 @@ export default function ProjectsView({ t, dark, mobile, onLaunchPortal }) {
         </DragOverlay>
       </DndContext>
       
+      {/* ── Add Project Modal ── */}
+      {addProjectModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)' }} onClick={() => setAddProjectModal(false)}>
+          <div style={{ background: dark ? '#16161e' : '#fff', border: `1px solid ${t.cardBorder}`, borderRadius: 20, width: 380, padding: 24, boxShadow: '0 24px 60px rgba(0,0,0,0.3)' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h3 style={{ fontSize: 17, fontWeight: 700, color: t.text, margin: 0 }}>New Project</h3>
+              <button onClick={() => setAddProjectModal(false)} style={{ background: 'none', border: 'none', color: t.muted, cursor: 'pointer', fontSize: 20, lineHeight: 1 }}>×</button>
+            </div>
+            <form onSubmit={handleAddProject} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: t.sub, marginBottom: 5, textTransform: 'uppercase', letterSpacing: 0.5 }}>Project Name *</label>
+                <input
+                  required autoFocus
+                  value={addProjectForm.name}
+                  onChange={e => setAddProjectForm(f => ({ ...f, name: e.target.value }))}
+                  placeholder="e.g. Brand shoot for Acme Co"
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: `1px solid ${t.inputBorder}`, background: t.input, color: t.text, fontSize: 14, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                  onFocus={e => e.target.style.borderColor = '#ccfd01'}
+                  onBlur={e => e.target.style.borderColor = t.inputBorder}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: t.sub, marginBottom: 5, textTransform: 'uppercase', letterSpacing: 0.5 }}>Stage</label>
+                <select
+                  value={addProjectForm.status}
+                  onChange={e => setAddProjectForm(f => ({ ...f, status: e.target.value }))}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: `1px solid ${t.inputBorder}`, background: t.input, color: t.text, fontSize: 14, appearance: 'none', cursor: 'pointer', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                >
+                  {STAGES.map(s => <option key={s.id} value={s.id}>{s.title}</option>)}
+                </select>
+              </div>
+              <button type="submit" disabled={addProjectSaving} style={{ marginTop: 6, padding: '12px', borderRadius: 12, border: 'none', background: addProjectSaving ? 'rgba(204,253,1,0.4)' : 'linear-gradient(135deg,#ccfd01,#b8e300)', color: '#0a0a0a', fontWeight: 700, fontSize: 14, cursor: addProjectSaving ? 'wait' : 'pointer', fontFamily: 'inherit' }}>
+                {addProjectSaving ? 'Creating…' : 'Create Project'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Massive Trello-like Modal */}
       {openedTask && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'fadeIn 0.2s ease', padding: 24 }} onClick={() => setOpenedTask(null)}>

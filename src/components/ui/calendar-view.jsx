@@ -240,27 +240,35 @@ export default function CalendarView({ t, dark, mobile, compact }) {
     } catch {}
   };
 
-  const connectGoogle = async () => {
+  const connectGoogle = async (e) => {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
     if (!clientId) {
-      alert("Add VITE_GOOGLE_CLIENT_ID to your .env file.\n\nGet one at console.cloud.google.com — create a project, enable Calendar API, add OAuth 2.0 credentials (Web), add your domain to authorized origins.");
+      alert("Add VITE_GOOGLE_CLIENT_ID to your .env — get one at console.cloud.google.com (Calendar API → OAuth 2.0 Web credentials).");
       return;
     }
     setGConnecting(true);
-    await loadGsiScript();
-    window.google.accounts.oauth2.initTokenClient({
-      client_id: clientId,
-      scope: "https://www.googleapis.com/auth/calendar.readonly",
-      callback: async (resp) => {
-        setGConnecting(false);
-        if (resp.access_token) {
-          localStorage.setItem("gCalToken", resp.access_token);
-          setGConnected(true);
-          await fetchGoogleEvents(resp.access_token);
-        }
-      },
-      error_callback: () => setGConnecting(false),
-    }).requestAccessToken();
+    try {
+      await loadGsiScript();
+      if (!window.google?.accounts?.oauth2) { setGConnecting(false); return; }
+      window.google.accounts.oauth2.initTokenClient({
+        client_id: clientId,
+        scope: "https://www.googleapis.com/auth/calendar.readonly",
+        ux_mode: "popup",
+        callback: async (resp) => {
+          setGConnecting(false);
+          if (resp?.access_token) {
+            localStorage.setItem("gCalToken", resp.access_token);
+            setGConnected(true);
+            await fetchGoogleEvents(resp.access_token);
+          }
+        },
+        error_callback: (err) => { console.warn("Google OAuth error:", err); setGConnecting(false); },
+      }).requestAccessToken({ prompt: "consent" });
+    } catch (err) {
+      console.warn("Google connect error:", err);
+      setGConnecting(false);
+    }
   };
 
   const syncGoogle = async () => {
@@ -933,7 +941,7 @@ export default function CalendarView({ t, dark, mobile, compact }) {
     <motion.div
       initial={{ width:0, opacity:0 }} animate={{ width:mobile?"100%":260, opacity:1 }} exit={{ width:0, opacity:0 }}
       transition={{ type:"spring", stiffness:350, damping:32 }}
-      style={{ flexShrink:0, paddingLeft:12, minHeight:0, overflow:"visible" }}
+      style={{ flexShrink:0, paddingLeft:12, minHeight:0, overflow:"hidden" }}
     >
       <div style={{ width:mobile?"100%":260, height:"100%", display:"flex", flexDirection:"column", minHeight:0 }}>
         <div style={{ ...card({padding:0}), flex:1, display:"flex", flexDirection:"column", overflow:"hidden", minHeight:0 }}>
@@ -1070,22 +1078,13 @@ export default function CalendarView({ t, dark, mobile, compact }) {
                       </button>
                     </div>
                   ) : (
-                    <button onClick={connectGoogle} disabled={gConnecting}
+                    <button type="button" onClick={connectGoogle} disabled={gConnecting}
                       style={{ width:"100%",padding:"7px",borderRadius:8,border:"none",background:"#4285F4",color:"#fff",fontSize:12,fontWeight:600,cursor:gConnecting?"wait":"pointer",marginTop:0 }}>
                       {gConnecting?"Connecting...":"Connect"}
                     </button>
                   )}
                 </div>
 
-                {/* Divider */}
-                <div style={{ height:1,background:t.divider,margin:"2px 0" }}/>
-                <p style={{ fontSize:10,fontWeight:600,color:t.muted,letterSpacing:0.5,textTransform:"uppercase" }}>Coming Soon</p>
-                {["iCloud Calendar","Outlook"].map(name=>(
-                  <div key={name} style={{ display:"flex",alignItems:"center",gap:10,padding:"9px 12px",borderRadius:12,border:`1px solid ${t.inputBorder}`,background:t.input,opacity:0.5 }}>
-                    <div style={{ width:11,height:11,borderRadius:3,background:t.muted,flexShrink:0 }}/>
-                    <div style={{ fontSize:12,fontWeight:600,color:t.text }}>{name}</div>
-                  </div>
-                ))}
               </div>
             )}
           </div>
