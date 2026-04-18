@@ -613,15 +613,20 @@ export default function Dashboard(){
   // Show onboarding for new users who haven't completed it
   if (profile !== null && !profile?.onboarding_complete) return <OnboardingView />;
 
+  return <PlatformApp user={user} profile={profile} signOut={signOut} updateProfile={updateProfile} />;
+}
+
+// ─── Authenticated platform shell ─────────────────────────────────────────────
+// Separate component so all hooks always run (fixes Rules of Hooks violation)
+
+function PlatformApp({ user, profile, signOut, updateProfile }) {
   const userName = profile?.full_name || user?.user_metadata?.full_name || '';
   const userEmail = user?.email || '';
 
   const[dark,setDark]=useState(true);
-  const VOLTD = '#c3ef00'; // slightly darker
+  const VOLTD = '#c3ef00';
 
-  // We can render Client Portal directly as a full screen modal mock if user clicks a button 
   const [showPortal, setShowPortal] = useState(false);
-
   const[showProfile,setShowProfile]=useState(false);
   const[nav,setNav]=useState(0);
   const[navSec,setNavSec]=useState(0);
