@@ -276,9 +276,41 @@ function DonutRing({pct,color,size=72,strokeW=7,t}){
 }
 
 
+// ── Dashboard widget config ────────────────────────────────────────────────────
+const DASH_WIDGETS = [
+  { id: "stats",    label: "KPI Stats",        icon: "📊" },
+  { id: "chart",   label: "Cashflow Chart",    icon: "📈" },
+  { id: "upcoming",label: "Upcoming Events",   icon: "📅" },
+  { id: "tasks",   label: "Open Tasks",        icon: "✅" },
+  { id: "invoices",label: "Recent Invoices",   icon: "🧾" },
+];
+
+function getDashPrefs() {
+  try {
+    const raw = localStorage.getItem("nomaad_dash_widgets");
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  // Default: all on
+  return Object.fromEntries(DASH_WIDGETS.map(w => [w.id, true]));
+}
+
+function saveDashPrefs(prefs) {
+  try { localStorage.setItem("nomaad_dash_widgets", JSON.stringify(prefs)); } catch {}
+}
+
 function BusinessOverview({ t, dark, mobile, compact, mode, w, userName, userEmail, sidebarOpen }) {
   const ease="all 0.45s cubic-bezier(.4,0,.2,1)";
   const card=(ex={})=>({background:t.card,border:`1px solid ${t.cardBorder}`,borderRadius:20,boxShadow:t.cardShadow,transition:ease,backdropFilter:"blur(24px) saturate(1.6)",...ex});
+  const [showCustomize, setShowCustomize] = useState(false);
+  const [widgets, setWidgets] = useState(() => getDashPrefs());
+
+  const toggleWidget = (id) => {
+    setWidgets(prev => {
+      const next = { ...prev, [id]: !prev[id] };
+      saveDashPrefs(next);
+      return next;
+    });
+  };
 
   const currency = getCurrency();
 
@@ -373,16 +405,82 @@ function BusinessOverview({ t, dark, mobile, compact, mode, w, userName, userEma
           <h1 style={{fontSize:mobile?22:28,fontWeight:700,letterSpacing:-0.6}}>Hello, {(typeof userName === 'string' && userName) || 'there'}!</h1>
           <p style={{fontSize:mobile?12:14,color:t.sub,marginTop:3,fontWeight:400}}>Here's your business at a glance.</p>
         </div>
-        {!mobile&&(
-          <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
-            <div style={{width:38,height:38,borderRadius:"50%",background:t.accentGrad,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,fontWeight:600,color:t.accentText,boxShadow:t.accentGlow}}>{(userName || 'U')[0].toUpperCase()}</div>
-            <div><div style={{fontSize:13,fontWeight:600}}>{userName || 'User'}</div><div style={{fontSize:11,color:t.sub}}>{userEmail || ''}</div></div>
+        <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
+          {/* Customize button */}
+          <div style={{position:"relative"}}>
+            <button
+              onClick={() => setShowCustomize(v => !v)}
+              style={{
+                height:34,padding:"0 12px",borderRadius:17,
+                background:showCustomize?(dark?"rgba(204,253,1,0.12)":"rgba(204,253,1,0.15)"):(dark?"rgba(255,255,255,0.06)":"rgba(0,0,0,0.04)"),
+                border:`1px solid ${showCustomize?VOLT+"44":(dark?"rgba(255,255,255,0.08)":"rgba(0,0,0,0.06)")}`,
+                display:"flex",alignItems:"center",gap:6,
+                color:showCustomize?VOLT:(dark?"rgba(255,255,255,0.7)":"#6b7280"),
+                cursor:"pointer",fontSize:12,fontWeight:600,
+                fontFamily:"inherit",transition:"all 0.2s ease",
+              }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14M12 2v2m0 16v2M2 12h2m16 0h2"/>
+              </svg>
+              Customise
+            </button>
+            {showCustomize && (
+              <div style={{
+                position:"absolute",top:"calc(100% + 8px)",right:0,zIndex:999,
+                background:dark?"rgba(18,18,22,0.97)":"rgba(255,255,255,0.97)",
+                border:`1px solid ${dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.08)"}`,
+                borderRadius:16,boxShadow:"0 12px 48px rgba(0,0,0,0.2)",
+                padding:"14px 16px",minWidth:220,
+                backdropFilter:"blur(24px)",
+              }}>
+                <div style={{fontSize:11,fontWeight:700,color:dark?"rgba(255,255,255,0.4)":"rgba(0,0,0,0.4)",letterSpacing:0.8,textTransform:"uppercase",marginBottom:10}}>
+                  Widgets
+                </div>
+                {DASH_WIDGETS.map(wg => (
+                  <div
+                    key={wg.id}
+                    onClick={() => toggleWidget(wg.id)}
+                    style={{
+                      display:"flex",alignItems:"center",justifyContent:"space-between",
+                      padding:"8px 2px",cursor:"pointer",gap:10,
+                      borderBottom:`1px solid ${dark?"rgba(255,255,255,0.05)":"rgba(0,0,0,0.04)"}`,
+                    }}
+                  >
+                    <div style={{display:"flex",alignItems:"center",gap:8}}>
+                      <span style={{fontSize:14}}>{wg.icon}</span>
+                      <span style={{fontSize:13,fontWeight:500,color:dark?"#f0f0f5":"#1a1a1f"}}>{wg.label}</span>
+                    </div>
+                    {/* Toggle pill */}
+                    <div style={{
+                      width:36,height:20,borderRadius:10,
+                      background:widgets[wg.id]?VOLT:(dark?"rgba(255,255,255,0.1)":"rgba(0,0,0,0.1)"),
+                      position:"relative",transition:"background 0.2s",flexShrink:0,
+                    }}>
+                      <div style={{
+                        position:"absolute",top:2,left:widgets[wg.id]?16:2,
+                        width:16,height:16,borderRadius:"50%",
+                        background:widgets[wg.id]?"#0a0a0a":"rgba(255,255,255,0.7)",
+                        transition:"left 0.2s",
+                        boxShadow:"0 1px 4px rgba(0,0,0,0.2)",
+                      }}/>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        )}
+          {!mobile&&(
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <div style={{width:38,height:38,borderRadius:"50%",background:t.accentGrad,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,fontWeight:600,color:t.accentText,boxShadow:t.accentGlow}}>{(userName || 'U')[0].toUpperCase()}</div>
+              <div><div style={{fontSize:13,fontWeight:600}}>{userName || 'User'}</div><div style={{fontSize:11,color:t.sub}}>{userEmail || ''}</div></div>
+            </div>
+          )}
+        </div>
       </header>
 
       {/* Stats */}
-      <div style={{display:"grid",gridTemplateColumns:mobile?"1fr 1fr":compact?"repeat(2,1fr)":"repeat(4,1fr)",gap:compact?10:12,flexShrink:0}}>
+      {widgets.stats && <div style={{display:"grid",gridTemplateColumns:mobile?"1fr 1fr":compact?"repeat(2,1fr)":"repeat(4,1fr)",gap:compact?10:12,flexShrink:0}}>
         {loading ? Array.from({length:4}).map((_,i)=>(
           <SkeletonStatCard key={i} t={t} dark={dark} />
         )) : stats.map((s,i)=>(
@@ -397,10 +495,10 @@ function BusinessOverview({ t, dark, mobile, compact, mode, w, userName, userEma
             <div style={{fontSize:compact?20:26,fontWeight:700,marginTop:6,letterSpacing:-0.5,position:"relative"}}>{s.val}</div>
             <div style={{fontSize:11,color:t.sub,marginTop:7,position:"relative"}}>{s.sub}</div>
           </div>))}
-      </div>
+      </div>}
 
       {/* Cashflow chart */}
-      <div style={{...card({padding:compact?"16px 14px":"20px 22px",minWidth:0,overflow:"hidden",flexShrink:0}),animation:"fadeUp 0.45s ease 0.2s backwards"}}>
+      {widgets.chart && <div style={{...card({padding:compact?"16px 14px":"20px 22px",minWidth:0,overflow:"hidden",flexShrink:0}),animation:"fadeUp 0.45s ease 0.2s backwards"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:compact?14:20,gap:8}}>
           <div>
             <h3 style={{fontSize:15,fontWeight:600}}>Cashflow</h3>
@@ -414,11 +512,11 @@ function BusinessOverview({ t, dark, mobile, compact, mode, w, userName, userEma
           <div style={{fontSize:11,color:t.muted}}>Last 30 days</div>
         </div>
         <AreaChartDemo data={chartData} currencySymbol={currency.symbol} />
-      </div>
+      </div>}
 
-      {/* Today + Upcoming */}
-      <div style={{display:"grid",gridTemplateColumns:compact?"1fr":"1fr 1fr",gap:12,flexShrink:0,minWidth:0}}>
-        <div style={{...card({padding:"16px 18px",minWidth:0}),animation:"fadeUp 0.45s ease 0.25s backwards"}}>
+      {/* Today + Upcoming + Tasks — shown as 1-col if only one is visible */}
+      {(widgets.upcoming || widgets.tasks) && <div style={{display:"grid",gridTemplateColumns:compact?"1fr":(widgets.upcoming&&widgets.tasks?"1fr 1fr":"1fr"),gap:12,flexShrink:0,minWidth:0}}>
+        {widgets.upcoming && <div style={{...card({padding:"16px 18px",minWidth:0}),animation:"fadeUp 0.45s ease 0.25s backwards"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
             <h3 style={{fontSize:15,fontWeight:600}}>Upcoming</h3>
             <span style={{fontSize:11,color:t.muted}}>{events.length} scheduled</span>
@@ -442,9 +540,9 @@ function BusinessOverview({ t, dark, mobile, compact, mode, w, userName, userEma
               </div>
             );
           })}
-        </div>
+        </div>}
 
-        <div style={{...card({padding:"16px 18px",minWidth:0}),animation:"fadeUp 0.45s ease 0.3s backwards"}}>
+        {widgets.tasks && <div style={{...card({padding:"16px 18px",minWidth:0}),animation:"fadeUp 0.45s ease 0.3s backwards"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
             <h3 style={{fontSize:15,fontWeight:600}}>Open Tasks</h3>
             <span style={{fontSize:11,color:t.muted}}>{tasks.length} open</span>
@@ -462,11 +560,11 @@ function BusinessOverview({ t, dark, mobile, compact, mode, w, userName, userEma
               </div>
             </div>
           ))}
-        </div>
-      </div>
+        </div>}
+      </div>}
 
       {/* Recent Invoices */}
-      <div style={{...card({padding:"16px 18px",flexShrink:0}),animation:"fadeUp 0.45s ease 0.4s backwards"}}>
+      {widgets.invoices && <div style={{...card({padding:"16px 18px",flexShrink:0}),animation:"fadeUp 0.45s ease 0.4s backwards"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
           <h3 style={{fontSize:15,fontWeight:600}}>Recent Invoices</h3>
         </div>
@@ -483,7 +581,7 @@ function BusinessOverview({ t, dark, mobile, compact, mode, w, userName, userEma
             <div style={{fontSize:14,fontWeight:600,fontVariantNumeric:"tabular-nums"}}>{formatMoney(inv.amount)}</div>
           </div>
         ))}
-      </div>
+      </div>}
       <div style={{height:4,flexShrink:0}}/>
     </>
   );
