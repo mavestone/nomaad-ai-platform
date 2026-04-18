@@ -343,7 +343,11 @@ function FindClientsTab({ t, dark, compact }) {
     try {
       const res  = await fetch('/api/prospect/search', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ filters, limit, page: pg }) });
       const data = await res.json();
-      if (!res.ok) { setError({ type: data.setup_required ? 'setup' : 'api', msg: data.error }); return; }
+      if (!res.ok) {
+        if (res.status === 403) setError({ type: 'credits', msg: data.error });
+        else setError({ type: data.setup_required ? 'setup' : 'api', msg: data.error });
+        return;
+      }
       setResults(data.prospects || []);
       setTotal(data.total || 0);
       setPages(data.total_pages || 1);
@@ -456,6 +460,18 @@ function FindClientsTab({ t, dark, compact }) {
         <div style={{ flex: 1, overflowY: 'auto' }}>
           {error?.type === 'setup' && <SetupBanner t={t} dark={dark} />}
 
+          {error?.type === 'credits' && (
+            <div style={{ padding: '48px 24px', textAlign: 'center' }}>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>⚡</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: t.text, marginBottom: 6 }}>Explorium credits used up</div>
+              <div style={{ fontSize: 12, color: t.sub, lineHeight: 1.65, maxWidth: 260, margin: '0 auto 14px' }}>
+                Your Explorium account has no remaining search credits. Credits reset on your billing cycle.
+              </div>
+              <a href="https://app.explorium.ai" target="_blank" rel="noreferrer" style={{ display: 'inline-block', padding: '7px 16px', borderRadius: 9, background: dark ? 'rgba(204,253,1,0.1)' : 'rgba(132,204,22,0.1)', border: `1px solid ${dark ? 'rgba(204,253,1,0.25)' : 'rgba(132,204,22,0.3)'}`, color: dark ? '#CCFD01' : '#365314', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>
+                Check Explorium account →
+              </a>
+            </div>
+          )}
           {(error?.type === 'api' || error?.type === 'network') && (
             <div style={{ padding: '48px 24px', textAlign: 'center' }}>
               <AlertCircle size={26} style={{ color: '#FF6259', margin: '0 auto 10px', display: 'block' }} />

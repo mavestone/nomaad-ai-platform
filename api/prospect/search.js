@@ -129,7 +129,7 @@ export default async function handler(req, res) {
   try {
     upstream = await fetch(EXPLORIUM_URL, {
       method:  'POST',
-      headers: { 'Content-Type': 'application/json', 'API_KEY': apiKey },
+      headers: { 'Content-Type': 'application/json', 'api_key': apiKey },
       body:    JSON.stringify(body),
     });
   } catch (err) {
@@ -141,8 +141,8 @@ export default async function handler(req, res) {
 
   if (!upstream.ok) {
     const msg = data?.detail || data?.message || data?.error || `Explorium ${upstream.status}`;
-    console.error('[search] Explorium error:', upstream.status, msg);
-    return res.status(upstream.status < 600 ? upstream.status : 502).json({ error: msg });
+    console.error('[search] Explorium error:', upstream.status, JSON.stringify(data).slice(0, 600));
+    return res.status(upstream.status < 600 ? upstream.status : 502).json({ error: msg, detail: data });
   }
 
   const prospects = Array.isArray(data.data) ? data.data.map(normalise) : [];

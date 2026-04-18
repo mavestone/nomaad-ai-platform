@@ -38,7 +38,7 @@ export default async function handler(req, res) {
   let upstream;
   try {
     upstream = await fetch(`${EXPLORIUM_URL}?${params}`, {
-      headers: { 'API_KEY': apiKey },
+      headers: { 'api_key': apiKey },
     });
   } catch (err) {
     return res.status(502).json({ error: `Network error: ${err.message}` });
