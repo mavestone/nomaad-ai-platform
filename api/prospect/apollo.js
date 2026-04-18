@@ -124,17 +124,15 @@ export default async function handler(req, res) {
   try { data = await upstream.json(); } catch { data = {}; }
 
   if (!upstream.ok) {
-    console.error('[prospect/apollo] Apollo error:', upstream.status, data);
-    // 401 = invalid key, 403 = not master key
-    if (upstream.status === 401 || upstream.status === 403) {
-      return res.status(upstream.status).json({
-        error: upstream.status === 403
-          ? 'Apollo requires a Master API Key for people search. Enable it in Apollo → Settings → Integrations → API.'
-          : 'Invalid Apollo API key.',
-      });
-    }
-    const msg = data?.message || data?.error || data?.detail || `Apollo returned ${upstream.status}`;
-    return res.status(upstream.status >= 400 && upstream.status < 600 ? upstream.status : 502).json({ error: msg });
+    // Return Apollo's raw error so we can see exactly what's wrong
+    const rawMsg = data?.message || data?.error || data?.detail
+      || (typeof data === 'string' ? data : null)
+      || `Apollo returned HTTP ${upstream.status}`;
+    console.error('[prospect/apollo] error:', upstream.status, rawMsg, JSON.stringify(data).slice(0, 300));
+    return res.status(upstream.status >= 400 && upstream.status < 600 ? upstream.status : 502).json({
+      error: `Apollo ${upstream.status}: ${rawMsg}`,
+      raw: data,
+    });
   }
 
   const people = Array.isArray(data.people) ? data.people.map(normalisePerson) : [];
