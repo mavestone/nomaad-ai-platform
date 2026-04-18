@@ -171,11 +171,11 @@ function AutocompleteInput({ field, placeholder, onSelect, selected, onClear, t,
         {loading && <Loader size={11} style={{ position: 'absolute', right: 9, top: '50%', transform: 'translateY(-50%)', color: t.muted, animation: 'nomSpin 1s linear infinite' }} />}
       </div>
       {open && options.length > 0 && (
-        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, background: t.card, border: `1px solid ${t.cardBorder}`, borderRadius: 10, boxShadow: t.cardShadow, zIndex: 100, overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, background: dark ? '#1c1c22' : '#ffffff', border: `1px solid ${t.cardBorder}`, borderRadius: 10, boxShadow: '0 8px 32px rgba(0,0,0,0.28)', zIndex: 200, overflow: 'hidden' }}>
           {options.map(opt => (
             <div key={opt.value} onClick={() => { onSelect(opt.label); setQuery(''); setOptions([]); setOpen(false); }}
-              style={{ padding: '8px 11px', fontSize: 12, color: t.text, cursor: 'pointer', borderBottom: `1px solid ${t.divider}`, transition: ease }}
-              onMouseEnter={e => e.currentTarget.style.background = t.input}
+              style={{ padding: '9px 12px', fontSize: 12, color: dark ? '#e8e8e8' : '#1a1a1f', cursor: 'pointer', borderBottom: `1px solid ${dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)'}`, transition: ease, background: 'transparent' }}
+              onMouseEnter={e => e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.07)' : '#f5f5f5'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
               {opt.label}
             </div>
@@ -186,8 +186,24 @@ function AutocompleteInput({ field, placeholder, onSelect, selected, onClear, t,
   );
 }
 
-function ProspectDetail({ p, isAdded, adding, onClose, onAdd, t, dark }) {
+/** Normalise any Explorium linkedin field shape → full https URL */
+function toLinkedInUrl(raw) {
+  if (!raw) return '';
+  const s = String(raw).trim();
+  if (!s) return '';
+  if (s.startsWith('https://')) return s;
+  if (s.startsWith('http://'))  return s.replace('http://', 'https://');
+  if (s.startsWith('www.linkedin.com')) return `https://${s}`;
+  if (s.startsWith('linkedin.com'))     return `https://www.${s}`;
+  if (s.startsWith('/in/'))             return `https://www.linkedin.com${s}`;
+  if (s.includes('linkedin.com'))       return `https://${s.replace(/^https?:\/\//, '')}`;
+  // bare username — wrap it
+  return `https://www.linkedin.com/in/${s}`;
+}
+
+function ProspectDetail({ p, isAdded, adding, onClose, onAdd, t, dark, compact }) {
   const initials = (p.full_name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const linkedInHref = toLinkedInUrl(p.linkedin_url);
   const infoRows = [
     { icon: <Building2 size={13} />, label: 'Company',    val: p.company_name },
     { icon: <Briefcase size={13} />, label: 'Department', val: p.job_department },
@@ -195,8 +211,13 @@ function ProspectDetail({ p, isAdded, adding, onClose, onAdd, t, dark }) {
     { icon: <Users size={13} />,     label: 'Company size', val: p.company_size },
   ].filter(r => r.val);
 
+  // On compact/mobile: overlay the results panel absolutely
+  const panelStyle = compact
+    ? { position: 'absolute', top: 0, right: 0, bottom: 0, width: '100%', zIndex: 50, background: dark ? '#14141a' : '#ffffff', border: `1px solid ${t.cardBorder}`, borderRadius: 18, boxShadow: '0 16px 48px rgba(0,0,0,0.4)', backdropFilter: 'blur(24px)', display: 'flex', flexDirection: 'column', overflow: 'hidden', animation: 'nomSlide 0.22s cubic-bezier(.4,0,.2,1)' }
+    : { width: 290, flexShrink: 0, background: dark ? '#14141a' : '#ffffff', border: `1px solid ${t.cardBorder}`, borderRadius: 18, boxShadow: t.cardShadow, backdropFilter: 'blur(24px) saturate(1.6)', display: 'flex', flexDirection: 'column', overflow: 'hidden', animation: 'nomSlide 0.22s cubic-bezier(.4,0,.2,1)' };
+
   return (
-    <div style={{ width: 300, flexShrink: 0, background: t.card, border: `1px solid ${t.cardBorder}`, borderRadius: 18, boxShadow: t.cardShadow, backdropFilter: 'blur(24px) saturate(1.6)', display: 'flex', flexDirection: 'column', overflow: 'hidden', animation: 'nomSlide 0.22s cubic-bezier(.4,0,.2,1)' }}>
+    <div style={panelStyle}>
       <div style={{ padding: '12px 16px', borderBottom: `1px solid ${t.divider}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: dark ? 'rgba(204,253,1,0.03)' : 'rgba(132,204,22,0.04)' }}>
         <span style={{ fontSize: 12, fontWeight: 700, color: t.text }}>Prospect Details</span>
         <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: t.muted, cursor: 'pointer', display: 'flex', padding: 3, borderRadius: 5 }}><X size={14} /></button>
@@ -209,10 +230,10 @@ function ProspectDetail({ p, isAdded, adding, onClose, onAdd, t, dark }) {
           <div>
             <div style={{ fontSize: 14, fontWeight: 700, color: t.text }}>{p.full_name}</div>
             <div style={{ fontSize: 11, color: t.sub, marginTop: 2 }}>{p.job_title}</div>
-            {p.linkedin_url && (
-              <a href={p.linkedin_url.startsWith('http') ? p.linkedin_url : `https://linkedin.com/in/${p.linkedin_url}`} target="_blank" rel="noreferrer"
+            {linkedInHref && (
+              <a href={linkedInHref} target="_blank" rel="noreferrer"
                 style={{ fontSize: 10, color: '#0A66C2', display: 'flex', alignItems: 'center', gap: 3, marginTop: 3, textDecoration: 'none' }}>
-                <ExternalLink size={9} /> LinkedIn
+                <ExternalLink size={9} /> View LinkedIn
               </a>
             )}
           </div>
@@ -414,7 +435,7 @@ function FindClientsTab({ t, dark, compact }) {
       </div>
 
       {/* ── Results ─────────────────────────────────────────────────────── */}
-      <div style={{ flex: 1, background: t.card, border: `1px solid ${t.cardBorder}`, borderRadius: 18, boxShadow: t.cardShadow, backdropFilter: 'blur(24px) saturate(1.6)', display: 'flex', flexDirection: 'column', overflow: 'hidden', transition: ease }}>
+      <div style={{ flex: 1, background: t.card, border: `1px solid ${t.cardBorder}`, borderRadius: 18, boxShadow: t.cardShadow, backdropFilter: 'blur(24px) saturate(1.6)', display: 'flex', flexDirection: 'column', overflow: 'hidden', transition: ease, position: 'relative' }}>
 
         {/* Header */}
         <div style={{ padding: '13px 18px', borderBottom: `1px solid ${t.divider}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
@@ -509,7 +530,7 @@ function FindClientsTab({ t, dark, compact }) {
 
       {/* ── Detail panel ────────────────────────────────────────────────── */}
       {selected && (
-        <ProspectDetail p={selected} isAdded={addedIds.has(selId)} adding={adding} onClose={() => setSelected(null)} onAdd={() => handleAdd(selected)} t={t} dark={dark} />
+        <ProspectDetail p={selected} isAdded={addedIds.has(selId)} adding={adding} onClose={() => setSelected(null)} onAdd={() => handleAdd(selected)} t={t} dark={dark} compact={compact} />
       )}
     </div>
   );
