@@ -6,9 +6,8 @@ import OnboardingView from "./components/OnboardingView";
 import UserProfileView from "./components/UserProfileView";
 import AIFloater from "./components/AIFloater";
 import AreaChartDemo from "./components/ui/demo";
-import CRMView from "./components/ui/crm-view";
+import ClientsView from "./components/ui/clients-view";
 import MessagesView from "./components/ui/messages-view";
-import ProspectingView from "./components/ui/prospecting-view";
 import ProjectsView from "./components/ui/projects-view";
 import CalendarView from "./components/ui/calendar-view";
 import DocsView from "./components/ui/docs-view";
@@ -106,7 +105,7 @@ const IC={
   zap:<svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>,
 };
 
-const navM=[{ic:"grid",label:"Dashboard"},{ic:"compass",label:"Prospecting"},{ic:"users",label:"CRM"},{ic:"chart",label:"Projects"},{ic:"bell",label:"Calendar"},{ic:"zap",label:"Automations"},{ic:"dollar",label:"Financials"}];
+const navM=[{ic:"grid",label:"Dashboard"},{ic:"users",label:"Clients"},{ic:"chart",label:"Projects"},{ic:"bell",label:"Calendar"},{ic:"zap",label:"Automations"},{ic:"dollar",label:"Financials"}];
 const navS=[{ic:"star",label:"Docs"},{ic:"mail",label:"Messages"},{ic:"cog",label:"Settings"}];
 
 function useWidth(){const[w,setW]=useState(typeof window!=='undefined'?window.innerWidth:1200);useEffect(()=>{const u=()=>setW(window.innerWidth);window.addEventListener("resize",u);return()=>window.removeEventListener("resize",u)},[]);return w;}
@@ -736,12 +735,11 @@ function PlatformApp({ user, profile, signOut, updateProfile }) {
           <UserProfileView t={t} dark={dark} onClose={()=>setShowProfile(false)} user={user} profile={profile} updateProfile={updateProfile} signOut={signOut} />
         ) : (<>
           {navSec === 0 && nav === 0 && <BusinessOverview t={t} dark={dark} mobile={mobile} compact={compact} mode={mode} w={w} userName={userName} userEmail={userEmail} sidebarOpen={sidebarOpen} />}
-          {navSec === 0 && nav === 1 && <ProspectingView t={t} dark={dark} mobile={mobile} compact={compact} />}
-          {navSec === 0 && nav === 2 && <CRMView t={t} dark={dark} mobile={mobile} compact={compact} mode={mode} w={w} IC={IC} pal={pal} VOLT={VOLT} VOLTD={VOLTD} />}
-          {navSec === 0 && nav === 3 && <ProjectsView t={t} dark={dark} mobile={mobile} compact={compact} onLaunchPortal={() => setShowPortal(true)} />}
-          {navSec === 0 && nav === 4 && <CalendarView t={t} dark={dark} mobile={mobile} compact={compact} />}
-          {navSec === 0 && nav === 5 && <AutomationsView t={t} dark={dark} mobile={mobile} compact={compact} />}
-          {navSec === 0 && nav === 6 && <FinancialsView t={t} dark={dark} mobile={mobile} compact={compact} mode={mode} IC={IC} pal={pal} VOLT={VOLT} VOLTD={VOLTD} />}
+          {navSec === 0 && nav === 1 && <ClientsView t={t} dark={dark} mobile={mobile} compact={compact} />}
+          {navSec === 0 && nav === 2 && <ProjectsView t={t} dark={dark} mobile={mobile} compact={compact} onLaunchPortal={() => setShowPortal(true)} />}
+          {navSec === 0 && nav === 3 && <CalendarView t={t} dark={dark} mobile={mobile} compact={compact} />}
+          {navSec === 0 && nav === 4 && <AutomationsView t={t} dark={dark} mobile={mobile} compact={compact} />}
+          {navSec === 0 && nav === 5 && <FinancialsView t={t} dark={dark} mobile={mobile} compact={compact} mode={mode} IC={IC} pal={pal} VOLT={VOLT} VOLTD={VOLTD} />}
 
           {navSec === 1 && nav === 0 && <DocsView t={t} dark={dark} mobile={mobile} compact={compact} />}
           {navSec === 1 && nav === 1 && <MessagesView t={t} dark={dark} mobile={mobile} compact={compact} mode={mode} IC={IC} />}
@@ -758,7 +756,7 @@ function PlatformApp({ user, profile, signOut, updateProfile }) {
         mobile={mobile}
         context={{
           view: (() => {
-            if (navSec === 0) return ["Today","Prospecting","Clients","Projects","Calendar","Automations","Money"][nav];
+            if (navSec === 0) return ["Today","Clients","Projects","Calendar","Automations","Money"][nav];
             return ["Docs","Inbox","Settings"][nav];
           })(),
         }}
