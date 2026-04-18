@@ -1,22 +1,10 @@
-// Vercel serverless function — POST /api/prospect/search
-// Calls Explorium REST API: POST https://api.explorium.ai/v1/prospects
-//
-// Docs: https://developers.explorium.ai/reference/prospects/fetch_prospects.md
-//
-// Request body:
-//   { filters: { linkedin_category?, job_level?, job_department?, country_code?,
-//                company_size?, job_title? }, limit?: number, page?: number }
-//
-// Response:
-//   200 { prospects: [...], total: number, total_pages: number }
-//   503 { error: string, setup_required: true }   ← missing API key
-//   4xx/5xx { error: string }
+// Vercel serverless — POST /api/prospect/search
+// Explorium Fetch Prospects: POST https://api.explorium.ai/v1/prospects
+// Docs: https://developers.explorium.ai/reference/prospects/fetch_prospects
 
 export const config = { runtime: 'nodejs' };
 
 const EXPLORIUM_URL = 'https://api.explorium.ai/v1/prospects';
-
-// ─── helpers ──────────────────────────────────────────────────────────────
 
 async function readBody(req) {
   return new Promise((resolve, reject) => {
@@ -29,83 +17,84 @@ async function readBody(req) {
   });
 }
 
-/** Map a single Explorium prospect record → normalised shape */
 function normalise(p) {
-  const firstName = p.first_name || '';
-  const lastName  = p.last_name  || '';
-  const fullName  = p.full_name  || [firstName, lastName].filter(Boolean).join(' ') || 'Unknown';
-  const city      = p.city       || '';
-  const country   = p.country_name || p.country || '';
-  const location  = [city, country].filter(Boolean).join(', ');
+  const city    = p.city || '';
+  const country = p.country_name || '';
+  const region  = p.region_name  || '';
+  const location = [city, region, country].filter(Boolean).join(', ');
 
   return {
-    id:               p.prospect_id || null,
-    prospect_id:      p.prospect_id || null,
-    full_name:        fullName,
-    job_title:        p.job_title   || '',
+    id:               p.prospect_id,
+    prospect_id:      p.prospect_id,
+    full_name:        p.full_name || [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Unknown',
+    job_title:        p.job_title || '',
+    job_level:        p.job_level_main || '',
+    job_department:   p.job_department_main || '',
     company_name:     p.company_name || '',
-    linkedin_industry: p.linkedin_category || p.industry || '',
+    company_size:     p.company_size || '',
+    company_website:  p.company_website || '',
+    company_linkedin: p.company_linkedin || '',
+    business_id:      p.business_id || '',
     location,
     city,
+    region,
     country,
-    region:           p.region_name || '',
-    company_size:     p.company_size || '',
-    job_level:        p.job_level_main || p.job_level || '',
-    job_department:   p.job_department_main || p.job_department || '',
-    bio:              p.bio || p.summary || '',
-    has_email:        p.has_email        ?? false,
-    has_phone_number: p.has_phone_number ?? false,
-    linkedin_url:     p.linkedin_url || '',
+    linkedin_url:     p.linkedin || (Array.isArray(p.linkedin_url_array) ? p.linkedin_url_array[0] : '') || '',
+    has_email:        !!p.professional_email_hashed,
+    skills:           Array.isArray(p.skills) ? p.skills.slice(0, 8) : [],
+    experience:       Array.isArray(p.experience) ? p.experience.slice(0, 3) : [],
   };
 }
 
-/**
- * Build Explorium filter object.
- * Array filters → { values: [...] }
- * Boolean filters → { value: bool }
- */
 function buildFilters(f) {
   const out = {};
 
-  // linkedin_category — array of strings e.g. ["Marketing Services"]
-  if (Array.isArray(f.linkedin_category) && f.linkedin_category.length) {
+  if (f.linkedin_category?.length)
     out.linkedin_category = { values: f.linkedin_category };
+
+  if (f.google_category?.length)
+    out.google_category = { values: f.google_category };
+
+  if (f.job_level?.length)
+    out.job_level = { values: f.job_level };
+
+  if (f.job_department?.length)
+    out.job_department = { values: f.job_department };
+
+  if (f.job_title) {
+    out.job_title = {
+      values: [f.job_title],
+      include_related_job_titles: f.include_related !== false, // default true
+    };
   }
 
-  // job_level — single value e.g. "director"
-  if (f.job_level && f.job_level !== 'any level') {
-    out.job_level = { values: [String(f.job_level).toLowerCase()] };
-  }
+  if (f.country_code)
+    out.country_code = { values: [f.country_code.toUpperCase()] };
 
-  // job_department — single value e.g. "marketing"
-  if (f.job_department && f.job_department !== 'any dept.') {
-    out.job_department = { values: [String(f.job_department).toLowerCase()] };
-  }
+  if (f.company_country_code)
+    out.company_country_code = { values: [f.company_country_code.toUpperCase()] };
 
-  // country_code — ISO Alpha-2 e.g. "US"
-  if (f.country_code) {
-    out.country_code = { values: [String(f.country_code).toUpperCase()] };
-  }
+  if (f.company_size?.length)
+    out.company_size = { values: f.company_size };
 
-  // company_size — e.g. "51-200"
-  if (f.company_size && f.company_size !== 'any size') {
-    out.company_size = { values: [String(f.company_size)] };
-  }
+  if (f.company_name)
+    out.company_name = { values: [f.company_name] };
 
-  // job_title — free-text title e.g. "Marketing Director"
-  if (f.job_title && f.job_title.trim()) {
-    out.job_title = { values: [f.job_title.trim()] };
-  }
-
-  // has_email — boolean
-  if (f.has_email === true) {
+  if (f.has_email === true)
     out.has_email = { value: true };
+
+  if (f.has_phone === true)
+    out.has_phone_number = { value: true };
+
+  // Experience range (months)
+  if (f.min_experience || f.max_experience) {
+    out.total_experience_months = {};
+    if (f.min_experience) out.total_experience_months.gte = Number(f.min_experience);
+    if (f.max_experience) out.total_experience_months.lte = Number(f.max_experience);
   }
 
   return out;
 }
-
-// ─── handler ──────────────────────────────────────────────────────────────
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -117,24 +106,22 @@ export default async function handler(req, res) {
   const apiKey = process.env.EXPLORIUM_API_KEY;
   if (!apiKey) {
     return res.status(503).json({
-      error: 'EXPLORIUM_API_KEY is not configured. Add it to Vercel environment variables and redeploy.',
+      error: 'EXPLORIUM_API_KEY not configured.',
       setup_required: true,
     });
   }
 
   let payload;
-  try { payload = await readBody(req); }
-  catch { return res.status(400).json({ error: 'Invalid JSON body' }); }
+  try { payload = await readBody(req); } catch { return res.status(400).json({ error: 'Invalid JSON' }); }
 
   const { filters = {}, limit = 25, page = 1 } = payload;
-  const pageSize = Math.min(Math.max(Number(limit) || 25, 1), 500);
-  const pageNum  = Math.max(Number(page) || 1, 1);
+  const pageSize = Math.min(Math.max(Number(limit) || 25, 1), 100);
 
-  const exploBody = {
-    mode:      'full',         // required — 'full' returns all available fields
-    page_size: pageSize,       // required
-    page:      pageNum,
-    size:      pageSize,       // total records requested
+  const body = {
+    mode:      'full',
+    page_size: pageSize,
+    size:      pageSize,
+    page:      Math.max(Number(page) || 1, 1),
     filters:   buildFilters(filters),
   };
 
@@ -142,35 +129,28 @@ export default async function handler(req, res) {
   try {
     upstream = await fetch(EXPLORIUM_URL, {
       method:  'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'api_key':      apiKey,            // Explorium auth header
-      },
-      body: JSON.stringify(exploBody),
+      headers: { 'Content-Type': 'application/json', 'API_KEY': apiKey },
+      body:    JSON.stringify(body),
     });
   } catch (err) {
-    console.error('[prospect/search] network error:', err.message);
-    return res.status(502).json({ error: `Could not reach Explorium API: ${err.message}` });
+    return res.status(502).json({ error: `Network error: ${err.message}` });
   }
 
   let data;
   try { data = await upstream.json(); } catch { data = {}; }
 
   if (!upstream.ok) {
-    console.error('[prospect/search] Explorium error:', upstream.status, JSON.stringify(data).slice(0, 400));
-    const msg = data?.detail || data?.message || data?.error || `Explorium returned ${upstream.status}`;
-    const status = upstream.status >= 400 && upstream.status < 600 ? upstream.status : 502;
-    return res.status(status).json({ error: msg });
+    const msg = data?.detail || data?.message || data?.error || `Explorium ${upstream.status}`;
+    console.error('[search] Explorium error:', upstream.status, msg);
+    return res.status(upstream.status < 600 ? upstream.status : 502).json({ error: msg });
   }
 
-  // Response shape: { data: [...], total_results: N, page: N, total_pages: N }
-  const raw      = Array.isArray(data.data) ? data.data : [];
-  const prospects = raw.map(normalise);
+  const prospects = Array.isArray(data.data) ? data.data.map(normalise) : [];
 
   return res.status(200).json({
     prospects,
     total:       data.total_results ?? prospects.length,
     total_pages: data.total_pages   ?? 1,
-    page:        data.page          ?? pageNum,
+    page:        data.page          ?? 1,
   });
 }
