@@ -184,9 +184,9 @@ function VibeTab({ t, dark, compact }) {
     if (industry) filters.linkedin_category = [industry];
     if (level !== 'Any level') filters.job_level = level;
     if (dept !== 'Any dept.') filters.job_department = dept.toLowerCase();
-    if (country) filters.prospect_country_code = country;
+    if (country) filters.country_code = country;
     if (size !== 'Any size') filters.company_size = size;
-    if (keywords.trim()) filters.website_keywords = keywords.split(',').map(k => k.trim()).filter(Boolean);
+    if (keywords.trim()) filters.job_title = keywords.trim(); // use as job title keyword filter
     try {
       const res = await fetch('/api/prospect/search', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ filters, limit }) });
       const data = await res.json();
@@ -240,8 +240,8 @@ function VibeTab({ t, dark, compact }) {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 2 }}>
           {VIBE_SIZES.map(s => <Chip key={s} active={size === s} label={s} onClick={() => setSize(s)} t={t} dark={dark} />)}
         </div>
-        <FilterLabel t={t} text="Keywords" />
-        <input value={keywords} onChange={e => setKeywords(e.target.value)} placeholder="branding, SaaS…" onKeyDown={e => e.key === 'Enter' && handleSearch()} style={{ ...inpStyle(t), marginBottom: 10 }} />
+        <FilterLabel t={t} text="Job Title" />
+        <input value={keywords} onChange={e => setKeywords(e.target.value)} placeholder="e.g. Creative Director" onKeyDown={e => e.key === 'Enter' && handleSearch()} style={{ ...inpStyle(t), marginBottom: 10 }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, marginTop: 4 }}>
           <span style={{ fontSize: 11, color: t.sub, fontWeight: 600 }}>Results</span>
           <select value={limit} onChange={e => setLimit(Number(e.target.value))} style={{ padding: '4px 8px', borderRadius: 7, border: `1px solid ${t.inputBorder}`, background: t.input, color: t.text, fontSize: 11, outline: 'none', cursor: 'pointer' }}>
