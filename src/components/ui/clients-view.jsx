@@ -275,7 +275,7 @@ function ClientRecord({ client, onClose, onUpdate, t, dark }) {
     setSaving(true);
     try {
       const { data, error } = await supabase.from("prospects")
-        .update({ name: editData.name, company: editData.company, email: editData.email, phone: editData.phone, value: parseFloat(editData.value) || 0, notes: editData.notes, updated_at: new Date().toISOString() })
+        .update({ name: editData.name, company: editData.company, email: editData.email, value: parseFloat(editData.value) || 0, notes: editData.notes, updated_at: new Date().toISOString() })
         .eq("id", client.id).select().single();
       if (error) throw error;
       onUpdate(data);
@@ -738,7 +738,7 @@ export default function ClientsView({ t, dark, mobile, compact }) {
         name: form.name.trim(),
         company: form.company,
         email: form.email,
-        phone: form.phone,
+        // phone: form.phone, — add after running clients-migration.sql
         value: parseFloat(form.value) || 0,
         stage: form.stage,
       }).select().single();
