@@ -933,7 +933,7 @@ export default function CalendarView({ t, dark, mobile, compact }) {
     <motion.div
       initial={{ width:0, opacity:0 }} animate={{ width:mobile?"100%":260, opacity:1 }} exit={{ width:0, opacity:0 }}
       transition={{ type:"spring", stiffness:350, damping:32 }}
-      style={{ overflow:"hidden", flexShrink:0, paddingLeft:12, minHeight:0 }}
+      style={{ flexShrink:0, paddingLeft:12, minHeight:0, overflow:"visible" }}
     >
       <div style={{ width:mobile?"100%":260, height:"100%", display:"flex", flexDirection:"column", minHeight:0 }}>
         <div style={{ ...card({padding:0}), flex:1, display:"flex", flexDirection:"column", overflow:"hidden", minHeight:0 }}>
@@ -1154,8 +1154,8 @@ export default function CalendarView({ t, dark, mobile, compact }) {
       </header>
 
       {/* ── Main ── */}
-      <div style={{ flex:1, display:"flex", minHeight:0 }}>
-        <div style={{ flex:1, display:"flex", flexDirection:"column", minWidth:0 }}>
+      <div style={{ flex:1, display:"flex", minHeight:0, overflow:"hidden" }}>
+        <div style={{ flex:1, display:"flex", flexDirection:"column", minWidth:0, overflow:"hidden" }}>
           {view==="week"  && renderGrid(weekDays)}
           {view==="day"   && renderGrid([currentDate])}
           {view==="month" && renderMonth()}

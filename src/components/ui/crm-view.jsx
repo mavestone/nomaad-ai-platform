@@ -276,7 +276,18 @@ export default function CRMView({ t, dark, mobile, compact, IC, pal }) {
             </div>
 
             <div style={{ flex: 1, overflowY: "auto" }}>
-              {loading && <div style={{ padding: 20, textAlign: "center", color: t.muted }}>Loading data...</div>}
+              {loading && [0,1,2,3,4].map(i => (
+                <div key={i} style={{ display:"flex", alignItems:"center", padding:"16px 20px", borderBottom:`1px solid ${t.divider}`, gap:12 }}>
+                  <div style={{ width:36,height:36,borderRadius:"50%",background:`linear-gradient(90deg,${t.cardBorder} 25%,${t.divider} 50%,${t.cardBorder} 75%)`,backgroundSize:"200% 100%",animation:"skeletonShimmer 1.6s ease infinite",flexShrink:0 }}/>
+                  <div style={{ flex:2, display:"flex",flexDirection:"column",gap:6 }}>
+                    <div style={{ height:13,borderRadius:6,background:`linear-gradient(90deg,${t.cardBorder} 25%,${t.divider} 50%,${t.cardBorder} 75%)`,backgroundSize:"200% 100%",animation:"skeletonShimmer 1.6s ease infinite",width:"55%" }}/>
+                    <div style={{ height:10,borderRadius:6,background:`linear-gradient(90deg,${t.cardBorder} 25%,${t.divider} 50%,${t.cardBorder} 75%)`,backgroundSize:"200% 100%",animation:"skeletonShimmer 1.6s ease infinite",width:"35%" }}/>
+                  </div>
+                  <div style={{ flex:1.5, height:13,borderRadius:6,background:`linear-gradient(90deg,${t.cardBorder} 25%,${t.divider} 50%,${t.cardBorder} 75%)`,backgroundSize:"200% 100%",animation:"skeletonShimmer 1.6s ease infinite",width:"60%" }}/>
+                  <div style={{ flex:1, height:24,borderRadius:20,background:`linear-gradient(90deg,${t.cardBorder} 25%,${t.divider} 50%,${t.cardBorder} 75%)`,backgroundSize:"200% 100%",animation:"skeletonShimmer 1.6s ease infinite",width:"80%" }}/>
+                  <div style={{ flex:1, height:13,borderRadius:6,background:`linear-gradient(90deg,${t.cardBorder} 25%,${t.divider} 50%,${t.cardBorder} 75%)`,backgroundSize:"200% 100%",animation:"skeletonShimmer 1.6s ease infinite",width:"50%" }}/>
+                </div>
+              ))}
               {!loading && contacts.length === 0 && <div style={{ padding: 20, textAlign: "center", color: t.muted }}>No prospects yet. Add one!</div>}
               {contacts.map((c, i) => (
                 <div
@@ -376,7 +387,7 @@ export default function CRMView({ t, dark, mobile, compact, IC, pal }) {
                       </div>
                     ))}
 
-                    <button style={{ padding: "12px", borderRadius: 16, border: `1px dashed ${t.cardBorder}`, background: "transparent", color: t.sub, fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, cursor: "pointer", transition: ease, marginTop: stageDeals.length > 0 ? 0 : 4 }}>
+                    <button onClick={() => setModalOpen(true)} style={{ padding: "12px", borderRadius: 16, border: `1px dashed ${t.cardBorder}`, background: "transparent", color: t.sub, fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, cursor: "pointer", transition: ease, marginTop: stageDeals.length > 0 ? 0 : 4 }}>
                       <span>+</span> Add Deal
                     </button>
                   </div>

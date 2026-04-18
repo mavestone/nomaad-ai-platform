@@ -603,87 +603,93 @@ export default function UserProfileView({ t, dark, onClose, user, profile, updat
 
   return (
     <>
-      {/* ── Inline page (no longer a floating modal) ── */}
+      {/* ── Full-screen profile layout ── */}
       <div
         style={{
           width: "100%",
           height: "100%",
-          overflowY: "auto",
+          display: "flex",
+          flexDirection: "column",
           background: dark ? "rgba(8,8,10,0.4)" : "rgba(242,239,233,0.5)",
           borderRadius: 20,
+          overflow: "hidden",
           fontFamily: "-apple-system,'SF Pro Display',system-ui,sans-serif",
           WebkitFontSmoothing: "antialiased",
           color: dark ? "#f0f0f5" : "#1a1a1f",
         }}
       >
-        {/* Top bar: Back + Sign Out */}
+        {/* ── Top bar ── */}
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "14px 18px 0", gap: 8,
+          padding: "12px 20px", gap: 8, flexShrink: 0,
+          borderBottom: `1px solid ${dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)"}`,
+          backdropFilter: "blur(12px)",
         }}>
-          <button
-            onClick={onClose}
-            style={{
-              height: 38, padding: "0 14px", borderRadius: 19,
-              background: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
-              border: `1px solid ${dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"}`,
-              display: "flex", alignItems: "center", gap: 6,
-              color: dark ? "rgba(255,255,255,0.75)" : "#1a1a1f",
-              cursor: "pointer", fontSize: 13, fontWeight: 500,
-              fontFamily: "inherit", transition: "all 0.2s ease",
-            }}
-            aria-label="Back"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            Back
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <button
+              onClick={onClose}
+              style={{
+                height: 34, padding: "0 12px", borderRadius: 17,
+                background: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+                border: `1px solid ${dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"}`,
+                display: "flex", alignItems: "center", gap: 5,
+                color: dark ? "rgba(255,255,255,0.7)" : "#1a1a1f",
+                cursor: "pointer", fontSize: 13, fontWeight: 500,
+                fontFamily: "inherit", transition: "all 0.2s ease",
+              }}
+              aria-label="Back"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              Back
+            </button>
+            <span style={{ fontSize: 15, fontWeight: 700, color: dark ? "#f0f0f5" : "#1a1a1f", letterSpacing: -0.3 }}>
+              {profile?.full_name || profile?.business_name || "Profile"}
+            </span>
+          </div>
           {signOut && (
             <button
               onClick={() => { signOut(); onClose(); }}
               style={{
-                height: 38, padding: "0 16px", borderRadius: 19,
+                height: 34, padding: "0 14px", borderRadius: 17,
                 background: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
                 border: `1px solid ${dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"}`,
-                display: "flex", alignItems: "center", gap: 7,
-                color: dark ? "rgba(255,255,255,0.55)" : "#6b7280",
+                display: "flex", alignItems: "center", gap: 6,
+                color: dark ? "rgba(255,255,255,0.5)" : "#6b7280",
                 cursor: "pointer", fontSize: 13, fontWeight: 500,
                 transition: "all 0.2s ease", fontFamily: "inherit",
               }}
               onMouseEnter={e => { e.currentTarget.style.color = "#FF6259"; e.currentTarget.style.borderColor = "rgba(255,98,89,0.3)"; }}
-              onMouseLeave={e => { e.currentTarget.style.color = dark ? "rgba(255,255,255,0.55)" : "#6b7280"; e.currentTarget.style.borderColor = dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"; }}
+              onMouseLeave={e => { e.currentTarget.style.color = dark ? "rgba(255,255,255,0.5)" : "#6b7280"; e.currentTarget.style.borderColor = dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"; }}
             >
-              <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <svg width="13" height="13" fill="none" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
               Sign Out
             </button>
           )}
         </div>
 
-        {/* Content container */}
+        {/* ── Two-panel content area ── */}
         <div
-          style={{
-            maxWidth: 900, margin: "0 auto", padding: "48px 20px 80px",
-            animation: "profileContentIn 0.35s cubic-bezier(.4,0,.2,1)",
-          }}
+          style={{ flex: 1, overflow: "hidden", display: "flex" }}
           onClick={e => e.stopPropagation()}
         >
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "clamp(280px, 38%, 340px) 1fr",
-            gap: 20,
-            alignItems: "start",
-          }}
-          className="profile-grid"
-          >
-            {/* ══════════ LEFT COLUMN ══════════ */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ display: "flex", width: "100%", height: "100%" }}>
+            {/* ══════════ LEFT SIDEBAR ══════════ */}
+            <div style={{
+              width: 300, flexShrink: 0,
+              overflowY: "auto", height: "100%",
+              padding: "20px 16px 40px 20px",
+              borderRight: `1px solid ${dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)"}`,
+              display: "flex", flexDirection: "column", gap: 0,
+            }}>
 
               {/* Profile Card */}
               <div style={{
-                background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 24, overflow: "hidden",
-                boxShadow: "0 8px 40px rgba(0,0,0,0.4)",
+                background: dark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.7)",
+                border: `1px solid ${dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"}`,
+                borderRadius: 20, overflow: "hidden",
+                boxShadow: dark ? "0 8px 32px rgba(0,0,0,0.4)" : "0 4px 24px rgba(0,0,0,0.08)",
               }}>
                 {/* Banner */}
                 <div style={{
@@ -704,81 +710,14 @@ export default function UserProfileView({ t, dark, onClose, user, profile, updat
                     pointerEvents: "none",
                   }} />
 
-                  {/* Edit / Save button in banner */}
-                  <div style={{ position: "absolute", top: 12, right: 12 }}>
-                    {!editing ? (
-                      <button
-                        onClick={startEditing}
-                        style={{
-                          display: "flex", alignItems: "center", gap: 6,
-                          padding: "7px 14px", borderRadius: 20,
-                          background: "rgba(8,8,10,0.6)", backdropFilter: "blur(12px)",
-                          border: "1px solid rgba(255,255,255,0.12)",
-                          color: "rgba(255,255,255,0.8)", fontSize: 12, fontWeight: 600,
-                          cursor: "pointer", transition: "all 0.2s",
-                        }}
-                        onMouseEnter={e => { e.currentTarget.style.background = "rgba(8,8,10,0.8)"; e.currentTarget.style.color = "#fff"; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = "rgba(8,8,10,0.6)"; e.currentTarget.style.color = "rgba(255,255,255,0.8)"; }}
-                      >
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
-                          <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                        </svg>
-                        Edit Profile
-                      </button>
-                    ) : (
-                      <div style={{ display: "flex", gap: 6 }}>
-                        <button
-                          onClick={cancelEditing}
-                          style={{
-                            padding: "7px 12px", borderRadius: 20,
-                            background: "rgba(8,8,10,0.6)", backdropFilter: "blur(12px)",
-                            border: "1px solid rgba(255,255,255,0.12)",
-                            color: "rgba(255,255,255,0.6)", fontSize: 12, fontWeight: 600, cursor: "pointer",
-                          }}
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={saveChanges}
-                          disabled={saving}
-                          style={{
-                            display: "flex", alignItems: "center", gap: 5,
-                            padding: "7px 14px", borderRadius: 20,
-                            background: saving ? "rgba(204,253,1,0.4)" : `linear-gradient(135deg, ${VOLT}, ${VOLTD})`,
-                            border: "none", color: "#0a0a0a", fontSize: 12, fontWeight: 700,
-                            cursor: saving ? "wait" : "pointer",
-                            transition: "all 0.2s",
-                          }}
-                        >
-                          {saving ? (
-                            <>
-                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ animation: "spin 0.8s linear infinite" }}>
-                                <path d="M21 12a9 9 0 11-6.219-8.56"/>
-                              </svg>
-                              Saving…
-                            </>
-                          ) : (
-                            <>
-                              <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
-                                <path d="M2 6L5 9L10 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                              </svg>
-                              Save Changes
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
                   {/* Avatar — overlaps banner bottom */}
-                  <div style={{ position: "absolute", bottom: -34, left: 20 }}>
-                    <Avatar profile={editing ? { ...profile, availability: editedProfile?.availability } : profile} size={68} />
+                  <div style={{ position: "absolute", bottom: -32, left: 18 }}>
+                    <Avatar profile={editing ? { ...profile, availability: editedProfile?.availability } : profile} size={64} />
                   </div>
                 </div>
 
                 {/* Profile info body */}
-                <div style={{ padding: "44px 20px 20px" }}>
+                <div style={{ padding: "42px 18px 18px" }}>
                   {/* Name */}
                   {editing ? (
                     <input
@@ -993,44 +932,114 @@ export default function UserProfileView({ t, dark, onClose, user, profile, updat
               </div>
             </div>
 
-            {/* ══════════ RIGHT COLUMN ══════════ */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {/* ══════════ RIGHT PANEL ══════════ */}
+            <div style={{
+              flex: 1, overflowY: "auto", height: "100%",
+              padding: "24px 24px 40px",
+              display: "flex", flexDirection: "column", gap: 20,
+            }}>
               {/* Portfolio header */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div>
-                  <h2 style={{ fontSize: 22, fontWeight: 700, color: "#f0f0f5", letterSpacing: -0.5, margin: 0 }}>Portfolio</h2>
+                  <h2 style={{ fontSize: 22, fontWeight: 800, color: dark ? "#f0f0f5" : "#1a1a1f", letterSpacing: -0.5, margin: 0 }}>Portfolio</h2>
                   <div style={{ fontSize: 13, color: "#8b8fa3", marginTop: 3 }}>
                     {projects.length} {projects.length === 1 ? "project" : "projects"}
                   </div>
                 </div>
-                {editing && (
-                  <button
-                    onClick={() => { setAddingProject(true); setEditingProject(null); }}
-                    style={{
-                      display: "flex", alignItems: "center", gap: 6,
-                      padding: "8px 16px", borderRadius: 12,
-                      background: `linear-gradient(135deg, ${VOLT}, ${VOLTD})`,
-                      border: "none", color: "#0a0a0a", fontSize: 13, fontWeight: 700,
-                      cursor: "pointer", boxShadow: "0 2px 14px rgba(204,253,1,0.2)",
-                      transition: "opacity 0.2s",
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.opacity = "0.85"}
-                    onMouseLeave={e => e.currentTarget.style.opacity = "1"}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                    </svg>
-                    Add Project
-                  </button>
-                )}
+                <div style={{ display: "flex", gap: 8 }}>
+                  {!editing ? (
+                    <button
+                      onClick={startEditing}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 6,
+                        padding: "8px 16px", borderRadius: 12,
+                        background: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
+                        border: `1px solid ${dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"}`,
+                        color: dark ? "rgba(255,255,255,0.8)" : "#1a1a1f",
+                        fontSize: 13, fontWeight: 600, cursor: "pointer",
+                        transition: "all 0.2s",
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.background = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)"; }}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                      Edit Profile
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={cancelEditing}
+                        style={{
+                          padding: "8px 14px", borderRadius: 12,
+                          background: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
+                          border: `1px solid ${dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"}`,
+                          color: dark ? "rgba(255,255,255,0.6)" : "#6b7280",
+                          fontSize: 13, fontWeight: 600, cursor: "pointer",
+                        }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={saveChanges}
+                        disabled={saving}
+                        style={{
+                          display: "flex", alignItems: "center", gap: 5,
+                          padding: "8px 16px", borderRadius: 12,
+                          background: saving ? "rgba(204,253,1,0.4)" : `linear-gradient(135deg, ${VOLT}, ${VOLTD})`,
+                          border: "none", color: "#0a0a0a", fontSize: 13, fontWeight: 700,
+                          cursor: saving ? "wait" : "pointer",
+                          boxShadow: saving ? "none" : "0 2px 14px rgba(204,253,1,0.2)",
+                          transition: "all 0.2s",
+                        }}
+                      >
+                        {saving ? (
+                          <>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ animation: "spin 0.8s linear infinite" }}>
+                              <path d="M21 12a9 9 0 11-6.219-8.56"/>
+                            </svg>
+                            Saving…
+                          </>
+                        ) : (
+                          <>
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                              <path d="M2 6L5 9L10 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            Save Changes
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => { setAddingProject(true); setEditingProject(null); }}
+                        style={{
+                          display: "flex", alignItems: "center", gap: 6,
+                          padding: "8px 16px", borderRadius: 12,
+                          background: "rgba(204,253,1,0.08)",
+                          border: `1px solid ${VOLT}33`,
+                          color: VOLT, fontSize: 13, fontWeight: 700,
+                          cursor: "pointer", transition: "opacity 0.2s",
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.opacity = "0.8"}
+                        onMouseLeave={e => e.currentTarget.style.opacity = "1"}
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        Add Project
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
 
               {/* Projects grid */}
               {projects.length > 0 ? (
                 <div style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(2, 1fr)",
-                  gap: 14,
+                  gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+                  gap: 16,
                 }}>
                   {projects.map((project, i) => (
                     editingProject?.id === project.id ? (
@@ -1125,12 +1134,15 @@ export default function UserProfileView({ t, dark, onClose, user, profile, updat
           from { transform: rotate(0deg); }
           to   { transform: rotate(360deg); }
         }
-        .profile-grid {
-          grid-template-columns: clamp(280px, 38%, 340px) 1fr;
-        }
-        @media (max-width: 680px) {
-          .profile-grid {
-            grid-template-columns: 1fr !important;
+        @media (max-width: 640px) {
+          .profile-two-panel {
+            flex-direction: column !important;
+          }
+          .profile-sidebar {
+            width: 100% !important;
+            height: auto !important;
+            border-right: none !important;
+            border-bottom: 1px solid rgba(255,255,255,0.06) !important;
           }
         }
       `}</style>

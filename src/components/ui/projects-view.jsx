@@ -293,18 +293,19 @@ export default function ProjectsView({ t, dark, mobile, onLaunchPortal }) {
                   {/* Add Button */}
                   <button onClick={async () => {
                     const todayStr = format(new Date(), 'yyyy-MM-dd');
-                    const { data } = await supabase.from('projects').insert([{
+                    const { data, error } = await supabase.from('projects').insert([{
                       user_id: user.id,
                       name: 'New Project',
+                      title: 'New Project',
                       status: col.id,
-                      client_name: 'New Client',
-                      due_date: new Date().toISOString()
+                      due_date: new Date().toISOString(),
+                      color: '#ccfd01',
                     }]).select().single();
                     if (data) {
-                      const newTask = { id: data.id, columnId: data.status, client: data.client_name, title: data.name, value: 0, dueDate: todayStr, deliverables: [], members: [] };
+                      const newTask = { id: data.id, columnId: data.status, client: '', title: data.name || data.title || 'New Project', value: 0, dueDate: todayStr, deliverables: [], members: [] };
                       setTasks([...tasks, newTask]);
                       setOpenedTask(newTask);
-                    }
+                    } else if (error) { console.error('Add project:', error.message); }
                   }} style={{ padding: "14px", borderRadius: 16, border: `1px dashed ${t.cardBorder}`, background: "transparent", color: t.sub, fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, cursor: "pointer", transition: ease, ':hover': { background: t.input } }}>
                     <Plus size={14} /> Add Project
                   </button>
