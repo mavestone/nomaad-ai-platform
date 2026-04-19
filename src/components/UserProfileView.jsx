@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useRef, useCallback } from "react";
+import { supabase } from "../lib/supabase";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const VOLT = "#ccfd01";
@@ -59,16 +60,6 @@ function getRoleColor(businessType) {
   return ROLE_COLORS[businessType] || ROLE_COLORS.default;
 }
 
-function getBannerGradient(businessType) {
-  const c = getRoleColor(businessType);
-  // Hex → rgba helper
-  const hex = c.replace("#", "");
-  const r = parseInt(hex.slice(0,2), 16);
-  const g = parseInt(hex.slice(2,4), 16);
-  const b = parseInt(hex.slice(4,6), 16);
-  return `linear-gradient(135deg, rgba(${r},${g},${b},0.55) 0%, rgba(${r},${g},${b},0.12) 60%, rgba(8,8,10,0.8) 100%)`;
-}
-
 // ── Sub-components ────────────────────────────────────────────────────────────
 
 function Avatar({ profile, size = 80 }) {
@@ -86,7 +77,7 @@ function Avatar({ profile, size = 80 }) {
             width: size, height: size, borderRadius: "50%",
             objectFit: "cover",
             border: "3px solid #08080a",
-            boxShadow: `0 4px 24px rgba(0,0,0,0.4), 0 0 0 2px ${roleColor}44`,
+            boxShadow: `0 4px 24px rgba(0,0,0,0.5), 0 0 0 2px ${roleColor}55`,
           }}
         />
       ) : (
@@ -96,21 +87,18 @@ function Avatar({ profile, size = 80 }) {
           display: "flex", alignItems: "center", justifyContent: "center",
           fontSize: size * 0.3, fontWeight: 700, color: "#08080a",
           border: "3px solid #08080a",
-          boxShadow: `0 4px 24px rgba(0,0,0,0.4), 0 0 0 2px ${roleColor}44`,
-          letterSpacing: -0.5,
-          userSelect: "none",
+          boxShadow: `0 4px 24px rgba(0,0,0,0.5), 0 0 0 2px ${roleColor}55`,
+          letterSpacing: -0.5, userSelect: "none",
         }}>
           {getInitials(profile?.full_name)}
         </div>
       )}
-      {/* Online dot */}
       <div style={{
         position: "absolute", bottom: 4, right: 4,
         width: 14, height: 14, borderRadius: "50%",
         background: availColor,
         border: "2.5px solid #08080a",
         boxShadow: `0 0 8px ${availColor}99`,
-        transition: "background 0.3s ease",
       }} />
     </div>
   );
@@ -124,7 +112,6 @@ function RoleBadge({ businessType }) {
   const r = parseInt(hex.slice(0,2), 16);
   const g = parseInt(hex.slice(2,4), 16);
   const b = parseInt(hex.slice(4,6), 16);
-
   return (
     <span style={{
       display: "inline-flex", alignItems: "center", gap: 5,
@@ -141,49 +128,20 @@ function RoleBadge({ businessType }) {
 function SocialLinks({ links, editing, editedLinks, onChangeLink }) {
   const socials = [
     {
-      key: "twitter",
-      label: "Twitter / X",
-      placeholder: "@handle",
-      icon: (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-        </svg>
-      ),
+      key: "twitter", label: "Twitter / X", placeholder: "@handle",
+      icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>,
     },
     {
-      key: "instagram",
-      label: "Instagram",
-      placeholder: "@handle",
-      icon: (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
-          <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/>
-          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
-        </svg>
-      ),
+      key: "instagram", label: "Instagram", placeholder: "@handle",
+      icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>,
     },
     {
-      key: "linkedin",
-      label: "LinkedIn",
-      placeholder: "linkedin.com/in/handle",
-      icon: (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/>
-          <circle cx="4" cy="4" r="2"/>
-        </svg>
-      ),
+      key: "linkedin", label: "LinkedIn", placeholder: "linkedin.com/in/handle",
+      icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>,
     },
     {
-      key: "website",
-      label: "Website",
-      placeholder: "https://example.com",
-      icon: (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="2" y1="12" x2="22" y2="12"/>
-          <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
-        </svg>
-      ),
+      key: "website", label: "Website", placeholder: "https://example.com",
+      icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>,
     },
   ];
 
@@ -197,9 +155,7 @@ function SocialLinks({ links, editing, editedLinks, onChangeLink }) {
               background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)",
               display: "flex", alignItems: "center", justifyContent: "center",
               color: "rgba(255,255,255,0.4)",
-            }}>
-              {s.icon}
-            </div>
+            }}>{s.icon}</div>
             <input
               value={editedLinks?.[s.key] || ""}
               onChange={e => onChangeLink(s.key, e.target.value)}
@@ -207,8 +163,7 @@ function SocialLinks({ links, editing, editedLinks, onChangeLink }) {
               style={{
                 flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
                 borderRadius: 9, padding: "7px 11px", fontSize: 13, color: "#f0f0f5",
-                outline: "none", caretColor: VOLT, fontFamily: "inherit",
-                transition: "border 0.2s",
+                outline: "none", caretColor: VOLT, fontFamily: "inherit", transition: "border 0.2s",
               }}
               onFocus={e => e.target.style.border = `1px solid ${VOLT}`}
               onBlur={e => e.target.style.border = "1px solid rgba(255,255,255,0.08)"}
@@ -220,7 +175,7 @@ function SocialLinks({ links, editing, editedLinks, onChangeLink }) {
   }
 
   const hasAny = links && Object.values(links).some(v => v);
-  if (!hasAny) return null;
+  if (!hasAny) return <div style={{ fontSize: 13, color: "rgba(139,143,163,0.5)", fontStyle: "italic" }}>No links added yet.</div>;
 
   return (
     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -231,21 +186,16 @@ function SocialLinks({ links, editing, editedLinks, onChangeLink }) {
           <a
             key={s.key}
             href={s.key === "website" ? val : s.key === "linkedin" ? `https://${val.replace(/^https?:\/\//,"")}` : `https://${s.key}.com/${val.replace(/^@/,"")}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            title={val}
+            target="_blank" rel="noopener noreferrer" title={val}
             style={{
               width: 36, height: 36, borderRadius: 10,
               background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              color: "rgba(255,255,255,0.5)", textDecoration: "none",
-              transition: "all 0.2s ease",
+              color: "rgba(255,255,255,0.5)", textDecoration: "none", transition: "all 0.2s ease",
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.16)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; }}
-          >
-            {s.icon}
-          </a>
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "#fff"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
+          >{s.icon}</a>
         );
       })}
     </div>
@@ -263,18 +213,15 @@ function ProjectCard({ project, index, editing, onEdit, onDelete }) {
       style={{
         position: "relative", borderRadius: 16, overflow: "hidden",
         background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
-        cursor: "default",
         transform: hovered ? "scale(1.025)" : "scale(1)",
         boxShadow: hovered ? "0 8px 32px rgba(0,0,0,0.4)" : "0 2px 8px rgba(0,0,0,0.2)",
         transition: "transform 0.25s cubic-bezier(.4,0,.2,1), box-shadow 0.25s ease",
         animation: `fadeUp 0.4s ease ${index * 0.06}s backwards`,
       }}
     >
-      {/* Cover */}
       <div style={{ height: 130, overflow: "hidden", position: "relative" }}>
         <img
-          src={coverUrl}
-          alt={project.title}
+          src={coverUrl} alt={project.title}
           style={{
             width: "100%", height: "100%", objectFit: "cover",
             transform: hovered ? "scale(1.06)" : "scale(1)",
@@ -282,11 +229,7 @@ function ProjectCard({ project, index, editing, onEdit, onDelete }) {
           }}
           onError={e => { e.target.style.display = "none"; }}
         />
-        <div style={{
-          position: "absolute", inset: 0,
-          background: "linear-gradient(to bottom, transparent 40%, rgba(8,8,10,0.7) 100%)",
-        }} />
-        {/* Category badge */}
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 40%, rgba(8,8,10,0.7) 100%)" }} />
         {project.category && (
           <span style={{
             position: "absolute", top: 10, left: 10,
@@ -294,63 +237,32 @@ function ProjectCard({ project, index, editing, onEdit, onDelete }) {
             border: "1px solid rgba(255,255,255,0.12)", borderRadius: 20,
             padding: "3px 10px", fontSize: 10, fontWeight: 700,
             color: "rgba(255,255,255,0.8)", letterSpacing: 0.5, textTransform: "uppercase",
-          }}>
-            {project.category}
-          </span>
+          }}>{project.category}</span>
         )}
       </div>
-
-      {/* Info */}
       <div style={{ padding: "10px 12px 12px" }}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: "#f0f0f5", marginBottom: 2, lineHeight: 1.3 }}>
-          {project.title}
-        </div>
-        {project.year && (
-          <div style={{ fontSize: 12, color: "#8b8fa3" }}>{project.year}</div>
-        )}
+        <div style={{ fontSize: 14, fontWeight: 600, color: "#f0f0f5", marginBottom: 2 }}>{project.title}</div>
+        {project.year && <div style={{ fontSize: 12, color: "#8b8fa3" }}>{project.year}</div>}
       </div>
-
-      {/* Edit overlay */}
       {editing && hovered && (
         <div style={{
-          position: "absolute", inset: 0,
-          background: "rgba(8,8,10,0.75)", backdropFilter: "blur(4px)",
+          position: "absolute", inset: 0, background: "rgba(8,8,10,0.75)", backdropFilter: "blur(4px)",
           display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-          animation: "fadeIn 0.15s ease",
         }}>
-          <button
-            onClick={() => onEdit(project)}
-            style={{
-              display: "flex", alignItems: "center", gap: 6,
-              padding: "8px 16px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.15)",
-              background: "rgba(255,255,255,0.08)", color: "#fff",
-              fontSize: 13, fontWeight: 600, cursor: "pointer",
-              transition: "background 0.2s",
-            }}
-            onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.14)"}
-            onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.08)"}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
-              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
-            </svg>
+          <button onClick={() => onEdit(project)} style={{
+            display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10,
+            border: "1px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.08)",
+            color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer",
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             Edit
           </button>
-          <button
-            onClick={() => onDelete(project.id)}
-            style={{
-              display: "flex", alignItems: "center", gap: 6,
-              padding: "8px 14px", borderRadius: 10, border: "1px solid rgba(255,59,48,0.25)",
-              background: "rgba(255,59,48,0.1)", color: "#FF453A",
-              fontSize: 13, fontWeight: 600, cursor: "pointer",
-              transition: "background 0.2s",
-            }}
-            onMouseEnter={e => e.currentTarget.style.background = "rgba(255,59,48,0.18)"}
-            onMouseLeave={e => e.currentTarget.style.background = "rgba(255,59,48,0.1)"}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
-            </svg>
+          <button onClick={() => onDelete(project.id)} style={{
+            display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 10,
+            border: "1px solid rgba(255,59,48,0.25)", background: "rgba(255,59,48,0.1)",
+            color: "#FF453A", fontSize: 13, fontWeight: 600, cursor: "pointer",
+          }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
           </button>
         </div>
       )}
@@ -359,85 +271,38 @@ function ProjectCard({ project, index, editing, onEdit, onDelete }) {
 }
 
 function AddProjectForm({ onSave, onCancel }) {
-  const [form, setForm] = useState({
-    title: "", category: "Design", year: new Date().getFullYear(), cover_url: "",
-  });
-
+  const [form, setForm] = useState({ title: "", category: "Design", year: new Date().getFullYear(), cover_url: "" });
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
-
-  const inputStyle = {
+  const inp = {
     width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: 10, padding: "9px 12px", fontSize: 13, color: "#f0f0f5",
-    outline: "none", caretColor: VOLT, fontFamily: "inherit", boxSizing: "border-box",
-    transition: "border 0.2s",
+    outline: "none", caretColor: VOLT, fontFamily: "inherit", boxSizing: "border-box", transition: "border 0.2s",
   };
-
   return (
-    <div style={{
-      background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)",
-      borderRadius: 16, padding: "18px 16px", marginTop: 12,
-      animation: "fadeUp 0.25s ease",
-    }}>
+    <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: "18px 16px", marginBottom: 16 }}>
       <div style={{ fontSize: 14, fontWeight: 700, color: "#f0f0f5", marginBottom: 14 }}>New Project</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <input
-          autoFocus
-          value={form.title} onChange={e => set("title", e.target.value)}
-          placeholder="Project title"
-          style={inputStyle}
-          onFocus={e => e.target.style.border = `1px solid ${VOLT}`}
-          onBlur={e => e.target.style.border = "1px solid rgba(255,255,255,0.08)"}
-        />
+        <input autoFocus value={form.title} onChange={e => set("title", e.target.value)} placeholder="Project title" style={inp}
+          onFocus={e => e.target.style.border = `1px solid ${VOLT}`} onBlur={e => e.target.style.border = "1px solid rgba(255,255,255,0.08)"}/>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          <select
-            value={form.category} onChange={e => set("category", e.target.value)}
-            style={{ ...inputStyle, cursor: "pointer", appearance: "none", WebkitAppearance: "none" }}
-            onFocus={e => e.target.style.border = `1px solid ${VOLT}`}
-            onBlur={e => e.target.style.border = "1px solid rgba(255,255,255,0.08)"}
-          >
+          <select value={form.category} onChange={e => set("category", e.target.value)} style={{ ...inp, cursor: "pointer", appearance: "none" }}
+            onFocus={e => e.target.style.border = `1px solid ${VOLT}`} onBlur={e => e.target.style.border = "1px solid rgba(255,255,255,0.08)"}>
             {PROJECT_CATS.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
-          <input
-            type="number"
-            value={form.year} onChange={e => set("year", parseInt(e.target.value) || new Date().getFullYear())}
-            placeholder="Year"
-            style={inputStyle}
-            onFocus={e => e.target.style.border = `1px solid ${VOLT}`}
-            onBlur={e => e.target.style.border = "1px solid rgba(255,255,255,0.08)"}
-          />
+          <input type="number" value={form.year} onChange={e => set("year", parseInt(e.target.value) || new Date().getFullYear())} placeholder="Year" style={inp}
+            onFocus={e => e.target.style.border = `1px solid ${VOLT}`} onBlur={e => e.target.style.border = "1px solid rgba(255,255,255,0.08)"}/>
         </div>
-        <input
-          value={form.cover_url} onChange={e => set("cover_url", e.target.value)}
-          placeholder="Paste image URL (optional)"
-          style={inputStyle}
-          onFocus={e => e.target.style.border = `1px solid ${VOLT}`}
-          onBlur={e => e.target.style.border = "1px solid rgba(255,255,255,0.08)"}
-        />
+        <input value={form.cover_url} onChange={e => set("cover_url", e.target.value)} placeholder="Cover image URL (optional)" style={inp}
+          onFocus={e => e.target.style.border = `1px solid ${VOLT}`} onBlur={e => e.target.style.border = "1px solid rgba(255,255,255,0.08)"}/>
       </div>
       <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
-        <button
-          onClick={() => { if (form.title.trim()) onSave(form); }}
-          disabled={!form.title.trim()}
-          style={{
-            flex: 1, padding: "9px", borderRadius: 10, border: "none",
-            background: form.title.trim() ? `linear-gradient(135deg, ${VOLT}, ${VOLTD})` : "rgba(255,255,255,0.06)",
-            color: form.title.trim() ? "#0a0a0a" : "#8b8fa3",
-            fontSize: 13, fontWeight: 700, cursor: form.title.trim() ? "pointer" : "not-allowed",
-            transition: "all 0.2s",
-          }}
-        >
-          Save Project
-        </button>
-        <button
-          onClick={onCancel}
-          style={{
-            padding: "9px 16px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)",
-            background: "transparent", color: "#8b8fa3",
-            fontSize: 13, fontWeight: 600, cursor: "pointer",
-          }}
-        >
-          Cancel
-        </button>
+        <button onClick={() => { if (form.title.trim()) onSave(form); }} disabled={!form.title.trim()} style={{
+          flex: 1, padding: "9px", borderRadius: 10, border: "none",
+          background: form.title.trim() ? `linear-gradient(135deg, ${VOLT}, ${VOLTD})` : "rgba(255,255,255,0.06)",
+          color: form.title.trim() ? "#0a0a0a" : "#8b8fa3",
+          fontSize: 13, fontWeight: 700, cursor: form.title.trim() ? "pointer" : "not-allowed",
+        }}>Save Project</button>
+        <button onClick={onCancel} style={{ padding: "9px 16px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)", background: "transparent", color: "#8b8fa3", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
       </div>
     </div>
   );
@@ -446,42 +311,31 @@ function AddProjectForm({ onSave, onCancel }) {
 function EditProjectForm({ project, onSave, onCancel }) {
   const [form, setForm] = useState({ ...project });
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
-
-  const inputStyle = {
+  const inp = {
     width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: 10, padding: "9px 12px", fontSize: 13, color: "#f0f0f5",
-    outline: "none", caretColor: VOLT, fontFamily: "inherit", boxSizing: "border-box",
-    transition: "border 0.2s",
+    outline: "none", caretColor: VOLT, fontFamily: "inherit", boxSizing: "border-box", transition: "border 0.2s",
   };
-
   return (
-    <div style={{
-      background: "rgba(255,255,255,0.04)", border: `1px solid ${VOLT}44`,
-      borderRadius: 16, padding: "18px 16px", marginTop: 12,
-      animation: "fadeUp 0.25s ease",
-    }}>
+    <div style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${VOLT}44`, borderRadius: 16, padding: "18px 16px", marginBottom: 16 }}>
       <div style={{ fontSize: 14, fontWeight: 700, color: "#f0f0f5", marginBottom: 14 }}>Edit Project</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <input autoFocus value={form.title} onChange={e => set("title", e.target.value)} placeholder="Project title" style={inputStyle}
+        <input autoFocus value={form.title} onChange={e => set("title", e.target.value)} placeholder="Project title" style={inp}
           onFocus={e => e.target.style.border = `1px solid ${VOLT}`} onBlur={e => e.target.style.border = "1px solid rgba(255,255,255,0.08)"}/>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          <select value={form.category} onChange={e => set("category", e.target.value)} style={{ ...inputStyle, cursor: "pointer", appearance: "none", WebkitAppearance: "none" }}
+          <select value={form.category} onChange={e => set("category", e.target.value)} style={{ ...inp, cursor: "pointer", appearance: "none" }}
             onFocus={e => e.target.style.border = `1px solid ${VOLT}`} onBlur={e => e.target.style.border = "1px solid rgba(255,255,255,0.08)"}>
             {PROJECT_CATS.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
-          <input type="number" value={form.year} onChange={e => set("year", parseInt(e.target.value) || new Date().getFullYear())} placeholder="Year" style={inputStyle}
+          <input type="number" value={form.year} onChange={e => set("year", parseInt(e.target.value) || new Date().getFullYear())} placeholder="Year" style={inp}
             onFocus={e => e.target.style.border = `1px solid ${VOLT}`} onBlur={e => e.target.style.border = "1px solid rgba(255,255,255,0.08)"}/>
         </div>
-        <input value={form.cover_url || ""} onChange={e => set("cover_url", e.target.value)} placeholder="Paste image URL (optional)" style={inputStyle}
+        <input value={form.cover_url || ""} onChange={e => set("cover_url", e.target.value)} placeholder="Cover image URL (optional)" style={inp}
           onFocus={e => e.target.style.border = `1px solid ${VOLT}`} onBlur={e => e.target.style.border = "1px solid rgba(255,255,255,0.08)"}/>
       </div>
       <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
-        <button onClick={() => onSave(form)} style={{ flex: 1, padding: "9px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${VOLT}, ${VOLTD})`, color: "#0a0a0a", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
-          Save Changes
-        </button>
-        <button onClick={onCancel} style={{ padding: "9px 16px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)", background: "transparent", color: "#8b8fa3", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-          Cancel
-        </button>
+        <button onClick={() => onSave(form)} style={{ flex: 1, padding: "9px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${VOLT}, ${VOLTD})`, color: "#0a0a0a", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Save Changes</button>
+        <button onClick={onCancel} style={{ padding: "9px 16px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)", background: "transparent", color: "#8b8fa3", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
       </div>
     </div>
   );
@@ -489,24 +343,28 @@ function EditProjectForm({ project, onSave, onCancel }) {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function UserProfileView({ t, dark, onClose, user, profile, updateProfile, signOut }) {
-  const [editing, setEditing]       = useState(false);
-  const [saving,  setSaving]        = useState(false);
-  const [copiedLink, setCopiedLink] = useState(false);
+  const [editing, setEditing]             = useState(false);
+  const [saving, setSaving]               = useState(false);
+  const [saveError, setSaveError]         = useState(null);
+  const [usernameError, setUsernameError] = useState(null);
+  const [copiedLink, setCopiedLink]       = useState(false);
   const [addingProject, setAddingProject] = useState(false);
-  const [editingProject, setEditingProject] = useState(null); // project object or null
-
-  // Editable state — initialised when edit mode opens
+  const [editingProject, setEditingProject] = useState(null);
   const [editedProfile, setEditedProfile] = useState(null);
-
-  const overlayRef = useRef();
   const copyTimeoutRef = useRef();
 
-  const shareableUsername = profile?.username || (profile?.id ? profile.id.slice(0, 8) : "unknown");
   const shareableUrl = profile?.username
-    ? `${shareableUsername}.nomaad.ai`
-    : `nomaad.ai/p/${shareableUsername}`;
+    ? `${profile.username}.nomaad.ai`
+    : `nomaad.ai/p/${profile?.id?.slice(0, 8) || "unknown"}`;
 
-  // Start editing
+  // Username 7-day rate limit
+  const usernameChangedAt = profile?.username_changed_at;
+  const daysSinceChange = usernameChangedAt
+    ? (Date.now() - new Date(usernameChangedAt)) / (1000 * 60 * 60 * 24)
+    : 999;
+  const canChangeUsername = daysSinceChange >= 7;
+  const daysUntilCanChange = Math.ceil(7 - daysSinceChange);
+
   const startEditing = useCallback(() => {
     setEditedProfile({
       full_name:          profile?.full_name || "",
@@ -517,47 +375,73 @@ export default function UserProfileView({ t, dark, onClose, user, profile, updat
       username:           profile?.username || "",
       portfolio_projects: [...(profile?.portfolio_projects || [])],
     });
+    setSaveError(null);
+    setUsernameError(null);
     setEditing(true);
   }, [profile]);
 
-  // Cancel editing
   const cancelEditing = () => {
     setEditing(false);
     setEditedProfile(null);
     setAddingProject(false);
     setEditingProject(null);
+    setSaveError(null);
+    setUsernameError(null);
   };
 
-  // Save changes
   const saveChanges = async () => {
     if (!editedProfile) return;
+    setSaveError(null);
+    setUsernameError(null);
+
+    const newUsername = editedProfile.username?.trim().toLowerCase() || null;
+    const usernameChanged = newUsername !== (profile?.username || null);
+
+    if (usernameChanged && newUsername) {
+      if (!canChangeUsername) {
+        setUsernameError(`You can change your username again in ${daysUntilCanChange} day${daysUntilCanChange === 1 ? "" : "s"}`);
+        return;
+      }
+      const { data: existing } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("username", newUsername)
+        .neq("id", user.id)
+        .maybeSingle();
+      if (existing) {
+        setUsernameError("That username is already taken");
+        return;
+      }
+    }
+
     setSaving(true);
-    try {
-      await updateProfile({
-        full_name:          editedProfile.full_name,
-        bio:                editedProfile.bio,
-        location:           editedProfile.location,
-        availability:       editedProfile.availability,
-        social_links:       editedProfile.social_links,
-        username:           editedProfile.username || null,
-        portfolio_projects: editedProfile.portfolio_projects,
-      });
+    const updates = {
+      full_name:          editedProfile.full_name,
+      bio:                editedProfile.bio,
+      location:           editedProfile.location,
+      availability:       editedProfile.availability,
+      social_links:       editedProfile.social_links,
+      portfolio_projects: editedProfile.portfolio_projects,
+      username:           newUsername,
+      ...(usernameChanged && newUsername ? { username_changed_at: new Date().toISOString() } : {}),
+    };
+
+    const result = await updateProfile(updates);
+    setSaving(false);
+
+    if (result?.error) {
+      setSaveError(result.error.message || "Failed to save. Please try again.");
+    } else {
       setEditing(false);
       setEditedProfile(null);
       setAddingProject(false);
       setEditingProject(null);
-    } catch (err) {
-      console.error("Failed to save profile:", err);
-    } finally {
-      setSaving(false);
     }
   };
 
-  // Field helpers
   const setField = (key, val) => setEditedProfile(p => ({ ...p, [key]: val }));
   const setSocialLink = (key, val) => setEditedProfile(p => ({ ...p, social_links: { ...p.social_links, [key]: val } }));
 
-  // Project helpers
   const addProject = (form) => {
     const project = { id: Date.now().toString(), ...form };
     setEditedProfile(p => ({ ...p, portfolio_projects: [...(p.portfolio_projects || []), project] }));
@@ -577,7 +461,6 @@ export default function UserProfileView({ t, dark, onClose, user, profile, updat
     if (editingProject?.id === id) setEditingProject(null);
   };
 
-  // Copy link
   const copyLink = () => {
     navigator.clipboard.writeText(`https://${shareableUrl}`).catch(() => {});
     setCopiedLink(true);
@@ -585,569 +468,380 @@ export default function UserProfileView({ t, dark, onClose, user, profile, updat
     copyTimeoutRef.current = setTimeout(() => setCopiedLink(false), 2000);
   };
 
-  // Close on backdrop click
-  const handleOverlayClick = (e) => {
-    if (e.target === overlayRef.current) onClose();
-  };
-
-  // Close on Escape
-  useEffect(() => {
-    const handler = (e) => { if (e.key === "Escape") onClose(); };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [onClose]);
-
-  // Determine displayed data (editing → use editedProfile, else profile)
   const dp = editing ? editedProfile : profile;
   const projects = dp?.portfolio_projects || [];
   const socialLinks = dp?.social_links || {};
-  const roleColor = getRoleColor(profile?.business_type);
+
+  const inp = {
+    background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+    borderRadius: 10, padding: "8px 12px", fontSize: 14, color: "#f0f0f5",
+    outline: "none", caretColor: VOLT, fontFamily: "inherit",
+    transition: "border 0.2s", width: "100%", boxSizing: "border-box",
+  };
 
   return (
-    <>
-      {/* ── Full-screen profile layout ── */}
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          background: dark ? "rgba(8,8,10,0.4)" : "rgba(242,239,233,0.5)",
-          borderRadius: 20,
-          overflow: "hidden",
-          fontFamily: "-apple-system,'SF Pro Display',system-ui,sans-serif",
-          WebkitFontSmoothing: "antialiased",
-          color: dark ? "#f0f0f5" : "#1a1a1f",
-        }}
-      >
-        {/* ── Top bar ── */}
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "12px 20px", gap: 8, flexShrink: 0,
-          borderBottom: `1px solid ${dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)"}`,
-          backdropFilter: "blur(12px)",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <button
-              onClick={onClose}
-              style={{
-                height: 34, padding: "0 12px", borderRadius: 17,
-                background: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
-                border: `1px solid ${dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"}`,
-                display: "flex", alignItems: "center", gap: 5,
-                color: dark ? "rgba(255,255,255,0.7)" : "#1a1a1f",
-                cursor: "pointer", fontSize: 13, fontWeight: 500,
-                fontFamily: "inherit", transition: "all 0.2s ease",
-              }}
-              aria-label="Back"
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              Back
-            </button>
-            <span style={{ fontSize: 15, fontWeight: 700, color: dark ? "#f0f0f5" : "#1a1a1f", letterSpacing: -0.3 }}>
-              {profile?.full_name || profile?.business_name || "Profile"}
-            </span>
-          </div>
-          {signOut && (
-            <button
-              onClick={() => { signOut(); onClose(); }}
-              style={{
-                height: 34, padding: "0 14px", borderRadius: 17,
-                background: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
-                border: `1px solid ${dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"}`,
+    <div style={{
+      width: "100%", height: "100%", overflowY: "auto",
+      background: "#08080a",
+      fontFamily: "-apple-system,'SF Pro Display',system-ui,sans-serif",
+      WebkitFontSmoothing: "antialiased", color: "#f0f0f5",
+    }}>
+
+      {/* ── Banner ── */}
+      <div style={{ position: "relative", width: "100%", height: 190, overflow: "hidden", flexShrink: 0 }}>
+        {/* Photo strip */}
+        <div style={{ display: "flex", width: "100%", height: "100%" }}>
+          {UNSPLASH_IDS.slice(0, 5).map(id => (
+            <img key={id} src={`https://images.unsplash.com/photo-${id}?w=500&q=75`} alt=""
+              style={{ flex: 1, height: "100%", objectFit: "cover" }} />
+          ))}
+        </div>
+        {/* Gradient overlay */}
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(8,8,10,0.1) 30%, rgba(8,8,10,0.75) 100%)" }} />
+
+        {/* Top-right actions */}
+        <div style={{ position: "absolute", top: 14, right: 16, display: "flex", gap: 8, alignItems: "center" }}>
+          {!editing ? (
+            <>
+              <button onClick={startEditing} style={{
                 display: "flex", alignItems: "center", gap: 6,
-                color: dark ? "rgba(255,255,255,0.5)" : "#6b7280",
-                cursor: "pointer", fontSize: 13, fontWeight: 500,
-                transition: "all 0.2s ease", fontFamily: "inherit",
-              }}
-              onMouseEnter={e => { e.currentTarget.style.color = "#FF6259"; e.currentTarget.style.borderColor = "rgba(255,98,89,0.3)"; }}
-              onMouseLeave={e => { e.currentTarget.style.color = dark ? "rgba(255,255,255,0.5)" : "#6b7280"; e.currentTarget.style.borderColor = dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"; }}
-            >
-              <svg width="13" height="13" fill="none" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              Sign Out
-            </button>
+                padding: "7px 16px", borderRadius: 20,
+                background: "rgba(8,8,10,0.55)", backdropFilter: "blur(12px)",
+                border: "1px solid rgba(255,255,255,0.18)",
+                color: "#f0f0f5", fontSize: 13, fontWeight: 600, cursor: "pointer",
+              }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                Edit Profile
+              </button>
+              {signOut && (
+                <button onClick={() => signOut()} title="Sign out" style={{
+                  width: 34, height: 34, borderRadius: "50%",
+                  background: "rgba(8,8,10,0.55)", backdropFilter: "blur(12px)",
+                  border: "1px solid rgba(255,255,255,0.18)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: "rgba(255,255,255,0.6)", cursor: "pointer",
+                }}>
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24">
+                    <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              <button onClick={cancelEditing} style={{
+                padding: "7px 14px", borderRadius: 20,
+                background: "rgba(8,8,10,0.55)", backdropFilter: "blur(12px)",
+                border: "1px solid rgba(255,255,255,0.18)",
+                color: "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 600, cursor: "pointer",
+              }}>Cancel</button>
+              <button onClick={saveChanges} disabled={saving} style={{
+                display: "flex", alignItems: "center", gap: 6,
+                padding: "7px 18px", borderRadius: 20, border: "none",
+                background: saving ? "rgba(204,253,1,0.5)" : `linear-gradient(135deg, ${VOLT}, ${VOLTD})`,
+                color: "#0a0a0a", fontSize: 13, fontWeight: 700, cursor: saving ? "wait" : "pointer",
+                boxShadow: saving ? "none" : "0 2px 16px rgba(204,253,1,0.25)",
+              }}>
+                {saving ? "Saving…" : "Save Changes"}
+              </button>
+            </>
           )}
         </div>
 
-        {/* ── Two-panel content area ── */}
-        <div
-          style={{ flex: 1, overflow: "hidden", display: "flex" }}
-          onClick={e => e.stopPropagation()}
-        >
-          <div style={{ display: "flex", width: "100%", height: "100%" }}>
-            {/* ══════════ LEFT SIDEBAR ══════════ */}
-            <div style={{
-              width: 300, flexShrink: 0,
-              overflowY: "auto", height: "100%",
-              padding: "20px 16px 40px 20px",
-              borderRight: `1px solid ${dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)"}`,
-              display: "flex", flexDirection: "column", gap: 0,
-            }}>
-
-              {/* Profile Card */}
-              <div style={{
-                background: dark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.7)",
-                border: `1px solid ${dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"}`,
-                borderRadius: 20, overflow: "hidden",
-                boxShadow: dark ? "0 8px 32px rgba(0,0,0,0.4)" : "0 4px 24px rgba(0,0,0,0.08)",
-              }}>
-                {/* Banner */}
-                <div style={{
-                  height: 120, position: "relative",
-                  background: getBannerGradient(profile?.business_type),
-                  backgroundImage: [
-                    getBannerGradient(profile?.business_type),
-                    `radial-gradient(circle, rgba(255,255,255,0.08) 1px, transparent 1px)`,
-                  ].join(", "),
-                  backgroundSize: `100% 100%, 20px 20px`,
-                }}>
-                  {/* Ambient glow blob */}
-                  <div style={{
-                    position: "absolute", top: -40, right: -40,
-                    width: 180, height: 180, borderRadius: "50%",
-                    background: `radial-gradient(circle, ${roleColor}55, transparent 70%)`,
-                    filter: "blur(30px)",
-                    pointerEvents: "none",
-                  }} />
-
-                  {/* Avatar — overlaps banner bottom */}
-                  <div style={{ position: "absolute", bottom: -32, left: 18 }}>
-                    <Avatar profile={editing ? { ...profile, availability: editedProfile?.availability } : profile} size={64} />
-                  </div>
-                </div>
-
-                {/* Profile info body */}
-                <div style={{ padding: "42px 18px 18px" }}>
-                  {/* Name */}
-                  {editing ? (
-                    <input
-                      value={editedProfile?.full_name || ""}
-                      onChange={e => setField("full_name", e.target.value)}
-                      placeholder="Your name"
-                      style={{
-                        width: "100%", background: "rgba(255,255,255,0.04)",
-                        border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10,
-                        padding: "7px 11px", fontSize: 20, fontWeight: 700,
-                        color: "#f0f0f5", outline: "none", caretColor: VOLT,
-                        fontFamily: "inherit", letterSpacing: -0.4, boxSizing: "border-box",
-                        transition: "border 0.2s", marginBottom: 8,
-                      }}
-                      onFocus={e => e.target.style.border = `1px solid ${VOLT}`}
-                      onBlur={e => e.target.style.border = "1px solid rgba(255,255,255,0.08)"}
-                    />
-                  ) : (
-                    <div style={{ fontSize: 22, fontWeight: 700, color: "#f0f0f5", letterSpacing: -0.5, marginBottom: 6, lineHeight: 1.2 }}>
-                      {profile?.full_name || profile?.business_name || "Your Name"}
-                    </div>
-                  )}
-
-                  {/* Role badge */}
-                  <div style={{ marginBottom: 12 }}>
-                    <RoleBadge businessType={profile?.business_type} />
-                  </div>
-
-                  {/* Location */}
-                  {editing ? (
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
-                      <span style={{ fontSize: 14, color: "#8b8fa3", flexShrink: 0 }}>📍</span>
-                      <input
-                        value={editedProfile?.location || ""}
-                        onChange={e => setField("location", e.target.value)}
-                        placeholder="Your location"
-                        style={{
-                          flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
-                          borderRadius: 9, padding: "6px 10px", fontSize: 13, color: "#8b8fa3",
-                          outline: "none", caretColor: VOLT, fontFamily: "inherit", transition: "border 0.2s",
-                        }}
-                        onFocus={e => e.target.style.border = `1px solid ${VOLT}`}
-                        onBlur={e => e.target.style.border = "1px solid rgba(255,255,255,0.08)"}
-                      />
-                    </div>
-                  ) : profile?.location ? (
-                    <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 10, color: "#8b8fa3", fontSize: 13 }}>
-                      <span>📍</span>
-                      <span>{profile.location}</span>
-                    </div>
-                  ) : null}
-
-                  {/* Divider */}
-                  <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "12px 0" }} />
-
-                  {/* Bio */}
-                  {editing ? (
-                    <textarea
-                      value={editedProfile?.bio || ""}
-                      onChange={e => setField("bio", e.target.value)}
-                      placeholder="Write a short bio about yourself…"
-                      rows={3}
-                      style={{
-                        width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
-                        borderRadius: 10, padding: "9px 11px", fontSize: 13, color: "#f0f0f5",
-                        outline: "none", caretColor: VOLT, fontFamily: "inherit",
-                        lineHeight: 1.6, resize: "vertical", boxSizing: "border-box",
-                        transition: "border 0.2s", marginBottom: 12,
-                      }}
-                      onFocus={e => e.target.style.border = `1px solid ${VOLT}`}
-                      onBlur={e => e.target.style.border = "1px solid rgba(255,255,255,0.08)"}
-                    />
-                  ) : profile?.bio ? (
-                    <p style={{ fontSize: 13, color: "#8b8fa3", lineHeight: 1.65, marginBottom: 12 }}>
-                      {profile.bio}
-                    </p>
-                  ) : (
-                    <p style={{ fontSize: 13, color: "rgba(139,143,163,0.5)", lineHeight: 1.65, fontStyle: "italic", marginBottom: 12 }}>
-                      No bio yet.
-                    </p>
-                  )}
-
-                  {/* Divider */}
-                  <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "12px 0" }} />
-
-                  {/* Availability */}
-                  <div style={{ marginBottom: 14 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(139,143,163,0.7)", letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 8 }}>
-                      Availability
-                    </div>
-                    <div style={{ display: "flex", gap: 6 }}>
-                      {Object.entries(AVAIL_CONFIG).map(([key, cfg]) => {
-                        const active = (editing ? editedProfile?.availability : profile?.availability) === key;
-                        return (
-                          <button
-                            key={key}
-                            onClick={() => editing && setField("availability", key)}
-                            style={{
-                              display: "flex", alignItems: "center", gap: 5,
-                              padding: "5px 11px", borderRadius: 20,
-                              border: `1px solid ${active ? cfg.color + "55" : "rgba(255,255,255,0.08)"}`,
-                              background: active ? `${cfg.color}18` : "transparent",
-                              color: active ? cfg.color : "#8b8fa3",
-                              fontSize: 12, fontWeight: 600,
-                              cursor: editing ? "pointer" : "default",
-                              transition: "all 0.25s ease",
-                            }}
-                          >
-                            <div style={{
-                              width: 6, height: 6, borderRadius: "50%",
-                              background: active ? cfg.color : "rgba(139,143,163,0.4)",
-                              transition: "background 0.25s ease",
-                            }} />
-                            {cfg.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Divider */}
-                  <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "12px 0" }} />
-
-                  {/* Shareable link */}
-                  <div style={{ marginBottom: 14 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(139,143,163,0.7)", letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 8 }}>
-                      Public Profile
-                    </div>
-                    <div style={{
-                      display: "flex", alignItems: "center", gap: 8,
-                      background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
-                      borderRadius: 12, padding: "8px 10px 8px 12px",
-                    }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(139,143,163,0.6)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                        <circle cx="12" cy="12" r="10"/>
-                        <line x1="2" y1="12" x2="22" y2="12"/>
-                        <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
-                      </svg>
-                      <span style={{ flex: 1, fontSize: 12, color: "#8b8fa3", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {shareableUrl}
-                      </span>
-                      <button
-                        onClick={copyLink}
-                        style={{
-                          display: "flex", alignItems: "center", gap: 5,
-                          padding: "5px 10px", borderRadius: 8, border: "none",
-                          background: copiedLink ? "rgba(52,199,89,0.15)" : "rgba(255,255,255,0.06)",
-                          color: copiedLink ? "#34C759" : "#8b8fa3",
-                          fontSize: 11, fontWeight: 600, cursor: "pointer", flexShrink: 0,
-                          transition: "all 0.2s ease",
-                        }}
-                      >
-                        {copiedLink ? (
-                          <>
-                            <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
-                              <path d="M2 6L5 9L10 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                            Copied!
-                          </>
-                        ) : (
-                          <>
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                              <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
-                            </svg>
-                            Copy
-                          </>
-                        )}
-                      </button>
-                    </div>
-
-                    {/* Username edit */}
-                    {editing && (
-                      <div style={{ marginTop: 8 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                          <input
-                            value={editedProfile?.username || ""}
-                            onChange={e => setField("username", e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
-                            placeholder="your-username"
-                            style={{
-                              flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
-                              borderRadius: 8, padding: "5px 9px", fontSize: 12, color: "#f0f0f5",
-                              outline: "none", caretColor: VOLT, fontFamily: "inherit", transition: "border 0.2s",
-                            }}
-                            onFocus={e => e.target.style.border = `1px solid ${VOLT}`}
-                            onBlur={e => e.target.style.border = "1px solid rgba(255,255,255,0.08)"}
-                          />
-                          <span style={{ fontSize: 12, color: "#8b8fa3", whiteSpace: "nowrap" }}>.nomaad.ai</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Social links */}
-                  {(editing || Object.values(socialLinks).some(v => v)) && (
-                    <>
-                      <div style={{ height: 1, background: "rgba(255,255,255,0.06)", margin: "12px 0" }} />
-                      <div style={{ marginBottom: 4 }}>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(139,143,163,0.7)", letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 10 }}>
-                          Links
-                        </div>
-                        <SocialLinks
-                          links={socialLinks}
-                          editing={editing}
-                          editedLinks={editedProfile?.social_links}
-                          onChangeLink={setSocialLink}
-                        />
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* ══════════ RIGHT PANEL ══════════ */}
-            <div style={{
-              flex: 1, overflowY: "auto", height: "100%",
-              padding: "24px 24px 40px",
-              display: "flex", flexDirection: "column", gap: 20,
-            }}>
-              {/* Portfolio header */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <div>
-                  <h2 style={{ fontSize: 22, fontWeight: 800, color: dark ? "#f0f0f5" : "#1a1a1f", letterSpacing: -0.5, margin: 0 }}>Portfolio</h2>
-                  <div style={{ fontSize: 13, color: "#8b8fa3", marginTop: 3 }}>
-                    {projects.length} {projects.length === 1 ? "project" : "projects"}
-                  </div>
-                </div>
-                <div style={{ display: "flex", gap: 8 }}>
-                  {!editing ? (
-                    <button
-                      onClick={startEditing}
-                      style={{
-                        display: "flex", alignItems: "center", gap: 6,
-                        padding: "8px 16px", borderRadius: 12,
-                        background: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
-                        border: `1px solid ${dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"}`,
-                        color: dark ? "rgba(255,255,255,0.8)" : "#1a1a1f",
-                        fontSize: 13, fontWeight: 600, cursor: "pointer",
-                        transition: "all 0.2s",
-                      }}
-                      onMouseEnter={e => { e.currentTarget.style.background = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)"; }}
-                    >
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
-                        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                      </svg>
-                      Edit Profile
-                    </button>
-                  ) : (
-                    <>
-                      <button
-                        onClick={cancelEditing}
-                        style={{
-                          padding: "8px 14px", borderRadius: 12,
-                          background: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
-                          border: `1px solid ${dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"}`,
-                          color: dark ? "rgba(255,255,255,0.6)" : "#6b7280",
-                          fontSize: 13, fontWeight: 600, cursor: "pointer",
-                        }}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={saveChanges}
-                        disabled={saving}
-                        style={{
-                          display: "flex", alignItems: "center", gap: 5,
-                          padding: "8px 16px", borderRadius: 12,
-                          background: saving ? "rgba(204,253,1,0.4)" : `linear-gradient(135deg, ${VOLT}, ${VOLTD})`,
-                          border: "none", color: "#0a0a0a", fontSize: 13, fontWeight: 700,
-                          cursor: saving ? "wait" : "pointer",
-                          boxShadow: saving ? "none" : "0 2px 14px rgba(204,253,1,0.2)",
-                          transition: "all 0.2s",
-                        }}
-                      >
-                        {saving ? (
-                          <>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ animation: "spin 0.8s linear infinite" }}>
-                              <path d="M21 12a9 9 0 11-6.219-8.56"/>
-                            </svg>
-                            Saving…
-                          </>
-                        ) : (
-                          <>
-                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                              <path d="M2 6L5 9L10 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                            Save Changes
-                          </>
-                        )}
-                      </button>
-                      <button
-                        onClick={() => { setAddingProject(true); setEditingProject(null); }}
-                        style={{
-                          display: "flex", alignItems: "center", gap: 6,
-                          padding: "8px 16px", borderRadius: 12,
-                          background: "rgba(204,253,1,0.08)",
-                          border: `1px solid ${VOLT}33`,
-                          color: VOLT, fontSize: 13, fontWeight: 700,
-                          cursor: "pointer", transition: "opacity 0.2s",
-                        }}
-                        onMouseEnter={e => e.currentTarget.style.opacity = "0.8"}
-                        onMouseLeave={e => e.currentTarget.style.opacity = "1"}
-                      >
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                        </svg>
-                        Add Project
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Projects grid */}
-              {projects.length > 0 ? (
-                <div style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-                  gap: 16,
-                }}>
-                  {projects.map((project, i) => (
-                    editingProject?.id === project.id ? (
-                      <div key={project.id} style={{ gridColumn: "1 / -1" }}>
-                        <EditProjectForm
-                          project={editingProject}
-                          onSave={updateProject}
-                          onCancel={() => setEditingProject(null)}
-                        />
-                      </div>
-                    ) : (
-                      <ProjectCard
-                        key={project.id}
-                        project={project}
-                        index={i}
-                        editing={editing}
-                        onEdit={(p) => { setEditingProject(p); setAddingProject(false); }}
-                        onDelete={deleteProject}
-                      />
-                    )
-                  ))}
-                </div>
-              ) : (
-                !addingProject && (
-                  <div
-                    onClick={editing ? () => setAddingProject(true) : undefined}
-                    style={{
-                      border: "2px dashed rgba(255,255,255,0.1)", borderRadius: 20,
-                      padding: "60px 32px", textAlign: "center",
-                      cursor: editing ? "pointer" : "default",
-                      transition: "border-color 0.2s, background 0.2s",
-                      animation: "fadeUp 0.4s ease",
-                    }}
-                    onMouseEnter={e => { if (editing) { e.currentTarget.style.borderColor = `${VOLT}55`; e.currentTarget.style.background = "rgba(204,253,1,0.02)"; } }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.background = "transparent"; }}
-                  >
-                    <div style={{ fontSize: 40, marginBottom: 14 }}>🗂️</div>
-                    <div style={{ fontSize: 16, fontWeight: 600, color: "#f0f0f5", marginBottom: 6 }}>
-                      {editing ? "Add your first project" : "No projects yet"}
-                    </div>
-                    <div style={{ fontSize: 13, color: "#8b8fa3" }}>
-                      {editing ? "Click to add a project to your portfolio" : "Projects will appear here once added"}
-                    </div>
-                    {editing && (
-                      <div style={{
-                        display: "inline-flex", alignItems: "center", gap: 5,
-                        marginTop: 16, padding: "8px 16px", borderRadius: 10,
-                        background: "rgba(204,253,1,0.08)", border: `1px solid ${VOLT}33`,
-                        color: VOLT, fontSize: 12, fontWeight: 700,
-                      }}>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                        </svg>
-                        Add Project
-                      </div>
-                    )}
-                  </div>
-                )
-              )}
-
-              {/* Add project form */}
-              {editing && addingProject && (
-                <AddProjectForm
-                  onSave={addProject}
-                  onCancel={() => setAddingProject(false)}
-                />
-              )}
-            </div>
-          </div>
+        {/* Avatar overlapping banner */}
+        <div style={{ position: "absolute", bottom: -46, left: 28 }}>
+          <Avatar profile={editing ? { ...profile, availability: editedProfile?.availability } : profile} size={96} />
         </div>
       </div>
 
-      {/* ── Global styles ── */}
+      {/* ── Hero info ── */}
+      <div style={{ padding: "58px 28px 24px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+
+        {/* Name */}
+        {editing ? (
+          <input
+            value={editedProfile?.full_name || ""}
+            onChange={e => setField("full_name", e.target.value)}
+            placeholder="Your name"
+            style={{ ...inp, fontSize: 26, fontWeight: 800, letterSpacing: -0.5, marginBottom: 12, padding: "6px 10px" }}
+            onFocus={e => e.target.style.border = `1px solid ${VOLT}`}
+            onBlur={e => e.target.style.border = "1px solid rgba(255,255,255,0.1)"}
+          />
+        ) : (
+          <h1 style={{ fontSize: 28, fontWeight: 800, color: "#f0f0f5", letterSpacing: -0.5, margin: "0 0 8px", lineHeight: 1.15 }}>
+            {profile?.full_name || profile?.business_name || "Your Name"}
+          </h1>
+        )}
+
+        {/* Role badge + availability */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
+          <RoleBadge businessType={profile?.business_type} />
+          {editing ? (
+            <div style={{ display: "flex", gap: 6 }}>
+              {Object.entries(AVAIL_CONFIG).map(([key, cfg]) => {
+                const active = editedProfile?.availability === key;
+                return (
+                  <button key={key} onClick={() => setField("availability", key)} style={{
+                    display: "flex", alignItems: "center", gap: 5,
+                    padding: "4px 12px", borderRadius: 20,
+                    border: `1px solid ${active ? cfg.color + "55" : "rgba(255,255,255,0.1)"}`,
+                    background: active ? `${cfg.color}18` : "transparent",
+                    color: active ? cfg.color : "#8b8fa3",
+                    fontSize: 12, fontWeight: 600, cursor: "pointer",
+                  }}>
+                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: active ? cfg.color : "rgba(139,143,163,0.4)" }} />
+                    {cfg.label}
+                  </button>
+                );
+              })}
+            </div>
+          ) : (() => {
+            const avail = profile?.availability || "away";
+            const cfg = AVAIL_CONFIG[avail];
+            return (
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "4px 12px", borderRadius: 20,
+                background: `${cfg.color}18`, border: `1px solid ${cfg.color}44`,
+                color: cfg.color, fontSize: 12, fontWeight: 600,
+              }}>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: cfg.color }} />
+                {cfg.label}
+              </span>
+            );
+          })()}
+        </div>
+
+        {/* Bio */}
+        {editing ? (
+          <textarea
+            value={editedProfile?.bio || ""}
+            onChange={e => setField("bio", e.target.value)}
+            placeholder="Write a short bio or headline…"
+            rows={2}
+            style={{ ...inp, resize: "vertical", lineHeight: 1.6, marginBottom: 12 }}
+            onFocus={e => e.target.style.border = `1px solid ${VOLT}`}
+            onBlur={e => e.target.style.border = "1px solid rgba(255,255,255,0.1)"}
+          />
+        ) : profile?.bio ? (
+          <p style={{ fontSize: 14, color: "rgba(240,240,245,0.6)", lineHeight: 1.7, margin: "0 0 12px", maxWidth: 560 }}>
+            {profile.bio}
+          </p>
+        ) : null}
+
+        {/* Location + public link row */}
+        <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+          {editing ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 14 }}>📍</span>
+              <input
+                value={editedProfile?.location || ""}
+                onChange={e => setField("location", e.target.value)}
+                placeholder="Location"
+                style={{ ...inp, width: 180, fontSize: 13 }}
+                onFocus={e => e.target.style.border = `1px solid ${VOLT}`}
+                onBlur={e => e.target.style.border = "1px solid rgba(255,255,255,0.1)"}
+              />
+            </div>
+          ) : profile?.location ? (
+            <span style={{ fontSize: 13, color: "#8b8fa3", display: "flex", alignItems: "center", gap: 5 }}>
+              <span>📍</span>{profile.location}
+            </span>
+          ) : null}
+
+          {/* Public profile pill */}
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 20, padding: "5px 8px 5px 14px",
+          }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(139,143,163,0.6)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+              <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
+            </svg>
+            <span style={{ fontSize: 12, color: "#8b8fa3" }}>{shareableUrl}</span>
+            <button onClick={copyLink} style={{
+              padding: "3px 10px", borderRadius: 12, border: "none",
+              background: copiedLink ? "rgba(52,199,89,0.15)" : "rgba(255,255,255,0.06)",
+              color: copiedLink ? "#34C759" : "#8b8fa3",
+              fontSize: 11, fontWeight: 600, cursor: "pointer",
+            }}>
+              {copiedLink ? "✓ Copied" : "Copy"}
+            </button>
+          </div>
+        </div>
+
+        {/* Save error */}
+        {saveError && (
+          <div style={{
+            marginTop: 12, padding: "9px 14px", borderRadius: 10,
+            background: "rgba(255,69,58,0.1)", border: "1px solid rgba(255,69,58,0.25)",
+            color: "#FF453A", fontSize: 13,
+          }}>{saveError}</div>
+        )}
+      </div>
+
+      {/* ── Body: two columns ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "280px 1fr" }}>
+
+        {/* Left: details */}
+        <div style={{
+          padding: "24px 20px 48px",
+          borderRight: "1px solid rgba(255,255,255,0.06)",
+          display: "flex", flexDirection: "column", gap: 24, minHeight: 400,
+        }}>
+
+          {/* Profile URL / username */}
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(139,143,163,0.6)", letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 10 }}>
+              Profile URL
+            </div>
+            {editing ? (
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <input
+                    value={editedProfile?.username || ""}
+                    onChange={e => { setField("username", e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "")); setUsernameError(null); }}
+                    placeholder="your-username"
+                    disabled={!canChangeUsername && !!profile?.username}
+                    style={{
+                      ...inp, fontSize: 13, flex: 1,
+                      opacity: (!canChangeUsername && !!profile?.username) ? 0.5 : 1,
+                    }}
+                    onFocus={e => e.target.style.border = `1px solid ${VOLT}`}
+                    onBlur={e => e.target.style.border = "1px solid rgba(255,255,255,0.1)"}
+                  />
+                  <span style={{ fontSize: 12, color: "#8b8fa3", whiteSpace: "nowrap" }}>.nomaad.ai</span>
+                </div>
+                {usernameError && <div style={{ fontSize: 12, color: "#FF453A", marginTop: 5 }}>{usernameError}</div>}
+                {!canChangeUsername && profile?.username && (
+                  <div style={{ fontSize: 12, color: "#8b8fa3", marginTop: 5 }}>
+                    🔒 Can change again in {daysUntilCanChange} day{daysUntilCanChange === 1 ? "" : "s"}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div style={{ fontSize: 13, color: "#8b8fa3" }}>
+                {profile?.username ? (
+                  <a href={`https://${shareableUrl}`} target="_blank" rel="noopener noreferrer"
+                    style={{ color: VOLT, textDecoration: "none", fontWeight: 500 }}>
+                    {shareableUrl} ↗
+                  </a>
+                ) : (
+                  <span style={{ color: "rgba(139,143,163,0.5)", fontStyle: "italic" }}>No username set yet</span>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Social links */}
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(139,143,163,0.6)", letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 10 }}>
+              Links
+            </div>
+            <SocialLinks links={socialLinks} editing={editing} editedLinks={editedProfile?.social_links} onChangeLink={setSocialLink} />
+          </div>
+
+          {/* Sign out — bottom of left col */}
+          {signOut && !editing && (
+            <div style={{ marginTop: "auto", paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+              <button
+                onClick={() => signOut()}
+                style={{
+                  display: "flex", alignItems: "center", gap: 7, width: "100%",
+                  padding: "9px 14px", borderRadius: 10,
+                  background: "transparent", border: "1px solid rgba(255,255,255,0.07)",
+                  color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 500, cursor: "pointer",
+                  transition: "all 0.2s",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.color = "#FF453A"; e.currentTarget.style.borderColor = "rgba(255,69,58,0.3)"; }}
+                onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.35)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)"; }}
+              >
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24">
+                  <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Sign Out
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Right: portfolio */}
+        <div style={{ padding: "24px 24px 48px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+            <div>
+              <h2 style={{ fontSize: 18, fontWeight: 800, color: "#f0f0f5", letterSpacing: -0.3, margin: 0 }}>Portfolio</h2>
+              <div style={{ fontSize: 12, color: "#8b8fa3", marginTop: 3 }}>
+                {projects.length} {projects.length === 1 ? "project" : "projects"}
+              </div>
+            </div>
+            {editing && (
+              <button
+                onClick={() => { setAddingProject(true); setEditingProject(null); }}
+                style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  padding: "7px 14px", borderRadius: 10,
+                  background: "rgba(204,253,1,0.08)", border: `1px solid ${VOLT}33`,
+                  color: VOLT, fontSize: 13, fontWeight: 700, cursor: "pointer",
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Add Project
+              </button>
+            )}
+          </div>
+
+          {editing && addingProject && <AddProjectForm onSave={addProject} onCancel={() => setAddingProject(false)} />}
+
+          {projects.length > 0 ? (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 16 }}>
+              {projects.map((project, i) => (
+                editingProject?.id === project.id ? (
+                  <div key={project.id} style={{ gridColumn: "1 / -1" }}>
+                    <EditProjectForm project={editingProject} onSave={updateProject} onCancel={() => setEditingProject(null)} />
+                  </div>
+                ) : (
+                  <ProjectCard
+                    key={project.id} project={project} index={i} editing={editing}
+                    onEdit={(p) => { setEditingProject(p); setAddingProject(false); }}
+                    onDelete={deleteProject}
+                  />
+                )
+              ))}
+            </div>
+          ) : !addingProject ? (
+            <div
+              onClick={editing ? () => setAddingProject(true) : undefined}
+              style={{
+                border: "2px dashed rgba(255,255,255,0.09)", borderRadius: 20,
+                padding: "60px 32px", textAlign: "center",
+                cursor: editing ? "pointer" : "default", transition: "border-color 0.2s",
+              }}
+              onMouseEnter={e => { if (editing) e.currentTarget.style.borderColor = `${VOLT}44`; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.09)"; }}
+            >
+              <div style={{ fontSize: 40, marginBottom: 14 }}>🗂️</div>
+              <div style={{ fontSize: 16, fontWeight: 600, color: "#f0f0f5", marginBottom: 6 }}>
+                {editing ? "Add your first project" : "No projects yet"}
+              </div>
+              <div style={{ fontSize: 13, color: "#8b8fa3" }}>
+                {editing ? "Click to add a project to your portfolio" : "Projects will appear here once added"}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </div>
+
       <style>{`
-        @keyframes profileOverlayIn {
-          from { opacity: 0; }
-          to   { opacity: 1; }
-        }
-        @keyframes profileContentIn {
-          from { opacity: 0; transform: scale(0.97) translateY(12px); }
-          to   { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(12px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to   { opacity: 1; }
-        }
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to   { transform: rotate(360deg); }
-        }
-        @media (max-width: 640px) {
-          .profile-two-panel {
-            flex-direction: column !important;
-          }
-          .profile-sidebar {
-            width: 100% !important;
-            height: auto !important;
-            border-right: none !important;
-            border-bottom: 1px solid rgba(255,255,255,0.06) !important;
-          }
-        }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes spin   { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}</style>
-    </>
+    </div>
   );
 }
