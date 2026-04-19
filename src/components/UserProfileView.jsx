@@ -390,46 +390,42 @@ export default function UserProfileView({ t, dark, onClose, user, profile, updat
   };
 
   const saveChanges = async () => {
-    if (!editedProfile) return;
+    // setSaving first — before any async work — so the button always responds
+    setSaving(true);
     setSaveError(null);
     setUsernameError(null);
 
-    const newUsername = editedProfile.username?.trim().toLowerCase() || null;
-    const usernameChanged = newUsername !== (profile?.username || null);
+    try {
+      const newUsername = editedProfile?.username?.trim().toLowerCase() || null;
+      const usernameChanged = newUsername !== (profile?.username || null);
 
-    if (usernameChanged && newUsername) {
-      if (!canChangeUsername) {
+      // 7-day rate limit check (client-side only, no async needed)
+      if (usernameChanged && newUsername && !canChangeUsername) {
         setUsernameError(`You can change your username again in ${daysUntilCanChange} day${daysUntilCanChange === 1 ? "" : "s"}`);
         return;
       }
-      const { data: existing } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("username", newUsername)
-        .neq("id", user.id)
-        .maybeSingle();
-      if (existing) {
-        setUsernameError("That username is already taken");
-        return;
-      }
-    }
 
-    setSaving(true);
-    const updates = {
-      full_name:          editedProfile.full_name,
-      bio:                editedProfile.bio,
-      location:           editedProfile.location,
-      availability:       editedProfile.availability,
-      social_links:       editedProfile.social_links,
-      portfolio_projects: editedProfile.portfolio_projects,
-      username:           newUsername,
-      ...(usernameChanged && newUsername ? { username_changed_at: new Date().toISOString() } : {}),
-    };
+      const updates = {
+        full_name:          editedProfile?.full_name?.trim() || null,
+        bio:                editedProfile?.bio?.trim() || null,
+        location:           editedProfile?.location?.trim() || null,
+        availability:       editedProfile?.availability || "away",
+        social_links:       editedProfile?.social_links || {},
+        portfolio_projects: editedProfile?.portfolio_projects || [],
+        username:           newUsername,
+        ...(usernameChanged && newUsername ? { username_changed_at: new Date().toISOString() } : {}),
+      };
 
-    try {
       const result = await updateProfile(updates);
+
       if (result?.error) {
-        setSaveError(result.error.message || "Failed to save. Please try again.");
+        const msg = result.error.message || "";
+        // Unique constraint violation → username taken
+        if (msg.includes("unique") || msg.includes("duplicate") || msg.includes("username")) {
+          setUsernameError("That username is already taken");
+        } else {
+          setSaveError(msg || "Failed to save. Please try again.");
+        }
       } else {
         setEditing(false);
         setEditedProfile(null);
@@ -437,7 +433,7 @@ export default function UserProfileView({ t, dark, onClose, user, profile, updat
         setEditingProject(null);
       }
     } catch (err) {
-      setSaveError(err.message || "Something went wrong. Please try again.");
+      setSaveError(err?.message || "Something went wrong. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -500,14 +496,14 @@ export default function UserProfileView({ t, dark, onClose, user, profile, updat
               style={{ flex: 1, height: "100%", objectFit: "cover" }} />
           ))}
         </div>
-        {/* Gradient overlay */}
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(8,8,10,0.1) 30%, rgba(8,8,10,0.65) 100%)" }} />
+        {/* Gradient overlay — pointerEvents none so buttons behind it remain clickable */}
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(8,8,10,0.1) 30%, rgba(8,8,10,0.65) 100%)", pointerEvents: "none" }} />
 
         {/* Top-right actions */}
-        <div style={{ position: "absolute", top: 14, right: 16, display: "flex", gap: 8, alignItems: "center" }}>
+        <div style={{ position: "absolute", top: 14, right: 16, display: "flex", gap: 8, alignItems: "center", zIndex: 10 }}>
           {!editing ? (
             <>
-              <button onClick={startEditing} style={{
+              <button type="button" onClick={startEditing} style={{
                 display: "flex", alignItems: "center", gap: 6,
                 padding: "7px 16px", borderRadius: 20,
                 background: "rgba(8,8,10,0.55)", backdropFilter: "blur(12px)",
@@ -536,13 +532,13 @@ export default function UserProfileView({ t, dark, onClose, user, profile, updat
             </>
           ) : (
             <>
-              <button onClick={cancelEditing} style={{
+              <button type="button" onClick={cancelEditing} style={{
                 padding: "7px 14px", borderRadius: 20,
                 background: "rgba(8,8,10,0.55)", backdropFilter: "blur(12px)",
                 border: "1px solid rgba(255,255,255,0.18)",
                 color: "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 600, cursor: "pointer",
               }}>Cancel</button>
-              <button onClick={saveChanges} disabled={saving} style={{
+              <button type="button" onClick={saveChanges} disabled={saving} style={{
                 display: "flex", alignItems: "center", gap: 6,
                 padding: "7px 18px", borderRadius: 20, border: "none",
                 background: saving ? "rgba(204,253,1,0.5)" : `linear-gradient(135deg, ${VOLT}, ${VOLTD})`,
