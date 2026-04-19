@@ -895,10 +895,9 @@ export default function UserProfileView({ t, dark, onClose, user, profile, updat
                     {editing && (
                       <div style={{ marginTop: 8 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                          <span style={{ fontSize: 12, color: "#8b8fa3", whiteSpace: "nowrap" }}>nomaad.app/p/</span>
                           <input
                             value={editedProfile?.username || ""}
-                            onChange={e => setField("username", e.target.value.replace(/[^a-zA-Z0-9_-]/g, ""))}
+                            onChange={e => setField("username", e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
                             placeholder="your-username"
                             style={{
                               flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
@@ -908,6 +907,7 @@ export default function UserProfileView({ t, dark, onClose, user, profile, updat
                             onFocus={e => e.target.style.border = `1px solid ${VOLT}`}
                             onBlur={e => e.target.style.border = "1px solid rgba(255,255,255,0.08)"}
                           />
+                          <span style={{ fontSize: 12, color: "#8b8fa3", whiteSpace: "nowrap" }}>.nomaad.ai</span>
                         </div>
                       </div>
                     )}
