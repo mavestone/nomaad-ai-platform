@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { supabase } from "../lib/supabase";
+import { useAuth } from "../contexts/AuthContext";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const VOLT = "#ccfd01";
@@ -342,7 +343,8 @@ function EditProjectForm({ project, onSave, onCancel }) {
 }
 
 // ── Main Component ────────────────────────────────────────────────────────────
-export default function UserProfileView({ t, dark, onClose, user, profile, updateProfile, signOut }) {
+export default function UserProfileView({ t, dark, onClose, signOut }) {
+  const { user, profile, refreshProfile } = useAuth();
   const [editing, setEditing]             = useState(false);
   const [saving, setSaving]               = useState(false);
   const [saveError, setSaveError]         = useState(null);
@@ -390,6 +392,7 @@ export default function UserProfileView({ t, dark, onClose, user, profile, updat
   };
 
   const saveChanges = async () => {
+    if (!user?.id) return;
     setSaving(true);
     setSaveError(null);
     setUsernameError(null);
@@ -415,31 +418,34 @@ export default function UserProfileView({ t, dark, onClose, user, profile, updat
         ...(usernameChanged && newUsername ? { username_changed_at: new Date().toISOString() } : {}),
       };
 
-      // Race against a 10-second timeout so saving never hangs forever
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Save timed out — run the DB migration in Supabase SQL Editor (supabase/profiles-full-migration.sql) then try again")), 10000)
-      );
+      // Call Supabase directly — single network call, 8-second hard cap
+      const { error } = await Promise.race([
+        supabase.from('profiles').update(updates).eq('id', user.id),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Request timed out after 8s")), 8000)
+        ),
+      ]);
 
-      const result = await Promise.race([updateProfile(updates), timeoutPromise]);
-
-      if (result?.error) {
-        const msg = result.error.message || "";
-        console.error("[saveChanges] Supabase error:", result.error);
+      if (error) {
+        console.error("[saveChanges] error:", error);
+        const msg = error.message || "";
         if (msg.includes("unique") || msg.includes("duplicate") || msg.includes("username")) {
           setUsernameError("That username is already taken");
         } else if (msg.includes("column") || msg.includes("schema cache")) {
-          setSaveError("DB schema missing — run supabase/profiles-full-migration.sql in Supabase SQL Editor");
+          setSaveError("Schema error — refresh the page and try again, or re-run the DB migration");
         } else {
           setSaveError(msg || "Failed to save. Please try again.");
         }
       } else {
+        // Success — close edit mode immediately, re-fetch profile in background
         setEditing(false);
         setEditedProfile(null);
         setAddingProject(false);
         setEditingProject(null);
+        refreshProfile?.(); // don't await — updates UI asynchronously
       }
     } catch (err) {
-      console.error("[saveChanges] caught error:", err);
+      console.error("[saveChanges] caught:", err);
       setSaveError(err?.message || "Something went wrong. Please try again.");
     } finally {
       setSaving(false);

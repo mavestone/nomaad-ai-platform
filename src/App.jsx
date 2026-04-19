@@ -750,7 +750,7 @@ function PlatformApp({ user, profile, signOut, updateProfile }) {
         height:mobile?"calc(100vh - 16px)":"calc(100vh - 28px)",
         overflowY:"auto",overflowX:"hidden",minWidth:0}}>
         {showProfile ? (
-          <UserProfileView t={t} dark={dark} onClose={()=>setShowProfile(false)} user={user} profile={profile} updateProfile={updateProfile} signOut={signOut} />
+          <UserProfileView t={t} dark={dark} onClose={()=>setShowProfile(false)} signOut={signOut} />
         ) : (<>
           {navSec === 0 && nav === 0 && <BusinessOverview t={t} dark={dark} mobile={mobile} compact={compact} mode={mode} w={w} userName={userName} userEmail={userEmail} sidebarOpen={sidebarOpen} />}
           {navSec === 0 && nav === 1 && <ProspectingView t={t} dark={dark} mobile={mobile} compact={compact} />}
