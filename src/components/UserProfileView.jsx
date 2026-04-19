@@ -502,7 +502,9 @@ export default function UserProfileView({ t, dark, onClose, user, profile, updat
   const copyTimeoutRef = useRef();
 
   const shareableUsername = profile?.username || (profile?.id ? profile.id.slice(0, 8) : "unknown");
-  const shareableUrl = `nomaad.app/p/${shareableUsername}`;
+  const shareableUrl = profile?.username
+    ? `${shareableUsername}.nomaad.ai`
+    : `nomaad.ai/p/${shareableUsername}`;
 
   // Start editing
   const startEditing = useCallback(() => {

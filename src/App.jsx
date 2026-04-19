@@ -2,7 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { useAuth } from "./contexts/AuthContext";
 import AuthPage from "./components/AuthPage";
 import LandingPage from "./components/LandingPage";
+import PublicProfilePage from "./components/PublicProfilePage";
 import OnboardingView from "./components/OnboardingView";
+import { getHostnameRoute, APP_URL } from "./lib/hostname";
 import UserProfileView from "./components/UserProfileView";
 import AIFloater from "./components/AIFloater";
 import AreaChartDemo from "./components/ui/demo";
@@ -589,6 +591,21 @@ function BusinessOverview({ t, dark, mobile, compact, mode, w, userName, userEma
 }
 
 export default function Dashboard(){
+  const { route, username } = getHostnameRoute();
+
+  // username.nomaad.ai — public profile, no auth needed
+  if (route === 'profile') return <PublicProfilePage username={username} />;
+
+  // www.nomaad.ai / nomaad.ai — landing page only, CTAs send to app.nomaad.ai
+  if (route === 'landing') {
+    return <LandingPage onGetStarted={() => { window.location.href = APP_URL; }} />;
+  }
+
+  // app.nomaad.ai + localhost — full authenticated app
+  return <AppShell />;
+}
+
+function AppShell() {
   const { user, profile, loading, signOut, updateProfile } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
 
@@ -604,13 +621,10 @@ export default function Dashboard(){
     );
   }
 
-  // Show landing or auth for logged-out users
-  if (!user) {
-    if (!showAuth) return <LandingPage onGetStarted={() => setShowAuth(true)} />;
-    return <AuthPage />;
-  }
+  // Not logged in — show auth directly (no landing page on app subdomain)
+  if (!user) return <AuthPage />;
 
-  // Show onboarding for new users who haven't completed it
+  // New users who haven't completed onboarding
   if (profile !== null && !profile?.onboarding_complete) return <OnboardingView />;
 
   return <PlatformApp user={user} profile={profile} signOut={signOut} updateProfile={updateProfile} />;
