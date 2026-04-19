@@ -197,9 +197,9 @@ function Nav({ onSignIn }) {
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       style={{
         position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)',
-        zIndex: 999, display: 'flex', alignItems: 'center',
-        justifyContent: 'space-between',
-        width: 'min(780px, 92vw)',
+        zIndex: 999,
+        display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center',
+        width: 780, maxWidth: '92vw',
         padding: '10px 20px 10px 16px',
         background: scrolled ? 'rgba(8,8,10,0.88)' : 'rgba(8,8,10,0.6)',
         backdropFilter: 'blur(24px) saturate(1.8)',
@@ -221,8 +221,8 @@ function Nav({ onSignIn }) {
         <span style={{ fontWeight: 700, fontSize: 15, color: '#f0f0f5', letterSpacing: -0.3 }}>Nomaad</span>
       </div>
 
-      {/* Links — absolutely centred so logo width ≠ CTA width doesn't shift them */}
-      <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 24, alignItems: 'center' }}>
+      {/* Links — grid col 2 (auto), always truly centred between the two 1fr cols */}
+      <div style={{ display: 'flex', gap: 24, alignItems: 'center', justifyContent: 'center' }}>
         {[['Features', 'features'], ['Pricing', 'pricing']].map(([label, id]) => (
           <button
             key={id}
@@ -240,8 +240,8 @@ function Nav({ onSignIn }) {
         ))}
       </div>
 
-      {/* CTAs */}
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+      {/* CTAs — grid col 3, right-aligned */}
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'flex-end' }}>
         <button
           onClick={onSignIn}
           style={{
