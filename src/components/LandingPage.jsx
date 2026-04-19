@@ -198,7 +198,9 @@ function Nav({ onSignIn }) {
       style={{
         position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)',
         zIndex: 999, display: 'flex', alignItems: 'center',
-        gap: 32, padding: '10px 20px 10px 16px',
+        justifyContent: 'space-between',
+        width: 'min(780px, 92vw)',
+        padding: '10px 20px 10px 16px',
         background: scrolled ? 'rgba(8,8,10,0.88)' : 'rgba(8,8,10,0.6)',
         backdropFilter: 'blur(24px) saturate(1.8)',
         border: `1px solid ${scrolled ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.07)'}`,
@@ -219,8 +221,8 @@ function Nav({ onSignIn }) {
         <span style={{ fontWeight: 700, fontSize: 15, color: '#f0f0f5', letterSpacing: -0.3 }}>Nomaad</span>
       </div>
 
-      {/* Links */}
-      <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
+      {/* Links — absolutely centred so logo width ≠ CTA width doesn't shift them */}
+      <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 24, alignItems: 'center' }}>
         {[['Features', 'features'], ['Pricing', 'pricing']].map(([label, id]) => (
           <button
             key={id}
