@@ -693,8 +693,8 @@ function PlatformApp({ user, profile, signOut, updateProfile }) {
             {[{title:"MAIN MENU",items:navM,sec:0},{title:"SETTINGS",items:navS,sec:1}].map(s=>(
               <div key={s.sec} style={{marginTop:10}}>
                 <div style={{fontSize:10,fontWeight:600,color:t.muted,letterSpacing:1.2,padding:"8px 10px 5px"}}>{s.title}</div>
-                {s.items.map((item,i)=>{const on=s.sec===navSec&&nav===i;return(
-                  <button key={i} onClick={()=>{setNavSec(s.sec);setNav(i);mobile&&setSidebarOpen(false);}} style={{
+                {s.items.map((item,i)=>{const on=s.sec===navSec&&nav===i&&!showProfile;return(
+                  <button key={i} onClick={()=>{setNavSec(s.sec);setNav(i);setShowProfile(false);mobile&&setSidebarOpen(false);}} style={{
                     display:"flex",alignItems:"center",gap:10,padding:"9px 11px",borderRadius:12,width:"100%",
                     fontSize:13,fontWeight:on?600:400,color:on?t.accentText:t.sub,
                     background:on?t.accentGrad:"transparent",boxShadow:on?t.accentGlow:"none",
@@ -703,10 +703,13 @@ function PlatformApp({ user, profile, signOut, updateProfile }) {
               </div>))}
           </div>
           {/* ── User profile button ── */}
-          <button onClick={()=>setShowProfile(true)} style={{
+          <button onClick={()=>setShowProfile(p=>!p)} style={{
             display:"flex",alignItems:"center",gap:10,padding:"10px 12px",
-            borderRadius:16,width:"100%",background:dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.03)",
-            border:`1px solid ${t.cardBorder}`,cursor:"pointer",fontFamily:"inherit",
+            borderRadius:16,width:"100%",
+            background:showProfile?t.accentGrad:dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.03)",
+            border:`1px solid ${showProfile?VOLT+"44":t.cardBorder}`,
+            boxShadow:showProfile?t.accentGlow:"none",
+            cursor:"pointer",fontFamily:"inherit",
             transition:ease,marginTop:12,textAlign:"left",
           }}>
             {/* Avatar */}
@@ -727,14 +730,14 @@ function PlatformApp({ user, profile, signOut, updateProfile }) {
               }}/>
             </div>
             <div style={{flex:1,minWidth:0}}>
-              <div style={{fontSize:13,fontWeight:600,color:t.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+              <div style={{fontSize:13,fontWeight:600,color:showProfile?t.accentText:t.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
                 {userName||"Your Profile"}
               </div>
-              <div style={{fontSize:11,color:t.muted,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+              <div style={{fontSize:11,color:showProfile?"rgba(10,10,10,0.6)":t.muted,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
                 {profile?.business_name||userEmail}
               </div>
             </div>
-            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" style={{color:t.muted,flexShrink:0}}>
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" style={{color:showProfile?t.accentText:t.muted,flexShrink:0}}>
               <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>

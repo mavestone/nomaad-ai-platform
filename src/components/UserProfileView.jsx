@@ -390,7 +390,6 @@ export default function UserProfileView({ t, dark, onClose, user, profile, updat
   };
 
   const saveChanges = async () => {
-    // setSaving first — before any async work — so the button always responds
     setSaving(true);
     setSaveError(null);
     setUsernameError(null);
@@ -399,7 +398,7 @@ export default function UserProfileView({ t, dark, onClose, user, profile, updat
       const newUsername = editedProfile?.username?.trim().toLowerCase() || null;
       const usernameChanged = newUsername !== (profile?.username || null);
 
-      // 7-day rate limit check (client-side only, no async needed)
+      // 7-day rate limit check (client-side, no async needed)
       if (usernameChanged && newUsername && !canChangeUsername) {
         setUsernameError(`You can change your username again in ${daysUntilCanChange} day${daysUntilCanChange === 1 ? "" : "s"}`);
         return;
@@ -416,13 +415,20 @@ export default function UserProfileView({ t, dark, onClose, user, profile, updat
         ...(usernameChanged && newUsername ? { username_changed_at: new Date().toISOString() } : {}),
       };
 
-      const result = await updateProfile(updates);
+      // Race against a 10-second timeout so saving never hangs forever
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Save timed out — run the DB migration in Supabase SQL Editor (supabase/profiles-full-migration.sql) then try again")), 10000)
+      );
+
+      const result = await Promise.race([updateProfile(updates), timeoutPromise]);
 
       if (result?.error) {
         const msg = result.error.message || "";
-        // Unique constraint violation → username taken
+        console.error("[saveChanges] Supabase error:", result.error);
         if (msg.includes("unique") || msg.includes("duplicate") || msg.includes("username")) {
           setUsernameError("That username is already taken");
+        } else if (msg.includes("column") || msg.includes("schema cache")) {
+          setSaveError("DB schema missing — run supabase/profiles-full-migration.sql in Supabase SQL Editor");
         } else {
           setSaveError(msg || "Failed to save. Please try again.");
         }
@@ -433,6 +439,7 @@ export default function UserProfileView({ t, dark, onClose, user, profile, updat
         setEditingProject(null);
       }
     } catch (err) {
+      console.error("[saveChanges] caught error:", err);
       setSaveError(err?.message || "Something went wrong. Please try again.");
     } finally {
       setSaving(false);
@@ -721,6 +728,27 @@ export default function UserProfileView({ t, dark, onClose, user, profile, updat
                     🔒 Can change again in {daysUntilCanChange} day{daysUntilCanChange === 1 ? "" : "s"}
                   </div>
                 )}
+                {/* Sub-save shortcut */}
+                <button
+                  type="button"
+                  onClick={saveChanges}
+                  disabled={saving}
+                  style={{
+                    marginTop: 10, width: "100%", padding: "7px 0", borderRadius: 10, border: "none",
+                    background: saving ? "rgba(204,253,1,0.35)" : `linear-gradient(135deg, ${VOLT}, ${VOLTD})`,
+                    color: "#0a0a0a", fontSize: 12, fontWeight: 700, cursor: saving ? "wait" : "pointer",
+                    letterSpacing: 0.2,
+                  }}
+                >
+                  {saving ? "Saving…" : "Save Changes"}
+                </button>
+                <div style={{ fontSize: 11, color: "#8b8fa3", marginTop: 6, lineHeight: 1.5 }}>
+                  Your profile will be live at{" "}
+                  <span style={{ color: VOLT }}>
+                    {editedProfile?.username ? `${editedProfile.username}.nomaad.ai` : "username.nomaad.ai"}
+                  </span>
+                  {" "}— no extra setup needed.
+                </div>
               </div>
             ) : (
               <div style={{ fontSize: 13, color: "#8b8fa3" }}>
