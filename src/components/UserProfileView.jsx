@@ -401,7 +401,6 @@ export default function UserProfileView({ t, dark, onClose, signOut }) {
       const newUsername = editedProfile?.username?.trim().toLowerCase() || null;
       const usernameChanged = newUsername !== (profile?.username || null);
 
-      // 7-day rate limit check (client-side, no async needed)
       if (usernameChanged && newUsername && !canChangeUsername) {
         setUsernameError(`You can change your username again in ${daysUntilCanChange} day${daysUntilCanChange === 1 ? "" : "s"}`);
         return;
@@ -418,35 +417,60 @@ export default function UserProfileView({ t, dark, onClose, signOut }) {
         ...(usernameChanged && newUsername ? { username_changed_at: new Date().toISOString() } : {}),
       };
 
-      // Call Supabase directly — single network call, 8-second hard cap
-      const { error } = await Promise.race([
-        supabase.from('profiles').update(updates).eq('id', user.id),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Request timed out after 8s")), 8000)
-        ),
-      ]);
+      // Get the live session token — Supabase JS client can stall on auth state,
+      // so we use raw fetch to bypass it entirely.
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log("[saveChanges] session uid:", session?.user?.id, "user id:", user.id);
 
-      if (error) {
-        console.error("[saveChanges] error:", error);
-        const msg = error.message || "";
-        if (msg.includes("unique") || msg.includes("duplicate") || msg.includes("username")) {
-          setUsernameError("That username is already taken");
-        } else if (msg.includes("column") || msg.includes("schema cache")) {
-          setSaveError("Schema error — refresh the page and try again, or re-run the DB migration");
-        } else {
-          setSaveError(msg || "Failed to save. Please try again.");
+      if (!session?.access_token) {
+        setSaveError("Session expired — please sign out and sign back in");
+        return;
+      }
+
+      const controller = new AbortController();
+      const tid = setTimeout(() => controller.abort(), 15000);
+
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/profiles?id=eq.${user.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+            "Authorization": `Bearer ${session.access_token}`,
+            "Prefer": "return=minimal",
+          },
+          body: JSON.stringify(updates),
+          signal: controller.signal,
         }
-      } else {
-        // Success — close edit mode immediately, re-fetch profile in background
+      );
+      clearTimeout(tid);
+
+      console.log("[saveChanges] HTTP status:", res.status);
+
+      if (res.status === 204 || res.ok) {
         setEditing(false);
         setEditedProfile(null);
         setAddingProject(false);
         setEditingProject(null);
-        refreshProfile?.(); // don't await — updates UI asynchronously
+        refreshProfile?.();
+      } else {
+        const body = await res.json().catch(() => ({}));
+        console.error("[saveChanges] error body:", body);
+        const msg = body.message || body.details || body.hint || `HTTP ${res.status}`;
+        if (res.status === 409 || msg.includes("unique") || msg.includes("duplicate")) {
+          setUsernameError("That username is already taken");
+        } else {
+          setSaveError(msg);
+        }
       }
     } catch (err) {
       console.error("[saveChanges] caught:", err);
-      setSaveError(err?.message || "Something went wrong. Please try again.");
+      if (err.name === "AbortError") {
+        setSaveError("Server not responding after 15s — check Supabase dashboard for RLS/trigger issues");
+      } else {
+        setSaveError(err.message || "Something went wrong");
+      }
     } finally {
       setSaving(false);
     }
