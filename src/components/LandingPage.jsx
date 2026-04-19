@@ -1,15 +1,20 @@
+/**
+ * LandingPage.jsx — Nomaad
+ * High-conversion, outcome-driven. No features. Just workflows and results.
+ */
+
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { supabase } from '../lib/supabase';
 
-const VOLT = '#ccfd01';
+const VOLT  = '#ccfd01';
 const VOLTD = '#b8e300';
 const SHELL = '#08080a';
-const FF = "-apple-system,'SF Pro Display','SF Pro Text','Helvetica Neue',system-ui,sans-serif";
+const FF    = "-apple-system,'SF Pro Display','SF Pro Text','Helvetica Neue',system-ui,sans-serif";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function useInView(threshold = 0.15) {
+function useInView(threshold = 0.12) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
   useEffect(() => {
@@ -30,7 +35,7 @@ function FadeUp({ children, delay = 0, style }) {
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 28 }}
+      initial={{ opacity: 0, y: 24 }}
       animate={visible ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] }}
       style={style}
@@ -40,11 +45,21 @@ function FadeUp({ children, delay = 0, style }) {
   );
 }
 
+function Label({ text }) {
+  return (
+    <p style={{
+      fontSize: 11, fontWeight: 700, color: 'rgba(240,240,245,0.35)',
+      letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14, margin: '0 0 14px',
+      fontFamily: FF,
+    }}>{text}</p>
+  );
+}
+
 // ─── Waitlist Form ────────────────────────────────────────────────────────────
 
 function WaitlistForm({ source = 'landing', label = 'Get early access →', compact = false }) {
   const [email, setEmail] = useState('');
-  const [state, setState] = useState('idle'); // idle | loading | success | error
+  const [state, setState] = useState('idle');
   const [errMsg, setErrMsg] = useState('');
 
   const submit = async (e) => {
@@ -70,10 +85,9 @@ function WaitlistForm({ source = 'landing', label = 'Get early access →', comp
         style={{
           display: 'inline-flex', alignItems: 'center', gap: 10,
           padding: compact ? '10px 20px' : '14px 24px',
-          background: 'rgba(204,253,1,0.08)',
-          border: `1px solid rgba(204,253,1,0.25)`,
-          borderRadius: 100, color: VOLT,
-          fontFamily: FF, fontSize: compact ? 13 : 14, fontWeight: 600,
+          background: 'rgba(204,253,1,0.08)', border: `1px solid rgba(204,253,1,0.25)`,
+          borderRadius: 100, color: VOLT, fontFamily: FF,
+          fontSize: compact ? 13 : 14, fontWeight: 600,
         }}
       >
         <span style={{ fontSize: 16 }}>✓</span> You're on the list. We'll be in touch.
@@ -82,42 +96,32 @@ function WaitlistForm({ source = 'landing', label = 'Get early access →', comp
   }
 
   return (
-    <form onSubmit={submit} style={{ display: 'flex', gap: 8, flexWrap: compact ? 'nowrap' : 'wrap', justifyContent: 'center' }}>
+    <form onSubmit={submit} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
       <input
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="your@email.com"
-        required
+        type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+        placeholder="your@email.com" required
         style={{
           padding: compact ? '10px 16px' : '13px 18px',
           background: 'rgba(255,255,255,0.06)',
           border: state === 'error' ? '1px solid rgba(255,98,89,0.5)' : '1px solid rgba(255,255,255,0.12)',
-          borderRadius: 100,
-          color: '#f0f0f5',
-          fontSize: compact ? 13 : 14,
-          fontFamily: FF,
-          outline: 'none',
-          width: compact ? 220 : 260,
-          transition: 'border-color 0.2s',
+          borderRadius: 100, color: '#f0f0f5', fontSize: compact ? 13 : 14,
+          fontFamily: FF, outline: 'none', width: compact ? 220 : 260, transition: 'border-color 0.2s',
         }}
         onFocus={(e) => { e.target.style.borderColor = 'rgba(204,253,1,0.4)'; }}
         onBlur={(e) => { e.target.style.borderColor = state === 'error' ? 'rgba(255,98,89,0.5)' : 'rgba(255,255,255,0.12)'; }}
       />
       <motion.button
-        type="submit"
-        disabled={state === 'loading' || !email}
-        whileHover={{ scale: 1.03 }}
-        whileTap={{ scale: 0.97 }}
+        type="submit" disabled={state === 'loading' || !email}
+        whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
         style={{
           padding: compact ? '10px 20px' : '13px 24px',
           background: state === 'loading' || !email
             ? 'rgba(255,255,255,0.08)'
             : `linear-gradient(135deg, ${VOLT}, ${VOLTD})`,
           color: state === 'loading' || !email ? 'rgba(255,255,255,0.3)' : '#0a0a0a',
-          border: 'none', borderRadius: 100,
-          fontWeight: 700, fontSize: compact ? 13 : 14,
-          fontFamily: FF, cursor: state === 'loading' || !email ? 'not-allowed' : 'pointer',
+          border: 'none', borderRadius: 100, fontWeight: 700,
+          fontSize: compact ? 13 : 14, fontFamily: FF,
+          cursor: state === 'loading' || !email ? 'not-allowed' : 'pointer',
           boxShadow: state === 'loading' || !email ? 'none' : `0 4px 24px rgba(204,253,1,0.25)`,
           transition: 'all 0.2s ease', whiteSpace: 'nowrap',
         }}
@@ -133,7 +137,7 @@ function WaitlistForm({ source = 'landing', label = 'Get early access →', comp
   );
 }
 
-// ─── Waitlist Social Proof ────────────────────────────────────────────────────
+// ─── Waitlist Count ───────────────────────────────────────────────────────────
 
 function WaitlistCount() {
   const [count, setCount] = useState(null);
@@ -143,17 +147,14 @@ function WaitlistCount() {
       .select('*', { count: 'exact', head: true })
       .then(({ count: c }) => setCount(c));
   }, []);
-  const display = count ? Math.max(count + 40, 50) : 80; // pad a bit for social proof floor
+  const display = count ? Math.max(count + 40, 80) : 80;
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 0.5 }}
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
       style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        gap: 14, marginTop: 20, flexWrap: 'wrap',
-        fontFamily: FF,
+        gap: 14, marginTop: 20, flexWrap: 'wrap', fontFamily: FF,
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -164,13 +165,11 @@ function WaitlistCount() {
             marginLeft: i === 0 ? 0 : -8, flexShrink: 0,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 10, fontWeight: 700, color: c,
-          }}>
-            {['J', 'P', 'M', 'S', 'A'][i]}
-          </div>
+          }}>{['J','P','M','S','A'][i]}</div>
         ))}
       </div>
       <span style={{ fontSize: 12, color: 'rgba(240,240,245,0.4)' }}>
-        <span style={{ color: 'rgba(240,240,245,0.75)', fontWeight: 600 }}>{display}+ freelancers</span> already on the list
+        <span style={{ color: 'rgba(240,240,245,0.75)', fontWeight: 600 }}>{display}+ solo creators</span> already waiting
       </span>
       <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: 10 }}>·</span>
       <span style={{ fontSize: 12, color: 'rgba(240,240,245,0.3)' }}>No card required</span>
@@ -190,7 +189,6 @@ function Nav({ onSignIn }) {
 
   const scrollTo = (id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
 
-  // Outer nav spans full viewport width and FLEX-CENTRES the pill — no transform math
   return (
     <motion.nav
       initial={{ opacity: 0, y: -12 }}
@@ -200,16 +198,14 @@ function Nav({ onSignIn }) {
         position: 'fixed', top: 16, left: 0, right: 0,
         zIndex: 999,
         display: 'flex', justifyContent: 'center', alignItems: 'center',
-        pointerEvents: 'none',
-        fontFamily: FF,
+        pointerEvents: 'none', fontFamily: FF,
       }}
     >
-      {/* Pill — inner container, pointer events re-enabled */}
       <div style={{
         pointerEvents: 'auto',
         display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center',
         padding: '10px 20px 10px 16px',
-        background: scrolled ? 'rgba(8,8,10,0.88)' : 'rgba(8,8,10,0.6)',
+        background: scrolled ? 'rgba(8,8,10,0.9)' : 'rgba(8,8,10,0.65)',
         backdropFilter: 'blur(24px) saturate(1.8)',
         border: `1px solid ${scrolled ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.07)'}`,
         borderRadius: 100,
@@ -217,7 +213,6 @@ function Nav({ onSignIn }) {
         transition: 'all 0.3s ease',
         minWidth: 460,
       }}>
-        {/* Logo — col 1 */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
           <div style={{
             width: 28, height: 28, borderRadius: 8,
@@ -228,42 +223,29 @@ function Nav({ onSignIn }) {
           <span style={{ fontWeight: 700, fontSize: 15, color: '#f0f0f5', letterSpacing: -0.3 }}>Nomaad</span>
         </div>
 
-        {/* Links — col 2 (auto), perfectly centred by the 1fr cols either side */}
         <div style={{ display: 'flex', gap: 24, alignItems: 'center', padding: '0 32px' }}>
-          {[['Features', 'features'], ['Pricing', 'pricing']].map(([label, id]) => (
-            <button
-              key={id}
-              onClick={() => scrollTo(id)}
-              style={{
-                background: 'none', border: 'none', color: 'rgba(240,240,245,0.55)',
-                fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: FF,
-                padding: 0, transition: 'color 0.2s',
-              }}
+          {[['How it works', 'workflow'], ['Pricing', 'pricing']].map(([label, id]) => (
+            <button key={id} onClick={() => scrollTo(id)} style={{
+              background: 'none', border: 'none', color: 'rgba(240,240,245,0.55)',
+              fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: FF,
+              padding: 0, transition: 'color 0.2s',
+            }}
               onMouseEnter={(e) => e.target.style.color = '#f0f0f5'}
               onMouseLeave={(e) => e.target.style.color = 'rgba(240,240,245,0.55)'}
-            >
-              {label}
-            </button>
+            >{label}</button>
           ))}
         </div>
 
-        {/* CTAs — col 3, right-aligned */}
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'flex-end' }}>
-          <button
-            onClick={onSignIn}
-            style={{
-              background: 'none', border: 'none',
-              color: 'rgba(240,240,245,0.6)',
-              fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: FF, padding: '6px 12px',
-            }}
-          >Sign in</button>
+          <button onClick={onSignIn} style={{
+            background: 'none', border: 'none', color: 'rgba(240,240,245,0.6)',
+            fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: FF, padding: '6px 12px',
+          }}>Sign in</button>
           <motion.button
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.97 }}
+            whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
             onClick={() => scrollTo('waitlist')}
             style={{
-              padding: '7px 16px',
-              background: `linear-gradient(135deg, ${VOLT}, ${VOLTD})`,
+              padding: '7px 16px', background: `linear-gradient(135deg, ${VOLT}, ${VOLTD})`,
               color: '#0a0a0a', border: 'none', borderRadius: 100,
               fontWeight: 700, fontSize: 13, fontFamily: FF, cursor: 'pointer',
               boxShadow: `0 3px 16px rgba(204,253,1,0.25)`,
@@ -285,335 +267,137 @@ function Hero({ onSignIn }) {
       padding: '140px 24px 80px', textAlign: 'center', position: 'relative',
       fontFamily: FF,
     }}>
-      {/* Aurora blobs */}
       <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
-        <div style={{
-          position: 'absolute', top: '-15%', left: '55%', width: 700, height: 700,
-          borderRadius: '50%', background: VOLT, filter: 'blur(160px)', opacity: 0.055,
-        }} />
-        <div style={{
-          position: 'absolute', bottom: '-10%', left: '-5%', width: 600, height: 600,
-          borderRadius: '50%', background: '#5AC8FA', filter: 'blur(140px)', opacity: 0.04,
-        }} />
-        <div style={{
-          position: 'absolute', top: '40%', left: '40%', width: 500, height: 500,
-          borderRadius: '50%', background: '#FFB340', filter: 'blur(160px)', opacity: 0.025,
-        }} />
+        <div style={{ position: 'absolute', top: '-10%', left: '60%', width: 700, height: 700, borderRadius: '50%', background: VOLT, filter: 'blur(160px)', opacity: 0.05 }} />
+        <div style={{ position: 'absolute', bottom: '-5%', left: '-5%', width: 600, height: 600, borderRadius: '50%', background: '#5AC8FA', filter: 'blur(140px)', opacity: 0.035 }} />
       </div>
 
-      <div style={{ position: 'relative', maxWidth: 820, margin: '0 auto' }}>
-        {/* Eyebrow */}
+      <div style={{ position: 'relative', maxWidth: 800, margin: '0 auto' }}>
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 8,
             padding: '6px 14px 6px 10px',
-            background: 'rgba(204,253,1,0.07)',
-            border: '1px solid rgba(204,253,1,0.2)',
+            background: 'rgba(204,253,1,0.07)', border: '1px solid rgba(204,253,1,0.2)',
             borderRadius: 100, marginBottom: 32,
           }}
         >
-          <span style={{
-            width: 6, height: 6, borderRadius: '50%',
-            background: VOLT,
-            boxShadow: `0 0 8px ${VOLT}`,
-            animation: 'pulse 2s ease infinite',
-          }} />
-          <span style={{ fontSize: 12, fontWeight: 600, color: VOLT, letterSpacing: '0.04em' }}>
-            NOW IN BETA · WAITLIST OPEN
-          </span>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: VOLT, boxShadow: `0 0 8px ${VOLT}`, animation: 'pulse 2s ease infinite' }} />
+          <span style={{ fontSize: 12, fontWeight: 600, color: VOLT, letterSpacing: '0.04em' }}>NOW IN BETA · WAITLIST OPEN</span>
         </motion.div>
 
-        {/* Headline */}
         <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
           style={{
-            fontSize: 'clamp(44px, 7vw, 80px)',
-            fontWeight: 800, lineHeight: 1.08, letterSpacing: '-0.03em',
+            fontSize: 'clamp(42px, 7vw, 78px)', fontWeight: 800,
+            lineHeight: 1.07, letterSpacing: '-0.03em',
             color: '#f0f0f5', margin: '0 0 20px',
           }}
         >
-          You're the creative.
+          You didn't start freelancing
           <br />
-          <span style={{ color: VOLT }}>We'll run the business.</span>
+          <span style={{ color: VOLT }}>to drown in admin.</span>
         </motion.h1>
 
-        {/* Subheadline */}
         <motion.p
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
           style={{
-            fontSize: 'clamp(16px, 2.2vw, 20px)',
-            color: 'rgba(240,240,245,0.5)', lineHeight: 1.6,
-            maxWidth: 580, margin: '0 auto 28px',
+            fontSize: 'clamp(16px, 2.2vw, 19px)',
+            color: 'rgba(240,240,245,0.5)', lineHeight: 1.65,
+            maxWidth: 560, margin: '0 auto 36px',
           }}
         >
-          CRM, projects, invoicing, client portal — all in one place, built for one person.
-          Stop juggling eight tools. Get back to the work only you can do.
+          Nomaad runs your client pipeline, follow-ups, invoicing, and projects automatically —
+          so you can spend your time on work that actually pays.
         </motion.p>
 
-        {/* ICP chips */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.22, ease: [0.22, 1, 0.36, 1] }}
-          style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 36 }}
-        >
-          {['Videographers', 'Photographers', 'Designers', 'Editors', 'Content creators', 'Copywriters'].map((label) => (
-            <span key={label} style={{
-              padding: '5px 12px', borderRadius: 100,
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              fontSize: 12, color: 'rgba(240,240,245,0.4)',
-              fontFamily: FF, fontWeight: 500,
-            }}>{label}</span>
-          ))}
-        </motion.div>
-
-        {/* Waitlist form */}
         <motion.div
           id="waitlist"
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.24, ease: [0.22, 1, 0.36, 1] }}
         >
-          <WaitlistForm source="hero" label="Join the waitlist →" />
+          <WaitlistForm source="hero" label="Get early access →" />
           <WaitlistCount />
         </motion.div>
 
         <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.52 }}
           style={{ fontSize: 12, color: 'rgba(240,240,245,0.3)', marginTop: 20 }}
         >
           Already have an account?{' '}
-          <button
-            onClick={onSignIn}
-            style={{ background: 'none', border: 'none', color: 'rgba(204,253,1,0.7)', fontFamily: FF, fontSize: 12, cursor: 'pointer', fontWeight: 600, padding: 0 }}
-          >Sign in →</button>
+          <button onClick={onSignIn} style={{
+            background: 'none', border: 'none', color: 'rgba(204,253,1,0.7)',
+            fontFamily: FF, fontSize: 12, cursor: 'pointer', fontWeight: 600, padding: 0,
+          }}>Sign in →</button>
         </motion.p>
-
-        {/* Dashboard mockup */}
-        <motion.div
-          initial={{ opacity: 0, y: 40, scale: 0.97 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.9, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
-          style={{ marginTop: 64, position: 'relative' }}
-        >
-          {/* Glow under mockup */}
-          <div style={{
-            position: 'absolute', bottom: -60, left: '50%', transform: 'translateX(-50%)',
-            width: '70%', height: 120, borderRadius: '50%',
-            background: VOLT, filter: 'blur(60px)', opacity: 0.08, pointerEvents: 'none',
-          }} />
-          <AppMockup />
-        </motion.div>
       </div>
     </section>
   );
 }
 
-// ─── App Mockup ───────────────────────────────────────────────────────────────
-
-function AppMockup() {
-  const clients = [
-    { name: 'Anchor Studio', tag: 'Active', tagColor: VOLT, tagBg: 'rgba(204,253,1,0.12)', val: '£4,200', stage: 'Production' },
-    { name: 'Volta Creative', tag: 'Proposal', tagColor: '#5AC8FA', tagBg: 'rgba(90,200,250,0.12)', val: '£2,800', stage: 'Review' },
-    { name: 'Nori Films', tag: 'New lead', tagColor: '#FFB340', tagBg: 'rgba(255,179,64,0.12)', val: '£6,500', stage: 'Briefing' },
-  ];
-  return (
-    <div style={{
-      background: 'rgba(255,255,255,0.025)',
-      border: '1px solid rgba(255,255,255,0.08)',
-      borderRadius: 20,
-      overflow: 'hidden',
-      boxShadow: '0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04)',
-      textAlign: 'left',
-      fontFamily: FF,
-      maxWidth: 760, margin: '0 auto',
-    }}>
-      {/* Window chrome */}
-      <div style={{
-        padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 8,
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
-        background: 'rgba(255,255,255,0.02)',
-      }}>
-        {['#FF5F57', '#FEBC2E', '#28C840'].map((c) => (
-          <div key={c} style={{ width: 10, height: 10, borderRadius: '50%', background: c, opacity: 0.9 }} />
-        ))}
-        <div style={{
-          flex: 1, height: 20, borderRadius: 6,
-          background: 'rgba(255,255,255,0.04)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 10, color: 'rgba(255,255,255,0.2)', marginLeft: 8,
-        }}>
-          app.nomaad.ai
-        </div>
-      </div>
-
-      {/* App shell */}
-      <div style={{ display: 'flex', height: 340 }}>
-        {/* Sidebar */}
-        <div style={{
-          width: 180, borderRight: '1px solid rgba(255,255,255,0.05)',
-          padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: 4,
-          background: 'rgba(255,255,255,0.015)', flexShrink: 0,
-        }}>
-          {[
-            { label: 'Dashboard', active: false, icon: '⊞' },
-            { label: 'CRM', active: true, icon: '◎' },
-            { label: 'Projects', active: false, icon: '▤' },
-            { label: 'Calendar', active: false, icon: '⊡' },
-            { label: 'Financials', active: false, icon: '◈' },
-          ].map(({ label, active, icon }) => (
-            <div key={label} style={{
-              padding: '7px 10px', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 8,
-              background: active ? 'rgba(204,253,1,0.1)' : 'transparent',
-              color: active ? VOLT : 'rgba(255,255,255,0.35)',
-              fontSize: 12, fontWeight: active ? 600 : 400,
-            }}>
-              <span style={{ fontSize: 10 }}>{icon}</span>
-              {label}
-            </div>
-          ))}
-        </div>
-
-        {/* Main content */}
-        <div style={{ flex: 1, padding: '20px 20px', overflow: 'hidden' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-            <span style={{ fontSize: 14, fontWeight: 700, color: '#f0f0f5' }}>CRM Pipeline</span>
-            <div style={{
-              padding: '4px 12px', borderRadius: 100, fontSize: 11, fontWeight: 600,
-              background: `linear-gradient(135deg, ${VOLT}, ${VOLTD})`, color: '#0a0a0a',
-            }}>+ Add client</div>
-          </div>
-
-          {/* Client cards */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {clients.map((c) => (
-              <div key={c.name} style={{
-                padding: '12px 14px', borderRadius: 12,
-                background: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.06)',
-                display: 'flex', alignItems: 'center', gap: 12,
-              }}>
-                <div style={{
-                  width: 32, height: 32, borderRadius: 10, flexShrink: 0,
-                  background: 'rgba(255,255,255,0.06)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)',
-                }}>{c.name[0]}</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: '#f0f0f5', marginBottom: 3 }}>{c.name}</div>
-                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{c.stage}</div>
-                </div>
-                <div style={{
-                  padding: '2px 8px', borderRadius: 100, fontSize: 10, fontWeight: 600,
-                  background: c.tagBg, color: c.tagColor,
-                }}>{c.tag}</div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#f0f0f5', minWidth: 48, textAlign: 'right' }}>{c.val}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Pipeline strip */}
-          <div style={{ display: 'flex', gap: 4, marginTop: 14 }}>
-            {['Briefing', 'Production', 'Review', 'Delivered', 'Invoiced'].map((s, i) => (
-              <div key={s} style={{
-                flex: 1, padding: '5px 0', borderRadius: 6, textAlign: 'center',
-                fontSize: 9, fontWeight: 600,
-                background: i === 1 ? 'rgba(204,253,1,0.12)' : 'rgba(255,255,255,0.03)',
-                color: i === 1 ? VOLT : 'rgba(255,255,255,0.25)',
-                border: i === 1 ? `1px solid rgba(204,253,1,0.2)` : '1px solid rgba(255,255,255,0.05)',
-              }}>{s}</div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Marquee ──────────────────────────────────────────────────────────────────
-
-const TICKER_ITEMS = [
-  'CRM', 'Invoicing', 'Projects', 'Calendar', 'Client Portal',
-  'Automations', 'Documents', 'Pipeline', 'Time Tracking', 'Proposals',
-];
-
-function Marquee() {
-  const items = [...TICKER_ITEMS, ...TICKER_ITEMS];
-  return (
-    <div style={{
-      padding: '28px 0', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)',
-      overflow: 'hidden', position: 'relative',
-    }}>
-      <div style={{
-        display: 'flex', gap: 48, width: 'max-content',
-        animation: 'marquee 30s linear infinite',
-        fontFamily: FF,
-      }}>
-        {items.map((item, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-            <span style={{ color: VOLT, fontSize: 10, opacity: 0.6 }}>✦</span>
-            <span style={{ fontSize: 13, fontWeight: 500, color: 'rgba(240,240,245,0.35)', whiteSpace: 'nowrap' }}>{item}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ─── Villain Section ──────────────────────────────────────────────────────────
+// ─── Problem Section ──────────────────────────────────────────────────────────
 
 const PAINS = [
-  { emoji: '📋', title: 'Notion for notes & tasks', sub: "But it can't invoice." },
-  { emoji: '📊', title: 'Sheets for finances', sub: 'Updated once a quarter, usually wrong.' },
-  { emoji: '📅', title: 'Calendly for scheduling', sub: 'Another login, another tab.' },
-  { emoji: '📧', title: 'Gmail for client comms', sub: 'Follow-ups lost in the abyss.' },
-  { emoji: '🧾', title: 'FreshBooks for invoices', sub: '£30/mo for a glorified PDF.' },
-  { emoji: '💬', title: 'WhatsApp for clients', sub: 'Revision requests in voice notes.' },
+  {
+    title: 'You copied a lead from Instagram into a spreadsheet. Again.',
+    sub: 'Manual data entry is not a business system.',
+  },
+  {
+    title: 'A client emailed 3 days ago. You still haven\'t replied.',
+    sub: 'Buried in your inbox under 200 other things.',
+  },
+  {
+    title: 'Your invoices are in one app, your notes in another, your tasks somewhere else.',
+    sub: 'Nothing talks to anything. Every job starts with 20 minutes of admin.',
+  },
+  {
+    title: 'You spent Sunday catching up on work that should\'ve taken 20 minutes.',
+    sub: 'That\'s not a workload problem. That\'s a systems problem.',
+  },
+  {
+    title: 'A £2,000 project went quiet. You forgot to follow up.',
+    sub: 'Not because you didn\'t care. Because you had nothing reminding you.',
+  },
+  {
+    title: 'You\'re paying for 5 tools that don\'t talk to each other.',
+    sub: 'Notion. Sheets. Calendly. FreshBooks. Gmail. £150+/mo for chaos.',
+  },
 ];
 
-function VillainSection() {
-  const [ref, visible] = useInView(0.1);
+function ProblemSection() {
   return (
-    <section ref={ref} style={{ padding: '100px 24px', maxWidth: 1080, margin: '0 auto', fontFamily: FF }}>
-      <FadeUp style={{ textAlign: 'center', marginBottom: 56 }}>
-        <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(240,240,245,0.35)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>
-          The reality
-        </p>
-        <h2 style={{ fontSize: 'clamp(32px, 4.5vw, 52px)', fontWeight: 800, color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 16px', lineHeight: 1.1 }}>
-          You're running a business
+    <section style={{ padding: '100px 24px', maxWidth: 1080, margin: '0 auto', fontFamily: FF }}>
+      <FadeUp style={{ textAlign: 'center', marginBottom: 60 }}>
+        <Label text="The reality" />
+        <h2 style={{
+          fontSize: 'clamp(30px, 4.5vw, 52px)', fontWeight: 800,
+          color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 16px', lineHeight: 1.1,
+        }}>
+          You're doing the work of 5 people.
           <br />
-          <span style={{ color: 'rgba(240,240,245,0.35)' }}>with 8 different apps.</span>
+          <span style={{ color: 'rgba(240,240,245,0.3)' }}>With 8 different tools.</span>
         </h2>
-        <p style={{ fontSize: 16, color: 'rgba(240,240,245,0.4)', maxWidth: 480, margin: '0 auto' }}>
-          The average solo creative wastes 3–4 hours a day on admin that shouldn't exist.
+        <p style={{ fontSize: 16, color: 'rgba(240,240,245,0.4)', maxWidth: 460, margin: '0 auto' }}>
+          This is what running a solo creative business actually looks like right now.
         </p>
       </FadeUp>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 12 }}>
         {PAINS.map((p, i) => (
-          <FadeUp key={p.title} delay={i * 0.04}>
+          <FadeUp key={i} delay={i * 0.05}>
             <div style={{
-              padding: '20px 22px',
-              background: 'rgba(255,255,255,0.025)',
+              padding: '22px 24px',
+              background: 'rgba(255,255,255,0.02)',
               border: '1px solid rgba(255,255,255,0.06)',
               borderRadius: 16,
-              display: 'flex', gap: 14, alignItems: 'flex-start',
+              borderLeft: '2px solid rgba(255,98,89,0.3)',
             }}>
-              <span style={{ fontSize: 22, flexShrink: 0 }}>{p.emoji}</span>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: 'rgba(240,240,245,0.7)', marginBottom: 4 }}>{p.title}</div>
-                <div style={{ fontSize: 12, color: 'rgba(240,240,245,0.3)' }}>{p.sub}</div>
-              </div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: 'rgba(240,240,245,0.75)', marginBottom: 6, lineHeight: 1.45 }}>{p.title}</div>
+              <div style={{ fontSize: 12, color: 'rgba(240,240,245,0.3)', lineHeight: 1.55 }}>{p.sub}</div>
             </div>
           </FadeUp>
         ))}
@@ -622,135 +406,259 @@ function VillainSection() {
   );
 }
 
-// ─── Plan Section ─────────────────────────────────────────────────────────────
+// ─── Workflow Section ─────────────────────────────────────────────────────────
 
-const STEPS = [
-  {
-    num: '01',
-    title: 'Bring your clients in',
-    body: 'Import contacts or add them as they come in. Track deals through your pipeline — Briefing to Invoiced.',
-    color: VOLT,
-  },
-  {
-    num: '02',
-    title: 'Run every job from one place',
-    body: 'Projects, tasks, calendars, files, and client comms — all linked. No copy-pasting between apps.',
-    color: '#5AC8FA',
-  },
-  {
-    num: '03',
-    title: 'Get paid without chasing',
-    body: "Create invoices in seconds, track what's unpaid, and know exactly where your money is going.",
-    color: '#FFB340',
-  },
+const WORKFLOW_STEPS = [
+  { n: '01', title: 'Lead comes in',        body: 'From Instagram, email, referral — Nomaad logs it instantly. No copying. No forgetting.',                         color: VOLT },
+  { n: '02', title: 'Follow-up goes out',   body: 'A personalised email fires automatically. The lead hears from you before you even open your laptop.',           color: '#5AC8FA' },
+  { n: '03', title: 'Call gets booked',     body: 'Your calendar link is in the email. They pick a slot. You show up and close.',                                  color: '#FFB340' },
+  { n: '04', title: 'Client is onboarded',  body: 'Contract sent. Questionnaire filled. Brief captured. Everything handled before the project even starts.',        color: '#BF5AF2' },
+  { n: '05', title: 'Project is tracked',   body: 'Tasks, deadlines, files, and client comms — all linked in one place. Nothing falls through the cracks.',        color: '#5AC8FA' },
+  { n: '06', title: 'Invoice is paid',      body: 'Invoice raised automatically when the job is done. Payment tracked. You know exactly where every pound is.',    color: VOLT },
 ];
 
-function PlanSection() {
+function WorkflowSection() {
   return (
-    <section id="features" style={{ padding: '100px 24px', maxWidth: 1080, margin: '0 auto', fontFamily: FF }}>
+    <section id="workflow" style={{ padding: '100px 24px', maxWidth: 1080, margin: '0 auto', fontFamily: FF }}>
       <FadeUp style={{ textAlign: 'center', marginBottom: 64 }}>
-        <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(240,240,245,0.35)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>
-          How it works
-        </p>
-        <h2 style={{ fontSize: 'clamp(32px, 4.5vw, 52px)', fontWeight: 800, color: '#f0f0f5', letterSpacing: '-0.03em', margin: 0, lineHeight: 1.1 }}>
-          One tool.{' '}
-          <span style={{ color: VOLT }}>End to end.</span>
+        <Label text="How it works" />
+        <h2 style={{
+          fontSize: 'clamp(30px, 4.5vw, 52px)', fontWeight: 800,
+          color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 16px', lineHeight: 1.1,
+        }}>
+          This is how your business
+          <br />
+          <span style={{ color: VOLT }}>runs on Nomaad.</span>
         </h2>
+        <p style={{ fontSize: 16, color: 'rgba(240,240,245,0.4)', maxWidth: 440, margin: '0 auto' }}>
+          One flow. No dropped balls. No manual steps. Just clients in — revenue out.
+        </p>
       </FadeUp>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
-        {STEPS.map((s, i) => (
-          <FadeUp key={s.num} delay={i * 0.08}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(310px, 1fr))', gap: 2 }}>
+        {WORKFLOW_STEPS.map((s, i) => (
+          <FadeUp key={s.n} delay={i * 0.07}>
             <div style={{
-              padding: '32px 28px', borderRadius: 20,
-              background: 'rgba(255,255,255,0.025)',
-              border: '1px solid rgba(255,255,255,0.07)',
-              height: '100%', boxSizing: 'border-box',
+              padding: '28px 26px',
+              background: i % 2 === 0 ? 'rgba(255,255,255,0.025)' : 'rgba(255,255,255,0.018)',
+              border: '1px solid rgba(255,255,255,0.06)',
+              borderRadius: 18, position: 'relative', overflow: 'hidden',
             }}>
               <div style={{
-                fontSize: 11, fontWeight: 800, color: s.color, marginBottom: 20,
-                fontVariantNumeric: 'tabular-nums', letterSpacing: '0.1em',
-              }}>{s.num}</div>
-              <h3 style={{ fontSize: 22, fontWeight: 700, color: '#f0f0f5', margin: '0 0 12px', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
-                {s.title}
-              </h3>
-              <p style={{ fontSize: 14, color: 'rgba(240,240,245,0.4)', lineHeight: 1.65, margin: 0 }}>
+                position: 'absolute', top: 0, left: 0, right: 0, height: 2,
+                background: `linear-gradient(90deg, ${s.color}60, transparent)`,
+              }} />
+              <div style={{
+                fontSize: 10, fontWeight: 800, color: s.color,
+                letterSpacing: '0.12em', marginBottom: 14,
+              }}>STEP {s.n}</div>
+              <h3 style={{
+                fontSize: 20, fontWeight: 700, color: '#f0f0f5',
+                margin: '0 0 10px', letterSpacing: '-0.02em', lineHeight: 1.2,
+              }}>{s.title}</h3>
+              <p style={{ fontSize: 13, color: 'rgba(240,240,245,0.4)', lineHeight: 1.65, margin: 0 }}>
                 {s.body}
               </p>
             </div>
           </FadeUp>
         ))}
       </div>
+
+      <FadeUp style={{ textAlign: 'center', marginTop: 48 }}>
+        <div style={{
+          display: 'inline-block', padding: '14px 28px', borderRadius: 16,
+          background: 'rgba(204,253,1,0.05)', border: '1px solid rgba(204,253,1,0.15)',
+          fontSize: 14, color: 'rgba(240,240,245,0.6)', lineHeight: 1.6,
+        }}>
+          This replaces <span style={{ color: VOLT, fontWeight: 700 }}>5 separate tools</span> and{' '}
+          <span style={{ color: VOLT, fontWeight: 700 }}>hours of manual work</span> every week.
+        </div>
+      </FadeUp>
     </section>
   );
 }
 
-// ─── Bento Section ────────────────────────────────────────────────────────────
+// ─── Outcomes Section ─────────────────────────────────────────────────────────
 
-function BentoSection() {
-  const features = [
-    {
-      title: 'CRM & Pipeline',
-      body: 'Track every client from first hello to final payment. Kanban pipeline, profile cards, notes, and tags.',
-      icon: '◎',
-      color: VOLT,
-      span: 4,
-    },
-    {
-      title: 'Financials',
-      body: 'Invoices, transactions, and cash flow in one view.',
-      icon: '◈',
-      color: '#FFB340',
-      span: 2,
-    },
-    {
-      title: 'Projects & Tasks',
-      body: 'Kanban boards per project. Tasks linked to clients and deadlines.',
-      icon: '▤',
-      color: '#5AC8FA',
-      span: 2,
-    },
-    {
-      title: 'Calendar',
-      body: 'Week/month view with drag-and-drop, NLP event creation, and Google Calendar sync.',
-      icon: '⊡',
-      color: '#BF5AF2',
-      span: 4,
-    },
-  ];
+const OUTCOMES = [
+  { icon: '⏱', headline: '2–3 hours back every day', body: 'Admin that used to eat your mornings now happens automatically in the background.' },
+  { icon: '🎯', headline: 'Zero missed leads',        body: 'Every enquiry is logged and followed up. You stop losing work you never knew you had.' },
+  { icon: '💸', headline: 'Invoices that get paid',   body: 'Automated reminders and instant invoicing mean you stop chasing and start collecting.' },
+  { icon: '🧠', headline: 'One less thing to think about', body: 'One dashboard. Every client, every project, every payment. Nothing living in your head.' },
+  { icon: '📵', headline: 'Weekends that are actually off', body: 'When your system runs itself, Sunday admin catch-ups stop being a thing.' },
+  { icon: '⚡', headline: 'A business that scales with you', body: 'Take on more clients without taking on more chaos. The system handles the growth.' },
+];
 
+function OutcomesSection() {
   return (
-    <section style={{ padding: '40px 24px 100px', maxWidth: 1080, margin: '0 auto', fontFamily: FF }}>
-      <FadeUp style={{ textAlign: 'center', marginBottom: 48 }}>
-        <h2 style={{ fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 800, color: '#f0f0f5', letterSpacing: '-0.03em', margin: 0, lineHeight: 1.1 }}>
-          Everything you need,
-          <br />
-          <span style={{ color: 'rgba(240,240,245,0.35)' }}>nothing you don't.</span>
+    <section style={{ padding: '100px 24px', maxWidth: 1080, margin: '0 auto', fontFamily: FF }}>
+      <FadeUp style={{ textAlign: 'center', marginBottom: 60 }}>
+        <Label text="What you get back" />
+        <h2 style={{
+          fontSize: 'clamp(30px, 4.5vw, 52px)', fontWeight: 800,
+          color: '#f0f0f5', letterSpacing: '-0.03em', margin: 0, lineHeight: 1.1,
+        }}>
+          Not features. <span style={{ color: VOLT }}>Results.</span>
         </h2>
       </FadeUp>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 12 }}>
-        {features.map((f, i) => (
-          <FadeUp key={f.title} delay={i * 0.06} style={{ gridColumn: `span ${f.span}` }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 12 }}>
+        {OUTCOMES.map((o, i) => (
+          <FadeUp key={i} delay={i * 0.05}>
             <div style={{
-              padding: '28px 26px', borderRadius: 18,
+              padding: '26px 24px',
               background: 'rgba(255,255,255,0.025)',
               border: '1px solid rgba(255,255,255,0.07)',
-              height: '100%', boxSizing: 'border-box',
-              minHeight: 160,
+              borderRadius: 16, display: 'flex', gap: 16, alignItems: 'flex-start',
             }}>
               <div style={{
-                width: 36, height: 36, borderRadius: 10, marginBottom: 16,
-                background: `${f.color}18`, border: `1px solid ${f.color}30`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 16, color: f.color,
-              }}>{f.icon}</div>
-              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#f0f0f5', margin: '0 0 8px', letterSpacing: '-0.02em' }}>{f.title}</h3>
-              <p style={{ fontSize: 13, color: 'rgba(240,240,245,0.4)', lineHeight: 1.6, margin: 0 }}>{f.body}</p>
+                width: 40, height: 40, borderRadius: 12, flexShrink: 0,
+                background: 'rgba(204,253,1,0.07)', border: '1px solid rgba(204,253,1,0.12)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
+              }}>{o.icon}</div>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#f0f0f5', marginBottom: 6, lineHeight: 1.3 }}>{o.headline}</div>
+                <div style={{ fontSize: 13, color: 'rgba(240,240,245,0.4)', lineHeight: 1.6 }}>{o.body}</div>
+              </div>
             </div>
           </FadeUp>
         ))}
       </div>
+    </section>
+  );
+}
+
+// ─── Stack Section ────────────────────────────────────────────────────────────
+
+const OLD_STACK = [
+  { name: 'Notion',      purpose: 'Notes & tasks',       cost: '£16/mo', pain: "Can't invoice. Can't track leads. Just more tabs." },
+  { name: 'FreshBooks',  purpose: 'Invoicing',           cost: '£29/mo', pain: "£29/mo for a PDF maker. Doesn't know who your clients are." },
+  { name: 'Calendly',    purpose: 'Booking calls',       cost: '£12/mo', pain: 'Another login. Another app. Doesn\'t follow up automatically.' },
+  { name: 'Gmail',       purpose: 'Client comms',        cost: 'Free',   pain: 'Follow-ups buried in threads. Leads going cold in your inbox.' },
+  { name: 'Sheets',      purpose: 'Finance tracking',    cost: 'Free',   pain: 'Updated once a quarter. Usually wrong. Zero automation.' },
+  { name: 'WhatsApp',    purpose: 'Client chat',         cost: 'Free',   pain: 'Revision requests at 11pm. Work and life fully merged.' },
+];
+
+function StackSection() {
+  return (
+    <section style={{ padding: '100px 24px', maxWidth: 1080, margin: '0 auto', fontFamily: FF }}>
+      <FadeUp style={{ textAlign: 'center', marginBottom: 56 }}>
+        <Label text="Replace your stack" />
+        <h2 style={{
+          fontSize: 'clamp(30px, 4.5vw, 52px)', fontWeight: 800,
+          color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 16px', lineHeight: 1.1,
+        }}>
+          Stop paying for 5 tools
+          <br />
+          <span style={{ color: 'rgba(240,240,245,0.3)' }}>that don't talk to each other.</span>
+        </h2>
+        <p style={{ fontSize: 16, color: 'rgba(240,240,245,0.4)', maxWidth: 420, margin: '0 auto' }}>
+          You're cobbling together a business from tools that were never designed to work together.
+        </p>
+      </FadeUp>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 10, marginBottom: 32 }}>
+        {OLD_STACK.map((t, i) => (
+          <FadeUp key={t.name} delay={i * 0.04}>
+            <div style={{
+              padding: '18px 20px',
+              background: 'rgba(255,255,255,0.02)',
+              border: '1px solid rgba(255,255,255,0.06)',
+              borderRadius: 14, display: 'flex', gap: 14, alignItems: 'flex-start',
+            }}>
+              <div style={{
+                padding: '3px 8px', borderRadius: 8, flexShrink: 0,
+                background: 'rgba(255,98,89,0.08)', border: '1px solid rgba(255,98,89,0.15)',
+                fontSize: 11, fontWeight: 700, color: 'rgba(255,98,89,0.7)',
+              }}>{t.cost}</div>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(240,240,245,0.7)' }}>{t.name}</span>
+                  <span style={{ fontSize: 11, color: 'rgba(240,240,245,0.3)' }}>· {t.purpose}</span>
+                </div>
+                <div style={{ fontSize: 12, color: 'rgba(240,240,245,0.3)', lineHeight: 1.55 }}>{t.pain}</div>
+              </div>
+            </div>
+          </FadeUp>
+        ))}
+      </div>
+
+      <FadeUp>
+        <div style={{
+          padding: '28px 32px', borderRadius: 18,
+          background: 'rgba(204,253,1,0.04)', border: '1px solid rgba(204,253,1,0.15)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          flexWrap: 'wrap', gap: 20,
+        }}>
+          <div>
+            <div style={{ fontSize: 13, color: 'rgba(240,240,245,0.4)', marginBottom: 6 }}>All of that 👆</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: '#f0f0f5' }}>
+              £57–£100<span style={{ fontSize: 14, fontWeight: 500, color: 'rgba(240,240,245,0.4)' }}>/mo + 3 hours/day wasted</span>
+            </div>
+          </div>
+          <div style={{ color: 'rgba(240,240,245,0.2)', fontSize: 28, fontWeight: 300 }}>→</div>
+          <div>
+            <div style={{ fontSize: 13, color: VOLT, marginBottom: 6, fontWeight: 600 }}>Replace it all with Nomaad</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: '#f0f0f5' }}>
+              £39<span style={{ fontSize: 14, fontWeight: 500, color: 'rgba(240,240,245,0.4)' }}>/mo + runs itself</span>
+            </div>
+          </div>
+        </div>
+      </FadeUp>
+    </section>
+  );
+}
+
+// ─── Avatar Section ───────────────────────────────────────────────────────────
+
+const AVATARS = [
+  'Freelance videographer',
+  'Photographer',
+  'Brand designer',
+  'Copywriter',
+  'Video editor',
+  'Content creator',
+  'Creative coach',
+  'Social media manager',
+];
+
+function AvatarSection() {
+  return (
+    <section style={{ padding: '80px 24px 100px', maxWidth: 860, margin: '0 auto', fontFamily: FF, textAlign: 'center' }}>
+      <FadeUp>
+        <Label text="Built for solo operators" />
+        <h2 style={{
+          fontSize: 'clamp(28px, 4vw, 50px)', fontWeight: 800,
+          color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 20px', lineHeight: 1.1,
+        }}>
+          Not for agencies. Not for teams.
+          <br />
+          <span style={{ color: VOLT }}>For the person doing everything themselves.</span>
+        </h2>
+        <p style={{
+          fontSize: 16, color: 'rgba(240,240,245,0.4)', maxWidth: 560,
+          margin: '0 auto 40px', lineHeight: 1.7,
+        }}>
+          If you're taking client briefs, managing your own pipeline, chasing your own invoices,
+          handling your own admin, and still somehow finding time to do the actual work —
+          Nomaad was built for you.
+        </p>
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, justifyContent: 'center', marginBottom: 40 }}>
+          {AVATARS.map((a) => (
+            <span key={a} style={{
+              padding: '8px 16px', borderRadius: 100,
+              background: 'rgba(204,253,1,0.06)', border: '1px solid rgba(204,253,1,0.15)',
+              fontSize: 13, fontWeight: 600, color: VOLT,
+              fontFamily: FF,
+            }}>{a}</span>
+          ))}
+        </div>
+
+        <p style={{ fontSize: 14, color: 'rgba(240,240,245,0.3)', fontStyle: 'italic' }}>
+          If you wear every hat — creator, account manager, bookkeeper, sales rep — this is for you.
+        </p>
+      </FadeUp>
     </section>
   );
 }
@@ -773,10 +681,10 @@ const TESTIMONIALS = [
     color: '#5AC8FA',
   },
   {
-    quote: "My clients check the portal instead of WhatsApping me at 11pm about revision rounds. I can't overstate how much that changed my evenings.",
+    quote: "My clients check the portal instead of WhatsApping me at 11pm. I can't overstate how much that changed my evenings.",
     name: 'Marcus R.',
     role: 'Photographer · Bristol',
-    metric: 'Zero late-night DMs',
+    metric: 'Zero late-night messages',
     color: '#FFB340',
   },
 ];
@@ -785,46 +693,34 @@ function TestimonialsSection() {
   return (
     <section style={{ padding: '40px 24px 80px', maxWidth: 1080, margin: '0 auto', fontFamily: FF }}>
       <FadeUp style={{ textAlign: 'center', marginBottom: 48 }}>
-        <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(240,240,245,0.35)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>
-          Beta users
-        </p>
-        <h2 style={{ fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 800, color: '#f0f0f5', letterSpacing: '-0.03em', margin: 0, lineHeight: 1.1 }}>
+        <Label text="Beta users" />
+        <h2 style={{
+          fontSize: 'clamp(28px, 4vw, 46px)', fontWeight: 800,
+          color: '#f0f0f5', letterSpacing: '-0.03em', margin: 0, lineHeight: 1.1,
+        }}>
           Real people. Real results.
         </h2>
       </FadeUp>
-
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
         {TESTIMONIALS.map((t, i) => (
           <FadeUp key={t.name} delay={i * 0.08}>
             <div style={{
               padding: '28px 26px', borderRadius: 20,
-              background: 'rgba(255,255,255,0.025)',
-              border: '1px solid rgba(255,255,255,0.07)',
+              background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)',
               display: 'flex', flexDirection: 'column', gap: 18,
               height: '100%', boxSizing: 'border-box',
             }}>
-              {/* Metric pill */}
               <div style={{
-                display: 'inline-flex', alignSelf: 'flex-start',
-                alignItems: 'center', gap: 6,
+                display: 'inline-flex', alignSelf: 'flex-start', alignItems: 'center', gap: 6,
                 padding: '4px 12px', borderRadius: 100,
                 background: `${t.color}15`, border: `1px solid ${t.color}25`,
                 color: t.color, fontSize: 11, fontWeight: 700,
               }}>
-                <span style={{ fontSize: 9 }}>✦</span>
-                {t.metric}
+                <span style={{ fontSize: 9 }}>✦</span>{t.metric}
               </div>
-
-              {/* Quote */}
-              <p style={{
-                fontSize: 14, color: 'rgba(240,240,245,0.6)',
-                lineHeight: 1.75, margin: 0, flex: 1,
-                fontStyle: 'italic',
-              }}>
+              <p style={{ fontSize: 14, color: 'rgba(240,240,245,0.6)', lineHeight: 1.75, margin: 0, flex: 1, fontStyle: 'italic' }}>
                 "{t.quote}"
               </p>
-
-              {/* Author */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{
                   width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
@@ -853,22 +749,17 @@ function FounderNote() {
       <FadeUp>
         <div style={{
           padding: '36px 36px 32px', borderRadius: 22,
-          background: 'rgba(204,253,1,0.03)',
-          border: '1px solid rgba(204,253,1,0.1)',
+          background: 'rgba(204,253,1,0.03)', border: '1px solid rgba(204,253,1,0.1)',
           position: 'relative', overflow: 'hidden',
         }}>
           <div style={{
             position: 'absolute', top: 0, left: 0, right: 0, height: 1,
             background: `linear-gradient(90deg, transparent, rgba(204,253,1,0.3), transparent)`,
           }} />
-          <p style={{
-            fontSize: 11, fontWeight: 700, color: 'rgba(204,253,1,0.6)',
-            letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16,
-          }}>Why we built this</p>
-          <p style={{
-            fontSize: 15, color: 'rgba(240,240,245,0.55)', lineHeight: 1.8,
-            margin: '0 0 24px',
-          }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(204,253,1,0.6)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>
+            Why we built this
+          </p>
+          <p style={{ fontSize: 15, color: 'rgba(240,240,245,0.55)', lineHeight: 1.8, margin: '0 0 24px' }}>
             I spent more time updating spreadsheets and chasing invoices than actually doing the work I was hired for.
             Every tool I tried was built for a 10-person agency — not for one person trying to do everything.
             So I stopped looking and built the thing I needed.
@@ -898,17 +789,32 @@ const PLANS = [
     name: 'Creator',
     price: '£39',
     period: '/mo',
-    desc: 'Everything you need to run your freelance business solo.',
+    desc: 'Everything you need to run your solo business without the chaos.',
     featured: true,
-    features: ['CRM & pipeline (unlimited clients)', 'Projects & kanban tasks', 'Invoicing & transactions', 'Calendar + Google sync', 'Client portal', 'AI assistant'],
+    features: [
+      'Client pipeline & CRM',
+      'Automated follow-ups',
+      'Projects & task tracking',
+      'Invoicing & payment tracking',
+      'Client portal',
+      'Calendar & scheduling',
+      'AI assistant',
+    ],
   },
   {
     name: 'Studio',
     price: '£89',
     period: '/mo',
-    desc: 'For small creative studios with multiple team members.',
+    desc: 'For small creative studios growing beyond one person.',
     featured: false,
-    features: ['Everything in Creator', 'Up to 5 team members', 'Shared projects & pipeline', 'Team calendar + scheduling', 'Priority support', 'Custom branding'],
+    features: [
+      'Everything in Creator',
+      'Up to 5 team members',
+      'Shared pipeline & projects',
+      'Team calendar',
+      'Priority support',
+      'Custom branding',
+    ],
   },
 ];
 
@@ -916,12 +822,14 @@ function PricingSection() {
   return (
     <section id="pricing" style={{ padding: '80px 24px 100px', maxWidth: 860, margin: '0 auto', fontFamily: FF }}>
       <FadeUp style={{ textAlign: 'center', marginBottom: 56 }}>
-        <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(240,240,245,0.35)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>
-          Pricing
-        </p>
-        <h2 style={{ fontSize: 'clamp(32px, 4.5vw, 52px)', fontWeight: 800, color: '#f0f0f5', letterSpacing: '-0.03em', margin: 0, lineHeight: 1.1 }}>
-          Replace 8 tools for less than{' '}
-          <span style={{ color: VOLT }}>one of them.</span>
+        <Label text="Pricing" />
+        <h2 style={{
+          fontSize: 'clamp(30px, 4.5vw, 50px)', fontWeight: 800,
+          color: '#f0f0f5', letterSpacing: '-0.03em', margin: 0, lineHeight: 1.1,
+        }}>
+          Replace 5 tools for less than
+          <br />
+          <span style={{ color: VOLT }}>the cost of one of them.</span>
         </h2>
       </FadeUp>
 
@@ -930,28 +838,20 @@ function PricingSection() {
           <FadeUp key={plan.name} delay={i * 0.08}>
             <div style={{
               padding: '32px 28px', borderRadius: 22,
-              background: plan.featured
-                ? 'rgba(204,253,1,0.04)'
-                : 'rgba(255,255,255,0.02)',
-              border: plan.featured
-                ? `1px solid rgba(204,253,1,0.2)`
-                : '1px solid rgba(255,255,255,0.07)',
+              background: plan.featured ? 'rgba(204,253,1,0.04)' : 'rgba(255,255,255,0.02)',
+              border: plan.featured ? `1px solid rgba(204,253,1,0.2)` : '1px solid rgba(255,255,255,0.07)',
               position: 'relative', overflow: 'hidden',
               transform: plan.featured ? 'translateY(-8px)' : 'none',
               boxShadow: plan.featured ? `0 0 60px rgba(204,253,1,0.06)` : 'none',
             }}>
               {plan.featured && (
-                <div style={{
-                  position: 'absolute', top: 0, left: 28, right: 28, height: 2,
-                  background: `linear-gradient(90deg, transparent, ${VOLT}, transparent)`,
-                }} />
+                <div style={{ position: 'absolute', top: 0, left: 28, right: 28, height: 2, background: `linear-gradient(90deg, transparent, ${VOLT}, transparent)` }} />
               )}
               {plan.featured && (
                 <div style={{
                   display: 'inline-block', padding: '3px 10px', borderRadius: 100,
                   background: 'rgba(204,253,1,0.12)', color: VOLT,
-                  fontSize: 10, fontWeight: 700, letterSpacing: '0.06em',
-                  marginBottom: 16,
+                  fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', marginBottom: 16,
                 }}>MOST POPULAR</div>
               )}
               <div style={{ marginBottom: 6 }}>
@@ -962,7 +862,6 @@ function PricingSection() {
                 <span style={{ fontSize: 14, color: 'rgba(240,240,245,0.4)' }}>{plan.period}</span>
               </div>
               <p style={{ fontSize: 13, color: 'rgba(240,240,245,0.4)', margin: '0 0 28px', lineHeight: 1.5 }}>{plan.desc}</p>
-
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 28 }}>
                 {plan.features.map((f) => (
                   <div key={f} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
@@ -971,16 +870,12 @@ function PricingSection() {
                   </div>
                 ))}
               </div>
-
               <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
+                whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                 onClick={() => document.getElementById('waitlist')?.scrollIntoView({ behavior: 'smooth' })}
                 style={{
                   width: '100%', padding: '13px 0', borderRadius: 12, border: 'none',
-                  background: plan.featured
-                    ? `linear-gradient(135deg, ${VOLT}, ${VOLTD})`
-                    : 'rgba(255,255,255,0.07)',
+                  background: plan.featured ? `linear-gradient(135deg, ${VOLT}, ${VOLTD})` : 'rgba(255,255,255,0.07)',
                   color: plan.featured ? '#0a0a0a' : 'rgba(240,240,245,0.7)',
                   fontWeight: 700, fontSize: 14, fontFamily: FF, cursor: 'pointer',
                   boxShadow: plan.featured ? `0 4px 24px rgba(204,253,1,0.2)` : 'none',
@@ -1005,22 +900,28 @@ function PricingSection() {
 
 function CloserSection() {
   return (
-    <section style={{ padding: '80px 24px 100px', textAlign: 'center', fontFamily: FF, position: 'relative' }}>
+    <section style={{ padding: '80px 24px 120px', textAlign: 'center', fontFamily: FF, position: 'relative' }}>
       <div style={{
         position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
         width: 600, height: 300, borderRadius: '50%',
-        background: VOLT, filter: 'blur(120px)', opacity: 0.045, pointerEvents: 'none',
+        background: VOLT, filter: 'blur(120px)', opacity: 0.04, pointerEvents: 'none',
       }} />
       <FadeUp style={{ maxWidth: 680, margin: '0 auto' }}>
-        <h2 style={{ fontSize: 'clamp(32px, 5vw, 60px)', fontWeight: 800, color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 20px', lineHeight: 1.08 }}>
-          Your evenings are worth more
+        <h2 style={{
+          fontSize: 'clamp(32px, 5vw, 58px)', fontWeight: 800,
+          color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 16px', lineHeight: 1.08,
+        }}>
+          Stop managing your business.
           <br />
-          <span style={{ color: VOLT }}>than your toolstack.</span>
+          <span style={{ color: VOLT }}>Let it run itself.</span>
         </h2>
         <p style={{ fontSize: 16, color: 'rgba(240,240,245,0.4)', lineHeight: 1.65, margin: '0 0 40px' }}>
-          Join the waitlist and be first to get access when we launch.
+          Join the waitlist now. Be first in when we launch.
         </p>
-        <WaitlistForm source="closer" label="Reserve my spot →" />
+        <WaitlistForm source="closer" label="Get early access →" />
+        <p style={{ fontSize: 12, color: 'rgba(240,240,245,0.25)', marginTop: 16 }}>
+          No card required · 14-day free trial on launch · Cancel anytime
+        </p>
       </FadeUp>
     </section>
   );
@@ -1045,27 +946,27 @@ function Footer() {
         <span style={{ fontSize: 13, fontWeight: 600, color: 'rgba(240,240,245,0.5)' }}>Nomaad</span>
       </div>
       <span style={{ fontSize: 12, color: 'rgba(240,240,245,0.25)' }}>
-        © {new Date().getFullYear()} Nomaad. Built for solo creatives.
+        © {new Date().getFullYear()} Nomaad. Built for solo creators.
       </span>
     </footer>
   );
 }
 
-// ─── Landing Page ─────────────────────────────────────────────────────────────
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function LandingPage({ onGetStarted }) {
   return (
     <div style={{
       background: SHELL, minHeight: '100vh', color: '#f0f0f5',
-      fontFamily: FF, WebkitFontSmoothing: 'antialiased',
-      overflowX: 'hidden',
+      fontFamily: FF, WebkitFontSmoothing: 'antialiased', overflowX: 'hidden',
     }}>
       <Nav onSignIn={onGetStarted} />
       <Hero onSignIn={onGetStarted} />
-      <Marquee />
-      <VillainSection />
-      <PlanSection />
-      <BentoSection />
+      <ProblemSection />
+      <WorkflowSection />
+      <OutcomesSection />
+      <StackSection />
+      <AvatarSection />
       <TestimonialsSection />
       <FounderNote />
       <PricingSection />
@@ -1073,7 +974,6 @@ export default function LandingPage({ onGetStarted }) {
       <Footer />
 
       <style>{`
-        @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         input::placeholder { color: rgba(240,240,245,0.25); }
         * { box-sizing: border-box; }
