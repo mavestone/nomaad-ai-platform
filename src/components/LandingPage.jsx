@@ -190,16 +190,24 @@ function Nav({ onSignIn }) {
 
   const scrollTo = (id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
 
+  // Outer nav spans full viewport width and FLEX-CENTRES the pill — no transform math
   return (
     <motion.nav
       initial={{ opacity: 0, y: -12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       style={{
-        position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)',
+        position: 'fixed', top: 16, left: 0, right: 0,
         zIndex: 999,
+        display: 'flex', justifyContent: 'center', alignItems: 'center',
+        pointerEvents: 'none',
+        fontFamily: FF,
+      }}
+    >
+      {/* Pill — inner container, pointer events re-enabled */}
+      <div style={{
+        pointerEvents: 'auto',
         display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center',
-        width: 780, maxWidth: '92vw',
         padding: '10px 20px 10px 16px',
         background: scrolled ? 'rgba(8,8,10,0.88)' : 'rgba(8,8,10,0.6)',
         backdropFilter: 'blur(24px) saturate(1.8)',
@@ -207,61 +215,61 @@ function Nav({ onSignIn }) {
         borderRadius: 100,
         boxShadow: scrolled ? '0 8px 40px rgba(0,0,0,0.5)' : '0 4px 24px rgba(0,0,0,0.3)',
         transition: 'all 0.3s ease',
-        fontFamily: FF,
-      }}
-    >
-      {/* Logo */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-        <div style={{
-          width: 28, height: 28, borderRadius: 8,
-          background: `linear-gradient(135deg, ${VOLT}, ${VOLTD})`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: '#0a0a0a', fontWeight: 800, fontSize: 13, flexShrink: 0,
-        }}>N</div>
-        <span style={{ fontWeight: 700, fontSize: 15, color: '#f0f0f5', letterSpacing: -0.3 }}>Nomaad</span>
-      </div>
-
-      {/* Links — grid col 2 (auto), always truly centred between the two 1fr cols */}
-      <div style={{ display: 'flex', gap: 24, alignItems: 'center', justifyContent: 'center' }}>
-        {[['Features', 'features'], ['Pricing', 'pricing']].map(([label, id]) => (
-          <button
-            key={id}
-            onClick={() => scrollTo(id)}
-            style={{
-              background: 'none', border: 'none', color: 'rgba(240,240,245,0.55)',
-              fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: FF,
-              padding: 0, transition: 'color 0.2s',
-            }}
-            onMouseEnter={(e) => e.target.style.color = '#f0f0f5'}
-            onMouseLeave={(e) => e.target.style.color = 'rgba(240,240,245,0.55)'}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {/* CTAs — grid col 3, right-aligned */}
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'flex-end' }}>
-        <button
-          onClick={onSignIn}
-          style={{
-            background: 'none', border: 'none',
-            color: 'rgba(240,240,245,0.6)',
-            fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: FF, padding: '6px 12px',
-          }}
-        >Sign in</button>
-        <motion.button
-          whileHover={{ scale: 1.04 }}
-          whileTap={{ scale: 0.97 }}
-          onClick={() => scrollTo('waitlist')}
-          style={{
-            padding: '7px 16px',
+        minWidth: 460,
+      }}>
+        {/* Logo — col 1 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+          <div style={{
+            width: 28, height: 28, borderRadius: 8,
             background: `linear-gradient(135deg, ${VOLT}, ${VOLTD})`,
-            color: '#0a0a0a', border: 'none', borderRadius: 100,
-            fontWeight: 700, fontSize: 13, fontFamily: FF, cursor: 'pointer',
-            boxShadow: `0 3px 16px rgba(204,253,1,0.25)`,
-          }}
-        >Get early access</motion.button>
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#0a0a0a', fontWeight: 800, fontSize: 13, flexShrink: 0,
+          }}>N</div>
+          <span style={{ fontWeight: 700, fontSize: 15, color: '#f0f0f5', letterSpacing: -0.3 }}>Nomaad</span>
+        </div>
+
+        {/* Links — col 2 (auto), perfectly centred by the 1fr cols either side */}
+        <div style={{ display: 'flex', gap: 24, alignItems: 'center', padding: '0 32px' }}>
+          {[['Features', 'features'], ['Pricing', 'pricing']].map(([label, id]) => (
+            <button
+              key={id}
+              onClick={() => scrollTo(id)}
+              style={{
+                background: 'none', border: 'none', color: 'rgba(240,240,245,0.55)',
+                fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: FF,
+                padding: 0, transition: 'color 0.2s',
+              }}
+              onMouseEnter={(e) => e.target.style.color = '#f0f0f5'}
+              onMouseLeave={(e) => e.target.style.color = 'rgba(240,240,245,0.55)'}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* CTAs — col 3, right-aligned */}
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'flex-end' }}>
+          <button
+            onClick={onSignIn}
+            style={{
+              background: 'none', border: 'none',
+              color: 'rgba(240,240,245,0.6)',
+              fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: FF, padding: '6px 12px',
+            }}
+          >Sign in</button>
+          <motion.button
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => scrollTo('waitlist')}
+            style={{
+              padding: '7px 16px',
+              background: `linear-gradient(135deg, ${VOLT}, ${VOLTD})`,
+              color: '#0a0a0a', border: 'none', borderRadius: 100,
+              fontWeight: 700, fontSize: 13, fontFamily: FF, cursor: 'pointer',
+              boxShadow: `0 3px 16px rgba(204,253,1,0.25)`,
+            }}
+          >Get early access</motion.button>
+        </div>
       </div>
     </motion.nav>
   );
