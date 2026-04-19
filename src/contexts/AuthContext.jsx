@@ -93,15 +93,15 @@ export function AuthProvider({ children }) {
   }
 
   async function updateProfile(updates) {
-    if (!user) return;
-    const { data, error } = await supabase
+    if (!user) return { error: { message: 'Not authenticated' } };
+    const { error } = await supabase
       .from('profiles')
       .update(updates)
-      .eq('id', user.id)
-      .select()
-      .single();
-    if (data) setProfile(data);
-    return { data, error };
+      .eq('id', user.id);
+    if (!error) {
+      await fetchProfile(user.id);
+    }
+    return { error };
   }
 
   const value = {

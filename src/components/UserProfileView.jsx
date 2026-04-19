@@ -426,16 +426,20 @@ export default function UserProfileView({ t, dark, onClose, user, profile, updat
       ...(usernameChanged && newUsername ? { username_changed_at: new Date().toISOString() } : {}),
     };
 
-    const result = await updateProfile(updates);
-    setSaving(false);
-
-    if (result?.error) {
-      setSaveError(result.error.message || "Failed to save. Please try again.");
-    } else {
-      setEditing(false);
-      setEditedProfile(null);
-      setAddingProject(false);
-      setEditingProject(null);
+    try {
+      const result = await updateProfile(updates);
+      if (result?.error) {
+        setSaveError(result.error.message || "Failed to save. Please try again.");
+      } else {
+        setEditing(false);
+        setEditedProfile(null);
+        setAddingProject(false);
+        setEditingProject(null);
+      }
+    } catch (err) {
+      setSaveError(err.message || "Something went wrong. Please try again.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -488,7 +492,7 @@ export default function UserProfileView({ t, dark, onClose, user, profile, updat
     }}>
 
       {/* ── Banner ── */}
-      <div style={{ position: "relative", width: "100%", height: 190, overflow: "hidden", flexShrink: 0 }}>
+      <div style={{ position: "relative", width: "100%", height: 180, overflow: "hidden", flexShrink: 0 }}>
         {/* Photo strip */}
         <div style={{ display: "flex", width: "100%", height: "100%" }}>
           {UNSPLASH_IDS.slice(0, 5).map(id => (
@@ -497,7 +501,7 @@ export default function UserProfileView({ t, dark, onClose, user, profile, updat
           ))}
         </div>
         {/* Gradient overlay */}
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(8,8,10,0.1) 30%, rgba(8,8,10,0.75) 100%)" }} />
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(8,8,10,0.1) 30%, rgba(8,8,10,0.65) 100%)" }} />
 
         {/* Top-right actions */}
         <div style={{ position: "absolute", top: 14, right: 16, display: "flex", gap: 8, alignItems: "center" }}>
@@ -550,15 +554,14 @@ export default function UserProfileView({ t, dark, onClose, user, profile, updat
             </>
           )}
         </div>
-
-        {/* Avatar overlapping banner */}
-        <div style={{ position: "absolute", bottom: -46, left: 28 }}>
-          <Avatar profile={editing ? { ...profile, availability: editedProfile?.availability } : profile} size={96} />
-        </div>
       </div>
 
       {/* ── Hero info ── */}
-      <div style={{ padding: "58px 28px 24px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+      <div style={{ padding: "0 28px 24px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        {/* Avatar — pulled up over banner with negative margin, LinkedIn-style */}
+        <div style={{ marginTop: -44, marginBottom: 14 }}>
+          <Avatar profile={editing ? { ...profile, availability: editedProfile?.availability } : profile} size={96} />
+        </div>
 
         {/* Name */}
         {editing ? (
