@@ -120,7 +120,7 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSaveComplete 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="overflow-hidden p-0 sm:max-w-[480px] bg-[#1c1c1e] border-white/[0.08] rounded-2xl shadow-2xl [&>button:last-child]:hidden">
+      <DialogContent hideCloseButton className="overflow-hidden p-0 sm:max-w-[480px] gap-0">
         <DialogHeader className="sr-only">
           <DialogTitle>Edit profile</DialogTitle>
         </DialogHeader>
