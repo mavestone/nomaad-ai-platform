@@ -733,7 +733,7 @@ export default function ClientsView({ t, dark, mobile, compact }) {
 
   const handleAddClient = async (form) => {
     try {
-      setSaving(true);
+      console.log("Adding client:", form);
       const { data, error } = await supabase.from("prospects").insert({
         user_id: user.id,
         name: form.name.trim(),
@@ -754,8 +754,6 @@ export default function ClientsView({ t, dark, mobile, compact }) {
     } catch (err) {
       console.error("handleAddClient:", err);
       alert("Could not add client. Please try again.");
-    } finally {
-      setSaving(false);
     }
   };
 
