@@ -8,7 +8,7 @@ import { getHostnameRoute, APP_URL } from "./lib/hostname";
 import UserProfileView from "./components/UserProfileView";
 import AIFloater from "./components/AIFloater";
 import AreaChartDemo from "./components/ui/demo";
-import { AnimatedLoader } from "./components/Loader";
+import { LoadingBreadcrumb } from "./components/Loader";
 import ClientsView from "./components/ui/clients-view";
 import ProspectingView from "./components/ui/prospecting-view";
 import MessagesView from "./components/ui/messages-view";
@@ -612,7 +612,11 @@ function AppShell() {
 
   // Show loading spinner while checking session
   if (loading) {
-    return <AnimatedLoader size={48} text="Loading..." />;
+    return (
+      <div style={{display:'flex',alignItems:'center',justifyContent:'center',width:'100vw',height:'100vh',background:'#08080a'}}>
+        <LoadingBreadcrumb text="Loading..." dark={true} />
+      </div>
+    );
   }
 
   // Not logged in — show auth directly (no landing page on app subdomain)
