@@ -6,11 +6,13 @@ import { useAuth } from "../../contexts/AuthContext";
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const STAGES = [
-  { id: "lead",      label: "Lead",      color: "#FFB340", bg: "rgba(255,179,64,0.1)",  border: "rgba(255,179,64,0.2)"  },
-  { id: "contacted", label: "Contacted", color: "#5AC8FA", bg: "rgba(90,200,250,0.1)",  border: "rgba(90,200,250,0.2)"  },
-  { id: "proposal",  label: "Proposal",  color: "#BF5AF2", bg: "rgba(191,90,242,0.1)",  border: "rgba(191,90,242,0.2)"  },
-  { id: "active",    label: "Active",    color: "#ccfd01", bg: "rgba(204,253,1,0.08)",  border: "rgba(204,253,1,0.2)"   },
-  { id: "done",      label: "Done",      color: "#30D158", bg: "rgba(48,209,88,0.08)",  border: "rgba(48,209,88,0.2)"   },
+  { id: "new",        label: "New",        color: "#FFB340", bg: "rgba(255,179,64,0.1)",  border: "rgba(255,179,64,0.2)"  },
+  { id: "contacted",  label: "Contacted", color: "#5AC8FA", bg: "rgba(90,200,250,0.1)",  border: "rgba(90,200,250,0.2)"  },
+  { id: "qualified", label: "Qualified",color: "#BF5AF2", bg: "rgba(191,90,242,0.1)",  border: "rgba(191,90,242,0.2)"  },
+  { id: "proposal",  label: "Proposal", color: "#ccfd01", bg: "rgba(204,253,1,0.08)",  border: "rgba(204,253,1,0.2)"   },
+  { id: "negotiation",label: "Negotiation",color: "#FF6259", bg: "rgba(255,98,89,0.1)",  border: "rgba(255,98,89,0.2)"   },
+  { id: "won",       label: "Won",      color: "#30D158", bg: "rgba(48,209,88,0.08)",  border: "rgba(48,209,88,0.2)"   },
+  { id: "lost",      label: "Lost",     color: "#8b8fa3", bg: "rgba(139,143,163,0.1)",  border: "rgba(139,143,163,0.2)"   },
 ];
 
 const VOLT = "#ccfd01";
