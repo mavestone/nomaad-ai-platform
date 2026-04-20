@@ -1,28 +1,22 @@
 import { useId, useState, useEffect } from "react";
 import { useCharacterLimit } from "../hooks/use-character-limit";
 import { useImageUpload } from "../hooks/use-image-upload";
-import { Button } from "./ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
-  DialogHeader,
   DialogTitle,
 } from "./ui/dialog";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { Textarea } from "./ui/textarea";
-import { Check, Camera } from "lucide-react";
+import { Check, Camera, X } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabase";
 
 export function EditProfileDialog({ open, onOpenChange, profile, onSaveComplete }) {
   const id = useId();
   const { user, updateProfile } = useAuth();
-  
+
   const maxLength = 200;
-  const { value: bio, characterCount, handleChange: handleBioChange, maxLength: limit } = useCharacterLimit({
+  const { value: bio, characterCount, handleChange: handleBioChange } = useCharacterLimit({
     maxLength,
     initialValue: profile?.bio || "",
   });
@@ -63,7 +57,7 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSaveComplete 
 
     try {
       let avatar_url = profile.avatar_url;
-      
+
       if (fileObject) {
         const ext = fileObject.name.split(".").pop();
         const path = `${user.id}/avatar-${Date.now()}.${ext}`;
@@ -82,13 +76,13 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSaveComplete 
         bio: bio.trim() || null,
         location: form.location.trim() || null,
         availability: form.availability,
-        social_links: { 
-          ...(profile.social_links || {}), 
+        social_links: {
+          ...(profile.social_links || {}),
           website: form.website,
           email: form.email,
         },
         username: form.username.trim().toLowerCase() || null,
-        avatar_url
+        avatar_url,
       };
 
       if (form.username !== profile.username && form.username) {
@@ -111,204 +105,213 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSaveComplete 
   };
 
   const currentImage = previewUrl || profile?.avatar_url;
+  const initials = form.fullName ? form.fullName[0].toUpperCase() : "?";
 
   const availabilityOptions = [
-    { value: 'available', label: 'Available', color: '#34C759' },
-    { value: 'busy', label: 'Busy', color: '#FF9500' },
-    { value: 'away', label: 'Away', color: '#8E8E93' },
+    { value: "available", label: "Available", color: "#34C759" },
+    { value: "busy", label: "Busy", color: "#FF9500" },
+    { value: "away", label: "Away", color: "#636366" },
   ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent hideCloseButton className="overflow-hidden p-0 sm:max-w-[480px] gap-0">
-        <DialogHeader className="sr-only">
-          <DialogTitle>Edit profile</DialogTitle>
-        </DialogHeader>
-        <DialogDescription className="sr-only">
-          Make changes to your profile here.
-        </DialogDescription>
-        
-        {/* Header with centered avatar */}
-        <div className="relative pt-8 pb-6 px-6 flex flex-col items-center border-b border-white/[0.06]">
-          {/* Close button */}
+      <DialogContent
+        hideCloseButton
+        className="p-0 gap-0 sm:max-w-[430px] w-[92vw] rounded-2xl border-0 bg-[#111113] shadow-[0_32px_80px_rgba(0,0,0,0.7)] overflow-hidden flex flex-col max-h-[90vh]"
+      >
+        <DialogTitle className="sr-only">Edit profile</DialogTitle>
+        <DialogDescription className="sr-only">Update your profile information.</DialogDescription>
+
+        {/* Top bar */}
+        <div className="flex items-center justify-between px-5 pt-5 pb-4 shrink-0">
           <button
             onClick={() => onOpenChange(false)}
-            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-colors"
+            className="text-[15px] text-white/40 hover:text-white/70 transition-colors font-normal"
           >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M1 1L13 13M1 13L13 1" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
+            Cancel
           </button>
+          <span className="text-[15px] font-semibold text-white tracking-tight">Edit Profile</span>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="text-[15px] font-semibold text-[#ccfd01] hover:text-[#d8ff4d] disabled:opacity-40 transition-colors"
+          >
+            {saving ? "Saving" : "Done"}
+          </button>
+        </div>
 
-          {/* Avatar */}
-          <div className="relative group">
-            <div className="w-24 h-24 rounded-full overflow-hidden ring-4 ring-[#1c1c1e] bg-[#2c2c2e]">
+        {/* Avatar */}
+        <div className="flex flex-col items-center pb-6 shrink-0">
+          <div className="relative group cursor-pointer" onClick={handleThumbnailClick}>
+            <div className="w-20 h-20 rounded-full overflow-hidden">
               {currentImage ? (
                 <img src={currentImage} className="w-full h-full object-cover" alt="Profile" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-[#ccfd01] text-black font-semibold text-3xl">
-                  {form.fullName ? form.fullName[0].toUpperCase() : "?"}
+                <div className="w-full h-full flex items-center justify-center bg-[#ccfd01] text-black font-bold text-2xl">
+                  {initials}
                 </div>
               )}
             </div>
-            <button
-              type="button"
-              onClick={handleThumbnailClick}
-              className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer"
-              aria-label="Change profile picture"
-            >
-              <Camera size={24} className="text-white" />
-            </button>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              className="hidden"
-              accept="image/*"
-            />
+            <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+              <Camera size={20} className="text-white" />
+            </div>
           </div>
-          
-          <p className="mt-3 text-[13px] text-white/40">Tap to change photo</p>
+          <button
+            onClick={handleThumbnailClick}
+            className="mt-2 text-[13px] font-medium text-[#ccfd01] hover:text-[#d8ff4d] transition-colors"
+          >
+            Change Photo
+          </button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            className="hidden"
+            accept="image/*"
+          />
         </div>
 
-        {/* Form content */}
-        <div className="overflow-y-auto max-h-[55vh] px-6 py-5">
+        {/* Scrollable form */}
+        <div className="overflow-y-auto flex-1 px-4 pb-6 space-y-3">
+
           {error && (
-            <div className="mb-5 text-[13px] text-red-400 bg-red-500/10 px-4 py-3 rounded-xl">
+            <div className="flex items-center gap-2 text-[13px] text-red-400 bg-red-500/10 px-4 py-3 rounded-xl">
+              <X size={14} />
               {error}
             </div>
           )}
-          
-          {/* Name */}
-          <div className="space-y-1.5 mb-5">
-            <Label htmlFor={`${id}-name`} className="text-[13px] text-white/50 font-medium">Name</Label>
-            <Input
-              id={`${id}-name`}
-              placeholder="Your name"
-              value={form.fullName}
-              onChange={(e) => handleChange("fullName", e.target.value)}
-              className="h-12 bg-[#2c2c2e] border-0 rounded-xl text-[15px] placeholder:text-white/25 focus-visible:ring-1 focus-visible:ring-[#ccfd01]/50"
-            />
-          </div>
 
-          {/* Username & Location row */}
-          <div className="grid grid-cols-2 gap-3 mb-5">
-            <div className="space-y-1.5">
-              <Label htmlFor={`${id}-username`} className="text-[13px] text-white/50 font-medium">Username</Label>
-              <div className="relative">
-                <Input
+          {/* Name */}
+          <FormGroup>
+            <FormRow>
+              <label htmlFor={`${id}-name`} className="text-[15px] text-white w-24 shrink-0">Name</label>
+              <input
+                id={`${id}-name`}
+                value={form.fullName}
+                onChange={(e) => handleChange("fullName", e.target.value)}
+                placeholder="Your name"
+                className="flex-1 bg-transparent text-[15px] text-white placeholder:text-white/20 outline-none text-right"
+              />
+            </FormRow>
+            <Divider />
+            <FormRow>
+              <label htmlFor={`${id}-username`} className="text-[15px] text-white w-24 shrink-0">Username</label>
+              <div className="flex items-center gap-2 flex-1 justify-end">
+                <input
                   id={`${id}-username`}
-                  placeholder="username"
                   value={form.username}
-                  onChange={(e) => handleChange("username", e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
-                  className="h-12 bg-[#2c2c2e] border-0 rounded-xl text-[15px] placeholder:text-white/25 pr-10 focus-visible:ring-1 focus-visible:ring-[#ccfd01]/50"
+                  onChange={(e) => handleChange("username", e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, ""))}
+                  placeholder="username"
+                  className="flex-1 bg-transparent text-[15px] text-white placeholder:text-white/20 outline-none text-right"
                 />
-                {form.username && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <Check size={16} className="text-[#34C759]" />
-                  </div>
-                )}
+                {form.username && <Check size={15} className="text-[#34C759] shrink-0" />}
               </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor={`${id}-location`} className="text-[13px] text-white/50 font-medium">Location</Label>
-              <Input
+            </FormRow>
+          </FormGroup>
+
+          {/* Location & Website */}
+          <FormGroup>
+            <FormRow>
+              <label htmlFor={`${id}-location`} className="text-[15px] text-white w-24 shrink-0">Location</label>
+              <input
                 id={`${id}-location`}
-                placeholder="City, Country"
                 value={form.location}
                 onChange={(e) => handleChange("location", e.target.value)}
-                className="h-12 bg-[#2c2c2e] border-0 rounded-xl text-[15px] placeholder:text-white/25 focus-visible:ring-1 focus-visible:ring-[#ccfd01]/50"
+                placeholder="City, Country"
+                className="flex-1 bg-transparent text-[15px] text-white placeholder:text-white/20 outline-none text-right"
               />
-            </div>
-          </div>
-
-          {/* Website */}
-          <div className="space-y-1.5 mb-5">
-            <Label htmlFor={`${id}-website`} className="text-[13px] text-white/50 font-medium">Website</Label>
-            <Input
-              id={`${id}-website`}
-              placeholder="yourwebsite.com"
-              value={form.website}
-              onChange={(e) => handleChange("website", e.target.value.replace(/^https?:\/\//, ""))}
-              className="h-12 bg-[#2c2c2e] border-0 rounded-xl text-[15px] placeholder:text-white/25 focus-visible:ring-1 focus-visible:ring-[#ccfd01]/50"
-            />
-          </div>
-
-          {/* Email */}
-          <div className="space-y-1.5 mb-5">
-            <Label htmlFor={`${id}-email`} className="text-[13px] text-white/50 font-medium">Public Email</Label>
-            <Input
-              id={`${id}-email`}
-              type="email"
-              placeholder="hello@example.com"
-              value={form.email}
-              onChange={(e) => handleChange("email", e.target.value)}
-              className="h-12 bg-[#2c2c2e] border-0 rounded-xl text-[15px] placeholder:text-white/25 focus-visible:ring-1 focus-visible:ring-[#ccfd01]/50"
-            />
-          </div>
+            </FormRow>
+            <Divider />
+            <FormRow>
+              <label htmlFor={`${id}-website`} className="text-[15px] text-white w-24 shrink-0">Website</label>
+              <input
+                id={`${id}-website`}
+                value={form.website}
+                onChange={(e) => handleChange("website", e.target.value.replace(/^https?:\/\//, ""))}
+                placeholder="yoursite.com"
+                className="flex-1 bg-transparent text-[15px] text-white placeholder:text-white/20 outline-none text-right"
+              />
+            </FormRow>
+            <Divider />
+            <FormRow>
+              <label htmlFor={`${id}-email`} className="text-[15px] text-white w-24 shrink-0">Email</label>
+              <input
+                id={`${id}-email`}
+                type="email"
+                value={form.email}
+                onChange={(e) => handleChange("email", e.target.value)}
+                placeholder="hello@example.com"
+                className="flex-1 bg-transparent text-[15px] text-white placeholder:text-white/20 outline-none text-right"
+              />
+            </FormRow>
+          </FormGroup>
 
           {/* Availability */}
-          <div className="space-y-2 mb-5">
-            <Label className="text-[13px] text-white/50 font-medium">Availability</Label>
-            <div className="flex gap-2">
-              {availabilityOptions.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => handleChange("availability", opt.value)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
-                    form.availability === opt.value
-                      ? "bg-white/[0.12] text-white"
-                      : "bg-[#2c2c2e] text-white/50 hover:bg-white/[0.08]"
-                  }`}
-                >
-                  <span 
-                    className="w-2 h-2 rounded-full" 
-                    style={{ backgroundColor: opt.color }}
-                  />
-                  {opt.label}
-                </button>
-              ))}
+          <FormGroup>
+            <div className="px-4 py-3">
+              <p className="text-[13px] text-white/40 mb-3 uppercase tracking-wider font-medium">Availability</p>
+              <div className="flex gap-2">
+                {availabilityOptions.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => handleChange("availability", opt.value)}
+                    style={form.availability === opt.value ? { borderColor: opt.color + "60", backgroundColor: opt.color + "18" } : {}}
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[13px] font-medium transition-all border ${
+                      form.availability === opt.value
+                        ? "text-white border-current"
+                        : "bg-transparent border-white/10 text-white/40 hover:text-white/60 hover:border-white/20"
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: opt.color }} />
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          </FormGroup>
 
           {/* Bio */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <Label htmlFor={`${id}-bio`} className="text-[13px] text-white/50 font-medium">Bio</Label>
-              <span className="text-[11px] text-white/30 tabular-nums">{limit - characterCount}</span>
+          <FormGroup>
+            <div className="px-4 pt-3 pb-1">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[13px] text-white/40 uppercase tracking-wider font-medium">Bio</p>
+                <span className="text-[11px] text-white/25 tabular-nums">{maxLength - characterCount}</span>
+              </div>
+              <textarea
+                id={`${id}-bio`}
+                value={bio}
+                maxLength={maxLength}
+                onChange={handleBioChange}
+                placeholder="Tell people about yourself..."
+                rows={4}
+                className="w-full bg-transparent text-[15px] text-white placeholder:text-white/20 outline-none resize-none leading-relaxed pb-3"
+              />
             </div>
-            <Textarea
-              id={`${id}-bio`}
-              placeholder="Tell people about yourself..."
-              value={bio}
-              maxLength={maxLength}
-              onChange={handleBioChange}
-              className="min-h-[100px] bg-[#2c2c2e] border-0 rounded-xl text-[15px] placeholder:text-white/25 resize-none focus-visible:ring-1 focus-visible:ring-[#ccfd01]/50"
-            />
-          </div>
+          </FormGroup>
+
         </div>
-        
-        {/* Footer */}
-        <DialogFooter className="border-t border-white/[0.06] px-6 py-4 flex gap-3">
-          <Button 
-            type="button" 
-            variant="ghost" 
-            onClick={() => onOpenChange(false)}
-            className="flex-1 h-12 rounded-xl bg-[#2c2c2e] hover:bg-white/[0.08] text-white/70 text-[15px] font-medium"
-          >
-            Cancel
-          </Button>
-          <Button 
-            type="button" 
-            onClick={handleSave} 
-            disabled={saving}
-            className="flex-1 h-12 rounded-xl bg-[#ccfd01] hover:bg-[#d8ff4d] text-black text-[15px] font-semibold disabled:opacity-50"
-          >
-            {saving ? "Saving..." : "Save"}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
+}
+
+function FormGroup({ children }) {
+  return (
+    <div className="bg-[#1c1c1e] rounded-2xl overflow-hidden border border-white/[0.06]">
+      {children}
+    </div>
+  );
+}
+
+function FormRow({ children }) {
+  return (
+    <div className="flex items-center gap-3 px-4 py-3.5 min-h-[52px]">
+      {children}
+    </div>
+  );
+}
+
+function Divider() {
+  return <div className="h-px bg-white/[0.06] ml-4" />;
 }
