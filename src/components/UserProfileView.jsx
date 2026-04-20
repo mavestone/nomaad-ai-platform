@@ -344,7 +344,7 @@ function EditProjectForm({ project, onSave, onCancel }) {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function UserProfileView({ t, dark, onClose, signOut }) {
-  const { user, profile, refreshProfile } = useAuth();
+  const { user, session, profile, refreshProfile } = useAuth();
   const [editing, setEditing]             = useState(false);
   const [saving, setSaving]               = useState(false);
   const [saveError, setSaveError]         = useState(null);
@@ -417,9 +417,8 @@ export default function UserProfileView({ t, dark, onClose, signOut }) {
         ...(usernameChanged && newUsername ? { username_changed_at: new Date().toISOString() } : {}),
       };
 
-      // Get the live session token — Supabase JS client can stall on auth state,
-      // so we use raw fetch to bypass it entirely.
-      const { data: { session } } = await supabase.auth.getSession();
+      // Use session from context — avoids calling getSession() which competes
+      // for the same browser lock held by the auth state listener and stalls.
       console.log("[saveChanges] session uid:", session?.user?.id, "user id:", user.id);
 
       if (!session?.access_token) {
