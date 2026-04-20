@@ -713,10 +713,10 @@ function FindCreatorsTab({ t, dark }) {
         if (!Array.isArray(profiles)) return;
 
         const mapped = profiles
-          .filter(p => p.id !== user.id && p.full_name)   // exclude self + empty profiles
+          .filter(p => p.id !== user.id)   // exclude self only
           .map(p => ({
             id:           p.id,
-            name:         p.full_name,
+            name:         p.full_name || 'Nomaad Creator',
             role:         ROLE_MAP[p.business_type] || 'Creator',
             type:         TYPE_MAP[p.business_type] || 'create',
             loc:          p.location || '',
