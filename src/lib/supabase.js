@@ -4,7 +4,7 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables. Check your .env file.');
+  console.warn('[Nomaad] Missing Supabase environment variables — auth will not work until VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set.');
 }
 
 // No-op lock — prevents the BroadcastChannel lock contention that causes
@@ -13,7 +13,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // across multiple browser tabs/workers.
 const noopLock = async (name, acquireTimeout, fn) => fn();
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient(supabaseUrl || 'https://placeholder.supabase.co', supabaseAnonKey || 'placeholder', {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
