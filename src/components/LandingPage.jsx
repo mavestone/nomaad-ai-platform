@@ -604,28 +604,298 @@ function StackSection() {
       </div>
 
       <FadeUp>
-        <div style={{
-          display: 'grid', gridTemplateColumns: '1fr auto 1fr',
-          alignItems: 'center', gap: 24, padding: '8px 0',
-        }}>
-          <div>
-            <div style={{ fontSize: 12, color: 'rgba(240,240,245,0.4)', marginBottom: 8, letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 600 }}>All of that</div>
-            <div style={{ fontSize: 28, fontWeight: 800, color: '#f0f0f5', letterSpacing: '-0.02em' }}>
-              £69<span style={{ fontSize: 14, fontWeight: 500, color: 'rgba(240,240,245,0.4)' }}>/mo</span>
-            </div>
-            <div style={{ fontSize: 13, color: 'rgba(240,240,245,0.3)', marginTop: 4 }}>4 apps · 4 logins · 0 shared data</div>
-          </div>
-          <div style={{ color: 'rgba(240,240,245,0.15)', fontSize: 24, fontWeight: 300 }}>→</div>
-          <div>
-            <div style={{ fontSize: 12, color: VOLT, marginBottom: 8, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>With Nomaad</div>
-            <div style={{ fontSize: 28, fontWeight: 800, color: '#f0f0f5', letterSpacing: '-0.02em' }}>
-              £39<span style={{ fontSize: 14, fontWeight: 500, color: 'rgba(240,240,245,0.4)' }}>/mo</span>
-            </div>
-            <div style={{ fontSize: 13, color: 'rgba(240,240,245,0.3)', marginTop: 4 }}>+ runs itself</div>
-          </div>
-        </div>
+        <StackComparison />
       </FadeUp>
     </section>
+  );
+}
+
+// ─── Stack Comparison (problem vs solution with animation) ────────────────────
+
+const COMPARE_TOOLS = [
+  { name: 'Gmail',    src: '/integrations/gmail.svg' },
+  { name: 'Stripe',   src: '/integrations/stripe.svg' },
+  { name: 'Calendar', src: '/integrations/google-calendar.svg' },
+  { name: 'Drive',    src: '/integrations/google-drive.svg' },
+];
+
+function ToolLogo({ src, size = 20 }) {
+  return (
+    <img
+      src={src}
+      alt=""
+      aria-hidden="true"
+      loading="lazy"
+      style={{ width: size, height: size, objectFit: 'contain', display: 'block' }}
+    />
+  );
+}
+
+function StackComparison() {
+  // Orbital positions (degrees, starting top, going clockwise)
+  const ORBIT_RADIUS = 90;
+  const orbitals = COMPARE_TOOLS.map((t, i) => {
+    const angle = (i * 90 - 90) * (Math.PI / 180); // -90 so first one is at top
+    return {
+      ...t,
+      x: Math.cos(angle) * ORBIT_RADIUS,
+      y: Math.sin(angle) * ORBIT_RADIUS,
+      delay: i * 0.35,
+    };
+  });
+
+  return (
+    <div className="nomaad-compare-grid" style={{
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: 16,
+      marginTop: 48,
+    }}>
+      {/* ───── LEFT: Today (disconnected chaos) ───── */}
+      <div style={{
+        background: 'rgba(255,255,255,0.015)',
+        border: '1px solid rgba(255,255,255,0.06)',
+        borderRadius: 20,
+        padding: 28,
+        display: 'flex', flexDirection: 'column',
+        gap: 24,
+        position: 'relative',
+        overflow: 'hidden',
+        minHeight: 360,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.45)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+            Today
+          </div>
+          <div style={{
+            fontSize: 10, fontWeight: 600,
+            color: 'rgba(255,120,120,0.7)',
+            background: 'rgba(255,120,120,0.08)',
+            padding: '4px 10px', borderRadius: 999,
+            letterSpacing: '0.04em',
+          }}>
+            Disconnected
+          </div>
+        </div>
+
+        {/* Scattered tool grid with dashed disconnects */}
+        <div style={{
+          flex: 1,
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: 12,
+          alignContent: 'center',
+          position: 'relative',
+        }}>
+          {COMPARE_TOOLS.map((t, i) => (
+            <div key={t.name} style={{
+              aspectRatio: '1.6',
+              background: 'rgba(255,255,255,0.02)',
+              border: '1px dashed rgba(255,255,255,0.1)',
+              borderRadius: 12,
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center',
+              gap: 8,
+              transform: `rotate(${[-2, 1.5, -1, 2][i]}deg)`,
+            }}>
+              <div style={{
+                width: 32, height: 32, borderRadius: 8,
+                background: 'rgba(255,255,255,0.05)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <ToolLogo src={t.src} size={18} />
+              </div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>
+                {t.name}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12 }}>
+          <div>
+            <div style={{ fontSize: 32, fontWeight: 800, color: '#f0f0f5', letterSpacing: '-0.02em', lineHeight: 1 }}>
+              £69<span style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.4)' }}>/mo</span>
+            </div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 6 }}>
+              4 apps · 4 logins · 0 shared data
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ───── RIGHT: With Nomaad (unified hub with animation) ───── */}
+      <div style={{
+        background: 'radial-gradient(ellipse 120% 60% at 50% 50%, rgba(204,253,1,0.06) 0%, rgba(204,253,1,0.01) 60%, transparent 100%)',
+        border: '1px solid rgba(204,253,1,0.18)',
+        borderRadius: 20,
+        padding: 28,
+        display: 'flex', flexDirection: 'column',
+        gap: 24,
+        position: 'relative',
+        overflow: 'hidden',
+        minHeight: 360,
+      }}>
+        {/* Subtle grid overlay */}
+        <div aria-hidden="true" style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'linear-gradient(to right, rgba(204,253,1,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(204,253,1,0.04) 1px, transparent 1px)',
+          backgroundSize: '32px 32px',
+          maskImage: 'radial-gradient(ellipse 70% 60% at 50% 50%, #000 20%, transparent 85%)',
+          WebkitMaskImage: 'radial-gradient(ellipse 70% 60% at 50% 50%, #000 20%, transparent 85%)',
+          pointerEvents: 'none',
+        }} />
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', zIndex: 2 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: VOLT, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+            With Nomaad
+          </div>
+          <div style={{
+            fontSize: 10, fontWeight: 600,
+            color: VOLT,
+            background: 'rgba(204,253,1,0.1)',
+            padding: '4px 10px', borderRadius: 999,
+            letterSpacing: '0.04em',
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+          }}>
+            <span style={{
+              width: 6, height: 6, borderRadius: '50%',
+              background: VOLT,
+              animation: 'nomaad-dot 1.4s ease-in-out infinite',
+            }} />
+            Connected
+          </div>
+        </div>
+
+        {/* Orbital hub animation */}
+        <div style={{
+          flex: 1,
+          position: 'relative',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          minHeight: 220,
+        }}>
+          {/* Animated pulse rings */}
+          {[0, 1, 2].map(i => (
+            <span key={i} aria-hidden="true" style={{
+              position: 'absolute',
+              width: 80, height: 80, borderRadius: '50%',
+              border: `2px solid ${VOLT}`,
+              opacity: 0,
+              animation: `nomaad-pulse 3s ease-out infinite`,
+              animationDelay: `${i}s`,
+            }} />
+          ))}
+
+          {/* SVG connection lines with flowing dashes */}
+          <svg
+            aria-hidden="true"
+            viewBox="-120 -120 240 240"
+            style={{
+              position: 'absolute', inset: 0,
+              width: '100%', height: '100%',
+              pointerEvents: 'none',
+            }}
+          >
+            {orbitals.map((o, i) => (
+              <line
+                key={i}
+                x1="0" y1="0"
+                x2={o.x} y2={o.y}
+                stroke={VOLT}
+                strokeWidth="1"
+                strokeOpacity="0.35"
+                strokeDasharray="2 4"
+                style={{
+                  animation: `nomaad-flow 2s linear infinite`,
+                  animationDelay: `${o.delay}s`,
+                }}
+              />
+            ))}
+          </svg>
+
+          {/* Center Nomaad hub */}
+          <div style={{
+            position: 'relative',
+            width: 64, height: 64,
+            borderRadius: 18,
+            background: VOLT,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: `0 0 32px ${VOLT}55, 0 0 64px ${VOLT}22, inset 0 0 0 1px rgba(255,255,255,0.2)`,
+            zIndex: 3,
+          }}>
+            <span style={{
+              fontSize: 26, fontWeight: 900, color: '#0a0a0a',
+              letterSpacing: '-0.04em',
+              fontFamily: FF,
+            }}>
+              N
+            </span>
+          </div>
+
+          {/* Orbital tool logos */}
+          {orbitals.map((o) => (
+            <div
+              key={o.name}
+              style={{
+                position: 'absolute',
+                transform: `translate(${o.x}px, ${o.y}px)`,
+                width: 40, height: 40,
+                borderRadius: 12,
+                background: '#15151a',
+                border: '1px solid rgba(255,255,255,0.1)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+                zIndex: 2,
+                animation: `nomaad-float 4s ease-in-out infinite`,
+                animationDelay: `${o.delay}s`,
+              }}
+            >
+              <ToolLogo src={o.src} size={22} />
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, position: 'relative', zIndex: 2 }}>
+          <div>
+            <div style={{ fontSize: 32, fontWeight: 800, color: '#f0f0f5', letterSpacing: '-0.02em', lineHeight: 1 }}>
+              £39<span style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.4)' }}>/mo</span>
+            </div>
+            <div style={{ fontSize: 12, color: 'rgba(204,253,1,0.75)', marginTop: 6 }}>
+              1 login · one source of truth · runs itself
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes nomaad-pulse {
+          0%   { transform: scale(0.4); opacity: 0.5; }
+          100% { transform: scale(2.6); opacity: 0; }
+        }
+        @keyframes nomaad-flow {
+          from { stroke-dashoffset: 0; }
+          to   { stroke-dashoffset: -12; }
+        }
+        @keyframes nomaad-float {
+          0%, 100% { transform: translate(var(--x, 0), var(--y, 0)) translateY(0); }
+          50%      { transform: translate(var(--x, 0), var(--y, 0)) translateY(-4px); }
+        }
+        @keyframes nomaad-dot {
+          0%, 100% { transform: scale(1);   opacity: 1; }
+          50%      { transform: scale(1.6); opacity: 0.6; }
+        }
+        @media (max-width: 720px) {
+          .nomaad-compare-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .nomaad-compare-grid * {
+            animation: none !important;
+          }
+        }
+      `}</style>
+    </div>
   );
 }
 
