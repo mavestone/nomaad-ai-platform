@@ -1,6 +1,7 @@
 /**
  * LandingPage.jsx — Nomaad
  * High-conversion, outcome-driven. No features. Just workflows and results.
+ * Editorial redesign: less boxes, more typography, more whitespace.
  */
 
 import { useState, useEffect, useRef } from 'react';
@@ -49,7 +50,7 @@ function Label({ text }) {
   return (
     <p style={{
       fontSize: 11, fontWeight: 700, color: 'rgba(240,240,245,0.35)',
-      letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14, margin: '0 0 14px',
+      letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 14, margin: '0 0 14px',
       fontFamily: FF,
     }}>{text}</p>
   );
@@ -199,7 +200,7 @@ function Nav({ onSignIn }) {
         zIndex: 999,
         display: 'flex', justifyContent: 'center', alignItems: 'center',
         pointerEvents: 'none', fontFamily: FF,
-        padding: '0 16px' // give padding to prevent full stretch on very small screens
+        padding: '0 16px'
       }}
     >
       <style>{`
@@ -228,12 +229,8 @@ function Nav({ onSignIn }) {
             justify-content: space-between;
             padding: 10px 12px 10px 16px;
           }
-          .landing-nav-center {
-            display: none;
-          }
-          .landing-brand-text {
-            display: none;
-          }
+          .landing-nav-center { display: none; }
+          .landing-brand-text { display: none; }
         }
       `}</style>
       <div 
@@ -372,38 +369,21 @@ function Hero({ onSignIn }) {
 }
 
 // ─── Problem Section ──────────────────────────────────────────────────────────
+// Redesigned: clean editorial list with red hairline separators instead of cards
 
 const PAINS = [
-  {
-    title: 'You copied a lead from Instagram into a spreadsheet. Again.',
-    sub: 'Manual data entry is not a business system.',
-  },
-  {
-    title: 'A client emailed 3 days ago. You still haven\'t replied.',
-    sub: 'Buried in your inbox under 200 other things.',
-  },
-  {
-    title: 'Your invoices are in one app, your notes in another, your tasks somewhere else.',
-    sub: 'Nothing talks to anything. Every job starts with 20 minutes of admin.',
-  },
-  {
-    title: 'You spent Sunday catching up on work that should\'ve taken 20 minutes.',
-    sub: 'That\'s not a workload problem. That\'s a systems problem.',
-  },
-  {
-    title: 'A £2,000 project went quiet. You forgot to follow up.',
-    sub: 'Not because you didn\'t care. Because you had nothing reminding you.',
-  },
-  {
-    title: 'You\'re paying for 5 tools that don\'t talk to each other.',
-    sub: 'Notion. Sheets. Calendly. FreshBooks. Gmail. £150+/mo for chaos.',
-  },
+  { title: 'You copied a lead from Instagram into a spreadsheet. Again.', sub: 'Manual data entry is not a business system.' },
+  { title: "A client emailed 3 days ago. You still haven't replied.",     sub: 'Buried in your inbox under 200 other things.' },
+  { title: 'Your invoices are in one app, your notes in another, your tasks somewhere else.', sub: 'Nothing talks to anything. Every job starts with 20 minutes of admin.' },
+  { title: "You spent Sunday catching up on work that should've taken 20 minutes.", sub: "That's not a workload problem. That's a systems problem." },
+  { title: 'A £2,000 project went quiet. You forgot to follow up.',       sub: "Not because you didn't care. Because you had nothing reminding you." },
+  { title: "You're paying for 5 tools that don't talk to each other.",    sub: 'Notion. Sheets. Calendly. FreshBooks. Gmail. £150+/mo for chaos.' },
 ];
 
 function ProblemSection() {
   return (
-    <section style={{ padding: 'clamp(60px, 10vw, 100px) 20px', maxWidth: 1080, margin: '0 auto', fontFamily: FF }}>
-      <FadeUp style={{ textAlign: 'center', marginBottom: 60 }}>
+    <section style={{ padding: 'clamp(80px, 12vw, 120px) 20px', maxWidth: 880, margin: '0 auto', fontFamily: FF }}>
+      <FadeUp style={{ textAlign: 'center', marginBottom: 72 }}>
         <Label text="The reality" />
         <h2 style={{
           fontSize: 'clamp(28px, 6vw, 52px)', fontWeight: 800,
@@ -418,18 +398,25 @@ function ProblemSection() {
         </p>
       </FadeUp>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 12 }}>
+      <div>
         {PAINS.map((p, i) => (
           <FadeUp key={i} delay={i * 0.05}>
             <div style={{
-              padding: '22px 24px',
-              background: 'rgba(255,255,255,0.02)',
-              border: '1px solid rgba(255,255,255,0.06)',
-              borderRadius: 16,
-              borderLeft: '2px solid rgba(255,98,89,0.3)',
+              padding: '26px 0',
+              borderBottom: i === PAINS.length - 1 ? 'none' : '1px solid rgba(255,255,255,0.05)',
+              display: 'flex', gap: 20, alignItems: 'flex-start',
             }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: 'rgba(240,240,245,0.75)', marginBottom: 6, lineHeight: 1.45 }}>{p.title}</div>
-              <div style={{ fontSize: 12, color: 'rgba(240,240,245,0.3)', lineHeight: 1.55 }}>{p.sub}</div>
+              <div style={{
+                width: 28, height: 28, borderRadius: '50%', flexShrink: 0, marginTop: 2,
+                background: 'rgba(255,98,89,0.08)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 11, fontWeight: 700, color: 'rgba(255,98,89,0.6)',
+                fontVariantNumeric: 'tabular-nums',
+              }}>{String(i + 1).padStart(2, '0')}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 17, fontWeight: 600, color: 'rgba(240,240,245,0.9)', marginBottom: 6, lineHeight: 1.45, letterSpacing: '-0.01em' }}>{p.title}</div>
+                <div style={{ fontSize: 14, color: 'rgba(240,240,245,0.4)', lineHeight: 1.55 }}>{p.sub}</div>
+              </div>
             </div>
           </FadeUp>
         ))}
@@ -439,6 +426,7 @@ function ProblemSection() {
 }
 
 // ─── Workflow Section ─────────────────────────────────────────────────────────
+// Redesigned: timeline with connecting line, no boxed cards
 
 const WORKFLOW_STEPS = [
   { n: '01', title: 'Lead comes in',        body: 'From Instagram, email, referral — Nomaad logs it instantly. No copying. No forgetting.',                         color: VOLT },
@@ -451,8 +439,8 @@ const WORKFLOW_STEPS = [
 
 function WorkflowSection() {
   return (
-    <section id="workflow" style={{ padding: 'clamp(60px, 10vw, 100px) 20px', maxWidth: 1080, margin: '0 auto', fontFamily: FF }}>
-      <FadeUp style={{ textAlign: 'center', marginBottom: 64 }}>
+    <section id="workflow" style={{ padding: 'clamp(80px, 12vw, 120px) 20px', maxWidth: 760, margin: '0 auto', fontFamily: FF }}>
+      <FadeUp style={{ textAlign: 'center', marginBottom: 80 }}>
         <Label text="How it works" />
         <h2 style={{
           fontSize: 'clamp(28px, 6vw, 52px)', fontWeight: 800,
@@ -467,50 +455,56 @@ function WorkflowSection() {
         </p>
       </FadeUp>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(310px, 1fr))', gap: 2 }}>
+      <div style={{ position: 'relative' }}>
+        <div style={{
+          position: 'absolute', left: 19, top: 8, bottom: 8, width: 1,
+          background: 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.08) 10%, rgba(255,255,255,0.08) 90%, transparent)',
+        }} />
         {WORKFLOW_STEPS.map((s, i) => (
           <FadeUp key={s.n} delay={i * 0.07}>
             <div style={{
-              padding: '28px 26px',
-              background: i % 2 === 0 ? 'rgba(255,255,255,0.025)' : 'rgba(255,255,255,0.018)',
-              border: '1px solid rgba(255,255,255,0.06)',
-              borderRadius: 18, position: 'relative', overflow: 'hidden',
+              display: 'flex', gap: 28, padding: '20px 0 36px',
+              position: 'relative',
             }}>
               <div style={{
-                position: 'absolute', top: 0, left: 0, right: 0, height: 2,
-                background: `linear-gradient(90deg, ${s.color}60, transparent)`,
-              }} />
-              <div style={{
-                fontSize: 10, fontWeight: 800, color: s.color,
-                letterSpacing: '0.12em', marginBottom: 14,
-              }}>STEP {s.n}</div>
-              <h3 style={{
-                fontSize: 20, fontWeight: 700, color: '#f0f0f5',
-                margin: '0 0 10px', letterSpacing: '-0.02em', lineHeight: 1.2,
-              }}>{s.title}</h3>
-              <p style={{ fontSize: 13, color: 'rgba(240,240,245,0.4)', lineHeight: 1.65, margin: 0 }}>
-                {s.body}
-              </p>
+                width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
+                background: SHELL,
+                border: `1px solid ${s.color}35`,
+                boxShadow: `0 0 0 4px ${SHELL}, 0 0 20px ${s.color}20`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 12, fontWeight: 800, color: s.color,
+                fontVariantNumeric: 'tabular-nums', zIndex: 1,
+                letterSpacing: '0.02em',
+              }}>{s.n}</div>
+              <div style={{ flex: 1, paddingTop: 6 }}>
+                <h3 style={{
+                  fontSize: 22, fontWeight: 700, color: '#f0f0f5',
+                  margin: '0 0 8px', letterSpacing: '-0.02em', lineHeight: 1.2,
+                }}>{s.title}</h3>
+                <p style={{ fontSize: 15, color: 'rgba(240,240,245,0.5)', lineHeight: 1.65, margin: 0, maxWidth: 520 }}>
+                  {s.body}
+                </p>
+              </div>
             </div>
           </FadeUp>
         ))}
       </div>
 
-      <FadeUp style={{ textAlign: 'center', marginTop: 48 }}>
-        <div style={{
-          display: 'inline-block', padding: '14px 28px', borderRadius: 16,
-          background: 'rgba(204,253,1,0.05)', border: '1px solid rgba(204,253,1,0.15)',
-          fontSize: 14, color: 'rgba(240,240,245,0.6)', lineHeight: 1.6,
+      <FadeUp style={{ textAlign: 'center', marginTop: 32 }}>
+        <p style={{
+          fontSize: 15, color: 'rgba(240,240,245,0.55)', lineHeight: 1.6,
+          maxWidth: 520, margin: '0 auto',
         }}>
           This replaces <span style={{ color: VOLT, fontWeight: 700 }}>5 separate tools</span> and{' '}
           <span style={{ color: VOLT, fontWeight: 700 }}>hours of manual work</span> every week.
-        </div>
+        </p>
       </FadeUp>
     </section>
   );
 }
 
 // ─── Outcomes Section ─────────────────────────────────────────────────────────
+// Redesigned: clean 2-column grid with icons + text, no card backgrounds
 
 const OUTCOMES = [
   { icon: '⏱', headline: '2–3 hours back every day', body: 'Admin that used to eat your mornings now happens automatically in the background.' },
@@ -523,8 +517,8 @@ const OUTCOMES = [
 
 function OutcomesSection() {
   return (
-    <section style={{ padding: 'clamp(60px, 10vw, 100px) 20px', maxWidth: 1080, margin: '0 auto', fontFamily: FF }}>
-      <FadeUp style={{ textAlign: 'center', marginBottom: 60 }}>
+    <section style={{ padding: 'clamp(80px, 12vw, 120px) 20px', maxWidth: 1040, margin: '0 auto', fontFamily: FF }}>
+      <FadeUp style={{ textAlign: 'center', marginBottom: 72 }}>
         <Label text="What you get back" />
         <h2 style={{
           fontSize: 'clamp(28px, 6vw, 52px)', fontWeight: 800,
@@ -534,23 +528,18 @@ function OutcomesSection() {
         </h2>
       </FadeUp>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', columnGap: 48, rowGap: 40 }}>
         {OUTCOMES.map((o, i) => (
           <FadeUp key={i} delay={i * 0.05}>
-            <div style={{
-              padding: '26px 24px',
-              background: 'rgba(255,255,255,0.025)',
-              border: '1px solid rgba(255,255,255,0.07)',
-              borderRadius: 16, display: 'flex', gap: 16, alignItems: 'flex-start',
-            }}>
+            <div style={{ display: 'flex', gap: 18, alignItems: 'flex-start' }}>
               <div style={{
-                width: 40, height: 40, borderRadius: 12, flexShrink: 0,
-                background: 'rgba(204,253,1,0.07)', border: '1px solid rgba(204,253,1,0.12)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
+                width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                background: 'rgba(204,253,1,0.08)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16,
               }}>{o.icon}</div>
               <div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: '#f0f0f5', marginBottom: 6, lineHeight: 1.3 }}>{o.headline}</div>
-                <div style={{ fontSize: 13, color: 'rgba(240,240,245,0.4)', lineHeight: 1.6 }}>{o.body}</div>
+                <div style={{ fontSize: 17, fontWeight: 700, color: '#f0f0f5', marginBottom: 8, lineHeight: 1.3, letterSpacing: '-0.01em' }}>{o.headline}</div>
+                <div style={{ fontSize: 14, color: 'rgba(240,240,245,0.45)', lineHeight: 1.65 }}>{o.body}</div>
               </div>
             </div>
           </FadeUp>
@@ -561,11 +550,12 @@ function OutcomesSection() {
 }
 
 // ─── Stack Section ────────────────────────────────────────────────────────────
+// Redesigned: clean list of old tools with dividers, keep comparison as single accent block
 
 const OLD_STACK = [
   { name: 'Notion',      purpose: 'Notes & tasks',       cost: '£16/mo', pain: "Can't invoice. Can't track leads. Just more tabs." },
   { name: 'FreshBooks',  purpose: 'Invoicing',           cost: '£29/mo', pain: "£29/mo for a PDF maker. Doesn't know who your clients are." },
-  { name: 'Calendly',    purpose: 'Booking calls',       cost: '£12/mo', pain: 'Another login. Another app. Doesn\'t follow up automatically.' },
+  { name: 'Calendly',    purpose: 'Booking calls',       cost: '£12/mo', pain: "Another login. Another app. Doesn't follow up automatically." },
   { name: 'Gmail',       purpose: 'Client comms',        cost: 'Free',   pain: 'Follow-ups buried in threads. Leads going cold in your inbox.' },
   { name: 'Sheets',      purpose: 'Finance tracking',    cost: 'Free',   pain: 'Updated once a quarter. Usually wrong. Zero automation.' },
   { name: 'WhatsApp',    purpose: 'Client chat',         cost: 'Free',   pain: 'Revision requests at 11pm. Work and life fully merged.' },
@@ -573,8 +563,8 @@ const OLD_STACK = [
 
 function StackSection() {
   return (
-    <section style={{ padding: 'clamp(60px, 10vw, 100px) 20px', maxWidth: 1080, margin: '0 auto', fontFamily: FF }}>
-      <FadeUp style={{ textAlign: 'center', marginBottom: 56 }}>
+    <section style={{ padding: 'clamp(80px, 12vw, 120px) 20px', maxWidth: 880, margin: '0 auto', fontFamily: FF }}>
+      <FadeUp style={{ textAlign: 'center', marginBottom: 72 }}>
         <Label text="Replace your stack" />
         <h2 style={{
           fontSize: 'clamp(28px, 6vw, 52px)', fontWeight: 800,
@@ -589,27 +579,27 @@ function StackSection() {
         </p>
       </FadeUp>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 10, marginBottom: 32 }}>
+      <div style={{ marginBottom: 56 }}>
         {OLD_STACK.map((t, i) => (
           <FadeUp key={t.name} delay={i * 0.04}>
             <div style={{
-              padding: '18px 20px',
-              background: 'rgba(255,255,255,0.02)',
-              border: '1px solid rgba(255,255,255,0.06)',
-              borderRadius: 14, display: 'flex', gap: 14, alignItems: 'flex-start',
+              padding: '22px 0',
+              borderBottom: i === OLD_STACK.length - 1 ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(255,255,255,0.05)',
+              borderTop: i === 0 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+              display: 'grid',
+              gridTemplateColumns: 'minmax(140px, 180px) 1fr auto',
+              gap: 24, alignItems: 'center',
             }}>
-              <div style={{
-                padding: '3px 8px', borderRadius: 8, flexShrink: 0,
-                background: 'rgba(255,98,89,0.08)', border: '1px solid rgba(255,98,89,0.15)',
-                fontSize: 11, fontWeight: 700, color: 'rgba(255,98,89,0.7)',
-              }}>{t.cost}</div>
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(240,240,245,0.7)' }}>{t.name}</span>
-                  <span style={{ fontSize: 11, color: 'rgba(240,240,245,0.3)' }}>· {t.purpose}</span>
-                </div>
-                <div style={{ fontSize: 12, color: 'rgba(240,240,245,0.3)', lineHeight: 1.55 }}>{t.pain}</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: 'rgba(240,240,245,0.85)', marginBottom: 3 }}>{t.name}</div>
+                <div style={{ fontSize: 12, color: 'rgba(240,240,245,0.35)' }}>{t.purpose}</div>
               </div>
+              <div style={{ fontSize: 13, color: 'rgba(240,240,245,0.45)', lineHeight: 1.55 }}>{t.pain}</div>
+              <div style={{
+                fontSize: 12, fontWeight: 700, color: 'rgba(255,98,89,0.65)',
+                fontVariantNumeric: 'tabular-nums',
+                textAlign: 'right', whiteSpace: 'nowrap',
+              }}>{t.cost}</div>
             </div>
           </FadeUp>
         ))}
@@ -617,23 +607,23 @@ function StackSection() {
 
       <FadeUp>
         <div style={{
-          padding: '28px 32px', borderRadius: 18,
-          background: 'rgba(204,253,1,0.04)', border: '1px solid rgba(204,253,1,0.15)',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          flexWrap: 'wrap', gap: 20,
+          display: 'grid', gridTemplateColumns: '1fr auto 1fr',
+          alignItems: 'center', gap: 24, padding: '8px 0',
         }}>
           <div>
-            <div style={{ fontSize: 13, color: 'rgba(240,240,245,0.4)', marginBottom: 6 }}>All of that 👆</div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: '#f0f0f5' }}>
-              £57–£100<span style={{ fontSize: 14, fontWeight: 500, color: 'rgba(240,240,245,0.4)' }}>/mo + 3 hours/day wasted</span>
+            <div style={{ fontSize: 12, color: 'rgba(240,240,245,0.4)', marginBottom: 8, letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 600 }}>All of that</div>
+            <div style={{ fontSize: 28, fontWeight: 800, color: '#f0f0f5', letterSpacing: '-0.02em' }}>
+              £57–£100<span style={{ fontSize: 14, fontWeight: 500, color: 'rgba(240,240,245,0.4)' }}>/mo</span>
             </div>
+            <div style={{ fontSize: 13, color: 'rgba(240,240,245,0.3)', marginTop: 4 }}>+ 3 hours/day wasted</div>
           </div>
-          <div style={{ color: 'rgba(240,240,245,0.2)', fontSize: 28, fontWeight: 300 }}>→</div>
+          <div style={{ color: 'rgba(240,240,245,0.15)', fontSize: 24, fontWeight: 300 }}>→</div>
           <div>
-            <div style={{ fontSize: 13, color: VOLT, marginBottom: 6, fontWeight: 600 }}>Replace it all with Nomaad</div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: '#f0f0f5' }}>
-              £39<span style={{ fontSize: 14, fontWeight: 500, color: 'rgba(240,240,245,0.4)' }}>/mo + runs itself</span>
+            <div style={{ fontSize: 12, color: VOLT, marginBottom: 8, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>With Nomaad</div>
+            <div style={{ fontSize: 28, fontWeight: 800, color: '#f0f0f5', letterSpacing: '-0.02em' }}>
+              £39<span style={{ fontSize: 14, fontWeight: 500, color: 'rgba(240,240,245,0.4)' }}>/mo</span>
             </div>
+            <div style={{ fontSize: 13, color: 'rgba(240,240,245,0.3)', marginTop: 4 }}>+ runs itself</div>
           </div>
         </div>
       </FadeUp>
@@ -643,20 +633,10 @@ function StackSection() {
 
 // ─── Avatar Section ───────────────────────────────────────────────────────────
 
-const AVATARS = [
-  'Freelance videographer',
-  'Photographer',
-  'Brand designer',
-  'Copywriter',
-  'Video editor',
-  'Content creator',
-  'Creative coach',
-  'Social media manager',
-];
-
 function AvatarSection() {
+  const AVATARS = ['Freelance videographer', 'Photographer', 'Brand designer', 'Copywriter', 'Video editor', 'Content creator', 'Creative coach', 'Social media manager'];
   return (
-    <section style={{ padding: 'clamp(60px, 10vw, 80px) 20px 100px', maxWidth: 860, margin: '0 auto', fontFamily: FF, textAlign: 'center' }}>
+    <section style={{ padding: 'clamp(80px, 12vw, 120px) 20px', maxWidth: 860, margin: '0 auto', fontFamily: FF, textAlign: 'center' }}>
       <FadeUp>
         <Label text="Built for solo operators" />
         <h2 style={{
@@ -680,9 +660,8 @@ function AvatarSection() {
           {AVATARS.map((a) => (
             <span key={a} style={{
               padding: '8px 16px', borderRadius: 100,
-              background: 'rgba(204,253,1,0.06)', border: '1px solid rgba(204,253,1,0.15)',
-              fontSize: 13, fontWeight: 600, color: VOLT,
-              fontFamily: FF,
+              background: 'rgba(204,253,1,0.05)', border: '1px solid rgba(204,253,1,0.12)',
+              fontSize: 13, fontWeight: 600, color: VOLT, fontFamily: FF,
             }}>{a}</span>
           ))}
         </div>
@@ -696,35 +675,27 @@ function AvatarSection() {
 }
 
 // ─── Testimonials ─────────────────────────────────────────────────────────────
+// Redesigned: transparent quotes with left accent line, no boxed cards
 
 const TESTIMONIALS = [
   {
     quote: "I had invoices lost in Gmail threads for months. First month on Nomaad I got paid 3 weeks faster — purely because everything was in one place.",
-    name: 'Jake T.',
-    role: 'Freelance Videographer · London',
-    metric: 'Paid 3 weeks faster',
-    color: VOLT,
+    name: 'Jake T.', role: 'Freelance Videographer · London', metric: 'Paid 3 weeks faster', color: VOLT,
   },
   {
     quote: "Cancelled Notion, Toggl, and FreshBooks in the same week. Saving £65/mo and actually understand my cash flow for the first time.",
-    name: 'Priya S.',
-    role: 'Brand Designer · Manchester',
-    metric: '£65/mo saved, 3 tools gone',
-    color: '#5AC8FA',
+    name: 'Priya S.', role: 'Brand Designer · Manchester', metric: '£65/mo saved, 3 tools gone', color: '#5AC8FA',
   },
   {
     quote: "My clients check the portal instead of WhatsApping me at 11pm. I can't overstate how much that changed my evenings.",
-    name: 'Marcus R.',
-    role: 'Photographer · Bristol',
-    metric: 'Zero late-night messages',
-    color: '#FFB340',
+    name: 'Marcus R.', role: 'Photographer · Bristol', metric: 'Zero late-night messages', color: '#FFB340',
   },
 ];
 
 function TestimonialsSection() {
   return (
-    <section style={{ padding: 'clamp(40px, 10vw, 60px) 20px 80px', maxWidth: 1080, margin: '0 auto', fontFamily: FF }}>
-      <FadeUp style={{ textAlign: 'center', marginBottom: 48 }}>
+    <section style={{ padding: 'clamp(80px, 12vw, 120px) 20px', maxWidth: 1100, margin: '0 auto', fontFamily: FF }}>
+      <FadeUp style={{ textAlign: 'center', marginBottom: 64 }}>
         <Label text="Beta users" />
         <h2 style={{
           fontSize: 'clamp(26px, 6vw, 46px)', fontWeight: 800,
@@ -733,36 +704,34 @@ function TestimonialsSection() {
           Real people. Real results.
         </h2>
       </FadeUp>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 40 }}>
         {TESTIMONIALS.map((t, i) => (
           <FadeUp key={t.name} delay={i * 0.08}>
             <div style={{
-              padding: '28px 26px', borderRadius: 20,
-              background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)',
-              display: 'flex', flexDirection: 'column', gap: 18,
+              paddingLeft: 20,
+              borderLeft: `2px solid ${t.color}40`,
+              display: 'flex', flexDirection: 'column', gap: 20,
               height: '100%', boxSizing: 'border-box',
             }}>
               <div style={{
-                display: 'inline-flex', alignSelf: 'flex-start', alignItems: 'center', gap: 6,
-                padding: '4px 12px', borderRadius: 100,
-                background: `${t.color}15`, border: `1px solid ${t.color}25`,
-                color: t.color, fontSize: 11, fontWeight: 700,
+                fontSize: 11, fontWeight: 700, color: t.color,
+                letterSpacing: '0.08em', textTransform: 'uppercase',
               }}>
-                <span style={{ fontSize: 9 }}>✦</span>{t.metric}
+                {t.metric}
               </div>
-              <p style={{ fontSize: 14, color: 'rgba(240,240,245,0.6)', lineHeight: 1.75, margin: 0, flex: 1, fontStyle: 'italic' }}>
+              <p style={{ fontSize: 16, color: 'rgba(240,240,245,0.8)', lineHeight: 1.6, margin: 0, flex: 1, letterSpacing: '-0.005em' }}>
                 "{t.quote}"
               </p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{
-                  width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
-                  background: `${t.color}20`, border: `1px solid ${t.color}30`,
+                  width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
+                  background: `${t.color}18`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 13, fontWeight: 700, color: t.color,
+                  fontSize: 12, fontWeight: 700, color: t.color,
                 }}>{t.name[0]}</div>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(240,240,245,0.85)' }}>{t.name}</div>
-                  <div style={{ fontSize: 11, color: 'rgba(240,240,245,0.3)' }}>{t.role}</div>
+                  <div style={{ fontSize: 11, color: 'rgba(240,240,245,0.35)' }}>{t.role}</div>
                 </div>
               </div>
             </div>
@@ -774,39 +743,34 @@ function TestimonialsSection() {
 }
 
 // ─── Founder Note ─────────────────────────────────────────────────────────────
+// Redesigned: unboxed quote-style with left accent
 
 function FounderNote() {
   return (
-    <section style={{ padding: '20px 24px 80px', maxWidth: 680, margin: '0 auto', fontFamily: FF }}>
+    <section style={{ padding: 'clamp(60px, 10vw, 80px) 24px', maxWidth: 680, margin: '0 auto', fontFamily: FF }}>
       <FadeUp>
-        <div style={{
-          padding: '36px 36px 32px', borderRadius: 22,
-          background: 'rgba(204,253,1,0.03)', border: '1px solid rgba(204,253,1,0.1)',
-          position: 'relative', overflow: 'hidden',
+        <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(204,253,1,0.6)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 20 }}>
+          Why we built this
+        </p>
+        <p style={{
+          fontSize: 'clamp(18px, 2.5vw, 22px)',
+          color: 'rgba(240,240,245,0.75)', lineHeight: 1.6,
+          margin: '0 0 32px', letterSpacing: '-0.01em', fontWeight: 400,
         }}>
+          I spent more time updating spreadsheets and chasing invoices than actually doing the work I was hired for.
+          Every tool I tried was built for a 10-person agency — not for one person trying to do everything.
+          So I stopped looking and built the thing I needed.
+        </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{
-            position: 'absolute', top: 0, left: 0, right: 0, height: 1,
-            background: `linear-gradient(90deg, transparent, rgba(204,253,1,0.3), transparent)`,
-          }} />
-          <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(204,253,1,0.6)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>
-            Why we built this
-          </p>
-          <p style={{ fontSize: 15, color: 'rgba(240,240,245,0.55)', lineHeight: 1.8, margin: '0 0 24px' }}>
-            I spent more time updating spreadsheets and chasing invoices than actually doing the work I was hired for.
-            Every tool I tried was built for a 10-person agency — not for one person trying to do everything.
-            So I stopped looking and built the thing I needed.
-          </p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{
-              width: 38, height: 38, borderRadius: '50%',
-              background: 'rgba(204,253,1,0.15)', border: '1px solid rgba(204,253,1,0.25)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 15, fontWeight: 800, color: VOLT,
-            }}>N</div>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#f0f0f5' }}>Nomaad team</div>
-              <div style={{ fontSize: 11, color: 'rgba(240,240,245,0.3)' }}>Freelancers who got tired of bad tooling</div>
-            </div>
+            width: 36, height: 36, borderRadius: '50%',
+            background: 'rgba(204,253,1,0.12)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 14, fontWeight: 800, color: VOLT,
+          }}>N</div>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#f0f0f5' }}>Nomaad team</div>
+            <div style={{ fontSize: 12, color: 'rgba(240,240,245,0.35)' }}>Freelancers who got tired of bad tooling</div>
           </div>
         </div>
       </FadeUp>
@@ -815,6 +779,7 @@ function FounderNote() {
 }
 
 // ─── Pricing ──────────────────────────────────────────────────────────────────
+// Kept as cards — pricing cards carry meaning, but reduced visual weight on non-featured
 
 const PLANS = [
   {
@@ -823,15 +788,7 @@ const PLANS = [
     period: '/mo',
     desc: 'Everything you need to run your solo business without the chaos.',
     featured: true,
-    features: [
-      'Client pipeline & CRM',
-      'Automated follow-ups',
-      'Projects & task tracking',
-      'Invoicing & payment tracking',
-      'Client portal',
-      'Calendar & scheduling',
-      'AI assistant',
-    ],
+    features: ['Client pipeline & CRM', 'Automated follow-ups', 'Projects & task tracking', 'Invoicing & payment tracking', 'Client portal', 'Calendar & scheduling', 'AI assistant'],
   },
   {
     name: 'Studio',
@@ -839,21 +796,14 @@ const PLANS = [
     period: '/mo',
     desc: 'For small creative studios growing beyond one person.',
     featured: false,
-    features: [
-      'Everything in Creator',
-      'Up to 5 team members',
-      'Shared pipeline & projects',
-      'Team calendar',
-      'Priority support',
-      'Custom branding',
-    ],
+    features: ['Everything in Creator', 'Up to 5 team members', 'Shared pipeline & projects', 'Team calendar', 'Priority support', 'Custom branding'],
   },
 ];
 
 function PricingSection() {
   return (
-    <section id="pricing" style={{ padding: '80px 24px 100px', maxWidth: 860, margin: '0 auto', fontFamily: FF }}>
-      <FadeUp style={{ textAlign: 'center', marginBottom: 56 }}>
+    <section id="pricing" style={{ padding: 'clamp(80px, 12vw, 120px) 24px', maxWidth: 920, margin: '0 auto', fontFamily: FF }}>
+      <FadeUp style={{ textAlign: 'center', marginBottom: 72 }}>
         <Label text="Pricing" />
         <h2 style={{
           fontSize: 'clamp(30px, 4.5vw, 50px)', fontWeight: 800,
@@ -865,40 +815,39 @@ function PricingSection() {
         </h2>
       </FadeUp>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 20, alignItems: 'stretch' }}>
         {PLANS.map((plan, i) => (
           <FadeUp key={plan.name} delay={i * 0.08}>
             <div style={{
-              padding: '32px 28px', borderRadius: 22,
-              background: plan.featured ? 'rgba(204,253,1,0.04)' : 'rgba(255,255,255,0.02)',
-              border: plan.featured ? `1px solid rgba(204,253,1,0.2)` : '1px solid rgba(255,255,255,0.07)',
-              position: 'relative', overflow: 'hidden',
-              transform: plan.featured ? 'translateY(-8px)' : 'none',
-              boxShadow: plan.featured ? `0 0 60px rgba(204,253,1,0.06)` : 'none',
+              padding: '36px 32px', borderRadius: 24,
+              background: plan.featured ? 'rgba(204,253,1,0.035)' : 'transparent',
+              border: plan.featured ? `1px solid rgba(204,253,1,0.22)` : '1px solid rgba(255,255,255,0.07)',
+              position: 'relative', overflow: 'hidden', height: '100%', boxSizing: 'border-box',
+              boxShadow: plan.featured ? `0 0 80px rgba(204,253,1,0.05)` : 'none',
             }}>
               {plan.featured && (
-                <div style={{ position: 'absolute', top: 0, left: 28, right: 28, height: 2, background: `linear-gradient(90deg, transparent, ${VOLT}, transparent)` }} />
+                <div style={{ position: 'absolute', top: 0, left: 32, right: 32, height: 1, background: `linear-gradient(90deg, transparent, ${VOLT}80, transparent)` }} />
               )}
               {plan.featured && (
                 <div style={{
-                  display: 'inline-block', padding: '3px 10px', borderRadius: 100,
+                  display: 'inline-block', padding: '4px 12px', borderRadius: 100,
                   background: 'rgba(204,253,1,0.12)', color: VOLT,
-                  fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', marginBottom: 16,
+                  fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', marginBottom: 20,
                 }}>MOST POPULAR</div>
               )}
-              <div style={{ marginBottom: 6 }}>
+              <div style={{ marginBottom: 8 }}>
                 <span style={{ fontSize: 14, fontWeight: 600, color: 'rgba(240,240,245,0.55)' }}>{plan.name}</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 2, marginBottom: 8 }}>
-                <span style={{ fontSize: 48, fontWeight: 800, color: '#f0f0f5', letterSpacing: '-0.03em' }}>{plan.price}</span>
-                <span style={{ fontSize: 14, color: 'rgba(240,240,245,0.4)' }}>{plan.period}</span>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 2, marginBottom: 10 }}>
+                <span style={{ fontSize: 52, fontWeight: 800, color: '#f0f0f5', letterSpacing: '-0.03em' }}>{plan.price}</span>
+                <span style={{ fontSize: 15, color: 'rgba(240,240,245,0.4)' }}>{plan.period}</span>
               </div>
-              <p style={{ fontSize: 13, color: 'rgba(240,240,245,0.4)', margin: '0 0 28px', lineHeight: 1.5 }}>{plan.desc}</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 28 }}>
+              <p style={{ fontSize: 14, color: 'rgba(240,240,245,0.45)', margin: '0 0 32px', lineHeight: 1.55 }}>{plan.desc}</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 32 }}>
                 {plan.features.map((f) => (
-                  <div key={f} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                  <div key={f} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                     <span style={{ color: VOLT, fontSize: 13, flexShrink: 0, marginTop: 1 }}>✓</span>
-                    <span style={{ fontSize: 13, color: 'rgba(240,240,245,0.6)', lineHeight: 1.4 }}>{f}</span>
+                    <span style={{ fontSize: 14, color: 'rgba(240,240,245,0.7)', lineHeight: 1.45 }}>{f}</span>
                   </div>
                 ))}
               </div>
@@ -906,9 +855,9 @@ function PricingSection() {
                 whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                 onClick={() => document.getElementById('waitlist')?.scrollIntoView({ behavior: 'smooth' })}
                 style={{
-                  width: '100%', padding: '13px 0', borderRadius: 12, border: 'none',
-                  background: plan.featured ? `linear-gradient(135deg, ${VOLT}, ${VOLTD})` : 'rgba(255,255,255,0.07)',
-                  color: plan.featured ? '#0a0a0a' : 'rgba(240,240,245,0.7)',
+                  width: '100%', padding: '14px 0', borderRadius: 100, border: 'none',
+                  background: plan.featured ? `linear-gradient(135deg, ${VOLT}, ${VOLTD})` : 'rgba(255,255,255,0.06)',
+                  color: plan.featured ? '#0a0a0a' : 'rgba(240,240,245,0.8)',
                   fontWeight: 700, fontSize: 14, fontFamily: FF, cursor: 'pointer',
                   boxShadow: plan.featured ? `0 4px 24px rgba(204,253,1,0.2)` : 'none',
                 }}
@@ -916,7 +865,7 @@ function PricingSection() {
                 {plan.featured ? 'Join the waitlist' : 'Get early access'}
               </motion.button>
               {plan.featured && (
-                <p style={{ textAlign: 'center', fontSize: 11, color: 'rgba(240,240,245,0.3)', margin: '10px 0 0', fontFamily: FF }}>
+                <p style={{ textAlign: 'center', fontSize: 11, color: 'rgba(240,240,245,0.3)', margin: '12px 0 0', fontFamily: FF }}>
                   14-day free trial on launch · No card required · Cancel anytime
                 </p>
               )}
@@ -932,13 +881,13 @@ function PricingSection() {
 
 function CloserSection() {
   return (
-    <section style={{ padding: '80px 24px 120px', textAlign: 'center', fontFamily: FF, position: 'relative' }}>
+    <section style={{ padding: 'clamp(80px, 12vw, 120px) 24px', textAlign: 'center', fontFamily: FF, position: 'relative' }}>
       <div style={{
         position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
         width: 600, height: 300, borderRadius: '50%',
         background: VOLT, filter: 'blur(120px)', opacity: 0.04, pointerEvents: 'none',
       }} />
-      <FadeUp style={{ maxWidth: 680, margin: '0 auto' }}>
+      <FadeUp style={{ maxWidth: 680, margin: '0 auto', position: 'relative' }}>
         <h2 style={{
           fontSize: 'clamp(32px, 5vw, 58px)', fontWeight: 800,
           color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 16px', lineHeight: 1.08,
@@ -964,7 +913,7 @@ function CloserSection() {
 function Footer() {
   return (
     <footer style={{
-      padding: '28px 40px', borderTop: '1px solid rgba(255,255,255,0.05)',
+      padding: '32px 40px', borderTop: '1px solid rgba(255,255,255,0.05)',
       display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
       fontFamily: FF, flexWrap: 'wrap',
     }}>
