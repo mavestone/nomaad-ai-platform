@@ -411,7 +411,7 @@ export default function OnboardingView() {
                     border: `1.5px solid ${currency === c.code ? VOLT : "rgba(255,255,255,0.08)"}`,
                     background: currency === c.code ? "rgba(204,253,1,0.07)" : "rgba(255,255,255,0.03)",
                   }}>
-                    <span style={{ fontSize: 18, marginBottom: 4, display: "block" }}>{c.country} {c.symbol}</span>
+                    <span style={{ fontSize: 18, marginBottom: 4, display: "block", color: "#fff" }}>{c.country} {c.symbol}</span>
                     <span style={{ fontSize: 11, color: currency === c.code ? VOLT : "#fff", fontWeight: 600 }}>{c.code}</span>
                   </button>
                 ))}
