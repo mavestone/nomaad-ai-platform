@@ -689,29 +689,44 @@ function FindCreatorsTab({ t, dark }) {
   const [connected, setConn]    = useState(new Set());
   const [viewing, setViewing]   = useState(null);
 
+  // Map business_type → creator card type/role
+  const TYPE_MAP = { freelancer: 'create', agency: 'produce', consultant: 'design', creative: 'design', developer: 'edit', other: 'create' };
+  const ROLE_MAP = { freelancer: 'Freelancer', agency: 'Agency', consultant: 'Consultant', creative: 'Creative', developer: 'Developer', other: 'Creator' };
+
   useEffect(() => {
     if (!user) return;
     (async () => {
       try {
-        const { data: profiles } = await supabase.from('profiles').select('*');
+        // Single query — use portfolio_projects JSONB instead of N+1 projects fetch
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url, bio, location, business_type, portfolio_projects, username, availability')
+          .eq('onboarding_complete', true);
+
         if (!profiles) return;
-        const withProjects = await Promise.all(
-          profiles.map(async p => {
-            const { data: projs } = await supabase.from('projects').select('id,name,status,created_at').eq('user_id', p.id).limit(6);
-            return {
-              id:          p.id,
-              name:        p.full_name || 'Nomaad Creator',
-              role:        p.role || 'Creator',
-              type:        p.creator_type || 'photo',
-              loc:         p.city || p.company || '',
-              img:         p.avatar_url || null,
-              bio:         p.bio || '',
-              connections: Math.floor(Math.random() * 300 + 20),
-              projects:    (projs || []).map(pr => ({ id: pr.id, title: pr.name, cat: pr.status, year: new Date(pr.created_at).getFullYear(), img: null })),
-            };
-          })
-        );
-        setMembers(withProjects.filter(m => m.id !== user.id));
+
+        const mapped = profiles
+          .filter(p => p.id !== user.id)
+          .map(p => ({
+            id:          p.id,
+            name:        p.full_name || 'Nomaad Creator',
+            role:        ROLE_MAP[p.business_type] || 'Creator',
+            type:        TYPE_MAP[p.business_type] || 'create',
+            loc:         p.location || '',
+            img:         p.avatar_url || null,
+            bio:         p.bio || '',
+            username:    p.username || null,
+            availability: p.availability || 'away',
+            connections: Math.floor(Math.random() * 300 + 20),
+            projects:    (p.portfolio_projects || []).slice(0, 6).map(pr => ({
+              id:    pr.id,
+              title: pr.title,
+              year:  pr.year,
+              img:   pr.cover_url || null,
+            })),
+          }));
+
+        setMembers(mapped);
       } catch (e) { console.error(e); }
       finally { setLoading(false); }
     })();
@@ -721,7 +736,10 @@ function FindCreatorsTab({ t, dark }) {
     if (catFilter !== 'All' && m.type !== catFilter) return false;
     if (query) {
       const q = query.toLowerCase();
-      return m.name.toLowerCase().includes(q) || (m.role || '').toLowerCase().includes(q) || (m.loc || '').toLowerCase().includes(q);
+      return m.name.toLowerCase().includes(q)
+        || (m.role || '').toLowerCase().includes(q)
+        || (m.loc || '').toLowerCase().includes(q)
+        || (m.bio || '').toLowerCase().includes(q);
     }
     return true;
   }), [members, query, catFilter]);
@@ -734,7 +752,7 @@ function FindCreatorsTab({ t, dark }) {
       <div style={{ background: t.card, border: `1px solid ${t.cardBorder}`, borderRadius: 18, padding: '15px 20px', boxShadow: t.cardShadow, backdropFilter: 'blur(24px) saturate(1.6)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, flexShrink: 0 }}>
         <div>
           <h1 style={{ fontSize: 17, fontWeight: 800, letterSpacing: -0.4, color: t.text, margin: 0 }}>Find Creators</h1>
-          <p style={{ fontSize: 12, color: t.sub, margin: '3px 0 0' }}>Discover Nomaad creatives to collaborate with</p>
+          <p style={{ fontSize: 12, color: t.sub, margin: '3px 0 0' }}>Find skilled creators to collaborate on projects</p>
         </div>
         <div style={{ position: 'relative' }}>
           <Search size={12} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: t.muted, pointerEvents: 'none' }} />
@@ -782,8 +800,8 @@ function FindCreatorsTab({ t, dark }) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const TABS = [
-  { id: 0, label: 'Find Clients',   desc: 'Decision-makers · 400M+ professionals', icon: <Target size={15} />, accent: '#CCFD01' },
-  { id: 1, label: 'Find Creators',  desc: 'Nomaad community · portfolios',          icon: <Users  size={15} />, accent: '#5AC8FA' },
+  { id: 0, label: 'Find Clients',   desc: 'Decision-makers · 400M+ professionals',            icon: <Target size={15} />, accent: '#CCFD01' },
+  { id: 1, label: 'Find Creators',  desc: 'Find skilled creators to collaborate on projects',  icon: <Users  size={15} />, accent: '#5AC8FA' },
 ];
 
 export default function ProspectingView({ t, dark, mobile, compact }) {
