@@ -293,9 +293,12 @@ function ClientRecord({ client, onClose, onUpdate, t, dark }) {
     if (!newProject.name.trim()) return;
     try {
       const { data, error } = await supabase.from("projects").insert({
-        user_id: user.id, name: newProject.name, client_id: client.id,
+        user_id: user.id, 
+        title: newProject.name, 
+        client_id: client.id,
         client_name: client.company || client.name,
-        due_date: newProject.due_date || null, status: "active",
+        due_date: newProject.due_date || null, 
+        status: "active",
       }).select().single();
       if (error) throw error;
       setProjects(p => [data, ...p]);
@@ -788,9 +791,12 @@ export default function ClientsView({ t, dark, mobile, compact }) {
     if (!wonModal || !name.trim()) return;
     try {
       await supabase.from("projects").insert({
-        user_id: user.id, name, client_id: wonModal.id,
+        user_id: user.id, 
+        title: name, 
+        client_id: wonModal.id,
         client_name: wonModal.company || wonModal.name,
-        due_date: dueDate || null, status: "active",
+        due_date: dueDate || null, 
+        status: "active",
       });
     } catch (err) { console.error(err.message); }
     setWonModal(null);
