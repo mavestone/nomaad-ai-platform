@@ -4,18 +4,16 @@ import { useImageUpload } from "../hooks/use-image-upload";
 import { Button } from "./ui/button";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "./ui/dialog";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
-import { Check, ImagePlus, X } from "lucide-react";
+import { Check, Camera } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabase";
 
@@ -34,7 +32,6 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSaveComplete 
     username: profile?.username || "",
     website: profile?.social_links?.website || "",
     email: profile?.social_links?.email || "",
-    bookingUrl: profile?.social_links?.bookingUrl || "",
     location: profile?.location || "",
     availability: profile?.availability || "away",
   });
@@ -44,19 +41,16 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSaveComplete 
 
   const { previewUrl, fileObject, fileInputRef, handleThumbnailClick, handleFileChange } = useImageUpload();
 
-  // Reset form when opened with a new profile
   useEffect(() => {
-      if (open && profile) {
+    if (open && profile) {
       setForm({
         fullName: profile.full_name || profile.business_name || "",
         username: profile.username || "",
         website: profile.social_links?.website || "",
         email: profile.social_links?.email || "",
-        bookingUrl: profile.social_links?.bookingUrl || "",
         location: profile.location || "",
         availability: profile.availability || "away",
       });
-      // Need a way to reset bio correctly, but character limit hook initializes once.
     }
   }, [open, profile]);
 
@@ -70,7 +64,6 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSaveComplete 
     try {
       let avatar_url = profile.avatar_url;
       
-      // Upload new avatar if selected
       if (fileObject) {
         const ext = fileObject.name.split(".").pop();
         const path = `${user.id}/avatar-${Date.now()}.${ext}`;
@@ -93,7 +86,6 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSaveComplete 
           ...(profile.social_links || {}), 
           website: form.website,
           email: form.email,
-          bookingUrl: form.bookingUrl 
         },
         username: form.username.trim().toLowerCase() || null,
         avatar_url
@@ -103,7 +95,6 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSaveComplete 
         updates.username_changed_at = new Date().toISOString();
       }
 
-      // Optimistic save logic handled via updateProfile
       const { error: updateErr } = await updateProfile(updates);
 
       if (!updateErr) {
@@ -121,175 +112,200 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSaveComplete 
 
   const currentImage = previewUrl || profile?.avatar_url;
 
+  const availabilityOptions = [
+    { value: 'available', label: 'Available', color: '#34C759' },
+    { value: 'busy', label: 'Busy', color: '#FF9500' },
+    { value: 'away', label: 'Away', color: '#8E8E93' },
+  ];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex flex-col gap-0 overflow-hidden p-0 sm:max-w-lg [&>button:last-child]:top-3.5">
-        <DialogHeader className="contents space-y-0 text-left">
-          <DialogTitle className="border-b border-white/10 px-6 py-4 text-base text-white">
-            Edit profile
-          </DialogTitle>
+      <DialogContent className="overflow-hidden p-0 sm:max-w-[480px] bg-[#1c1c1e] border-white/[0.08] rounded-2xl shadow-2xl [&>button:last-child]:hidden">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Edit profile</DialogTitle>
         </DialogHeader>
         <DialogDescription className="sr-only">
           Make changes to your profile here.
         </DialogDescription>
         
-        <div className="overflow-y-auto max-h-[60vh]">
-          {/* Cover Placeholder Background */}
-          <div className="h-28 bg-[#111115] relative overflow-hidden">
-             <div className="absolute inset-0 opacity-20 bg-gradient-to-r from-[#ccfd01] to-[#b8e300] blur-3xl"></div>
-          </div>
-          
-          <div className="-mt-10 px-6">
-            <div className="relative flex size-20 items-center justify-center overflow-hidden rounded-full border-4 border-[#08080a] bg-neutral-800 shadow-sm shadow-black/10">
+        {/* Header with centered avatar */}
+        <div className="relative pt-8 pb-6 px-6 flex flex-col items-center border-b border-white/[0.06]">
+          {/* Close button */}
+          <button
+            onClick={() => onOpenChange(false)}
+            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-colors"
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M1 1L13 13M1 13L13 1" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          </button>
+
+          {/* Avatar */}
+          <div className="relative group">
+            <div className="w-24 h-24 rounded-full overflow-hidden ring-4 ring-[#1c1c1e] bg-[#2c2c2e]">
               {currentImage ? (
-                <img src={currentImage} className="h-full w-full object-cover" alt="Profile" />
+                <img src={currentImage} className="w-full h-full object-cover" alt="Profile" />
               ) : (
-                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#ccfd01] to-[#b8e300] text-black font-bold text-2xl">
-                  {form.fullName ? form.fullName[0].toUpperCase() : "U"}
+                <div className="w-full h-full flex items-center justify-center bg-[#ccfd01] text-black font-semibold text-3xl">
+                  {form.fullName ? form.fullName[0].toUpperCase() : "?"}
                 </div>
               )}
-              <button
-                type="button"
-                className="absolute flex size-8 cursor-pointer items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
-                onClick={handleThumbnailClick}
-                aria-label="Change profile picture"
-              >
-                <ImagePlus size={16} strokeWidth={2} />
-              </button>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                className="hidden"
-                accept="image/*"
+            </div>
+            <button
+              type="button"
+              onClick={handleThumbnailClick}
+              className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer"
+              aria-label="Change profile picture"
+            >
+              <Camera size={24} className="text-white" />
+            </button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              className="hidden"
+              accept="image/*"
+            />
+          </div>
+          
+          <p className="mt-3 text-[13px] text-white/40">Tap to change photo</p>
+        </div>
+
+        {/* Form content */}
+        <div className="overflow-y-auto max-h-[55vh] px-6 py-5">
+          {error && (
+            <div className="mb-5 text-[13px] text-red-400 bg-red-500/10 px-4 py-3 rounded-xl">
+              {error}
+            </div>
+          )}
+          
+          {/* Name */}
+          <div className="space-y-1.5 mb-5">
+            <Label htmlFor={`${id}-name`} className="text-[13px] text-white/50 font-medium">Name</Label>
+            <Input
+              id={`${id}-name`}
+              placeholder="Your name"
+              value={form.fullName}
+              onChange={(e) => handleChange("fullName", e.target.value)}
+              className="h-12 bg-[#2c2c2e] border-0 rounded-xl text-[15px] placeholder:text-white/25 focus-visible:ring-1 focus-visible:ring-[#ccfd01]/50"
+            />
+          </div>
+
+          {/* Username & Location row */}
+          <div className="grid grid-cols-2 gap-3 mb-5">
+            <div className="space-y-1.5">
+              <Label htmlFor={`${id}-username`} className="text-[13px] text-white/50 font-medium">Username</Label>
+              <div className="relative">
+                <Input
+                  id={`${id}-username`}
+                  placeholder="username"
+                  value={form.username}
+                  onChange={(e) => handleChange("username", e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                  className="h-12 bg-[#2c2c2e] border-0 rounded-xl text-[15px] placeholder:text-white/25 pr-10 focus-visible:ring-1 focus-visible:ring-[#ccfd01]/50"
+                />
+                {form.username && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <Check size={16} className="text-[#34C759]" />
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor={`${id}-location`} className="text-[13px] text-white/50 font-medium">Location</Label>
+              <Input
+                id={`${id}-location`}
+                placeholder="City, Country"
+                value={form.location}
+                onChange={(e) => handleChange("location", e.target.value)}
+                className="h-12 bg-[#2c2c2e] border-0 rounded-xl text-[15px] placeholder:text-white/25 focus-visible:ring-1 focus-visible:ring-[#ccfd01]/50"
               />
             </div>
           </div>
 
-          <div className="px-6 pb-6 pt-4">
-            <div className="space-y-4">
-              {error && <div className="text-red-500 text-sm bg-red-500/10 p-3 rounded-lg">{error}</div>}
-              
-              <div className="space-y-2">
-                <Label htmlFor={`${id}-name`}>Full name</Label>
-                <Input
-                  id={`${id}-name`}
-                  placeholder="Your full name"
-                  value={form.fullName}
-                  onChange={(e) => handleChange("fullName", e.target.value)}
-                />
-              </div>
+          {/* Website */}
+          <div className="space-y-1.5 mb-5">
+            <Label htmlFor={`${id}-website`} className="text-[13px] text-white/50 font-medium">Website</Label>
+            <Input
+              id={`${id}-website`}
+              placeholder="yourwebsite.com"
+              value={form.website}
+              onChange={(e) => handleChange("website", e.target.value.replace(/^https?:\/\//, ""))}
+              className="h-12 bg-[#2c2c2e] border-0 rounded-xl text-[15px] placeholder:text-white/25 focus-visible:ring-1 focus-visible:ring-[#ccfd01]/50"
+            />
+          </div>
 
-              <div className="flex flex-col gap-4 sm:flex-row">
-                <div className="flex-1 space-y-2">
-                  <Label htmlFor={`${id}-username`}>Username</Label>
-                  <div className="relative">
-                    <Input
-                      id={`${id}-username`}
-                      className="peer pe-9"
-                      placeholder="Username"
-                      value={form.username}
-                      onChange={(e) => handleChange("username", e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
-                    />
-                    {form.username && (
-                      <div className="pointer-events-none absolute inset-y-0 end-0 flex items-center justify-center pe-3 text-white/50">
-                        <Check size={16} strokeWidth={2} className="text-[#ccfd01]" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="flex-1 space-y-2">
-                  <Label htmlFor={`${id}-location`}>Location</Label>
-                  <Input
-                    id={`${id}-location`}
-                    placeholder="e.g. London, UK"
-                    value={form.location}
-                    onChange={(e) => handleChange("location", e.target.value)}
+          {/* Email */}
+          <div className="space-y-1.5 mb-5">
+            <Label htmlFor={`${id}-email`} className="text-[13px] text-white/50 font-medium">Public Email</Label>
+            <Input
+              id={`${id}-email`}
+              type="email"
+              placeholder="hello@example.com"
+              value={form.email}
+              onChange={(e) => handleChange("email", e.target.value)}
+              className="h-12 bg-[#2c2c2e] border-0 rounded-xl text-[15px] placeholder:text-white/25 focus-visible:ring-1 focus-visible:ring-[#ccfd01]/50"
+            />
+          </div>
+
+          {/* Availability */}
+          <div className="space-y-2 mb-5">
+            <Label className="text-[13px] text-white/50 font-medium">Availability</Label>
+            <div className="flex gap-2">
+              {availabilityOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => handleChange("availability", opt.value)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
+                    form.availability === opt.value
+                      ? "bg-white/[0.12] text-white"
+                      : "bg-[#2c2c2e] text-white/50 hover:bg-white/[0.08]"
+                  }`}
+                >
+                  <span 
+                    className="w-2 h-2 rounded-full" 
+                    style={{ backgroundColor: opt.color }}
                   />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor={`${id}-website`}>Website / Main Link</Label>
-                <div className="flex rounded-lg">
-                  <span className="-z-10 inline-flex items-center rounded-s-lg border border-r-0 border-white/10 bg-white/5 px-3 text-sm text-white/50">
-                    https://
-                  </span>
-                  <Input
-                    id={`${id}-website`}
-                    className="-ms-px rounded-s-none"
-                    placeholder="yourwebsite.com"
-                    value={form.website}
-                    onChange={(e) => handleChange("website", e.target.value.replace(/^https?:\/\//, ""))}
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-4 sm:flex-row">
-                <div className="flex-1 space-y-2">
-                  <Label htmlFor={`${id}-email`}>Public Email</Label>
-                  <Input
-                    id={`${id}-email`}
-                    type="email"
-                    placeholder="hello@example.com"
-                    value={form.email}
-                    onChange={(e) => handleChange("email", e.target.value)}
-                  />
-                </div>
-                <div className="flex-1 space-y-2">
-                  <Label htmlFor={`${id}-bookingUrl`}>Booking Link (e.g. Calendly)</Label>
-                  <Input
-                    id={`${id}-bookingUrl`}
-                    placeholder="cal.com/username"
-                    value={form.bookingUrl}
-                    onChange={(e) => handleChange("bookingUrl", e.target.value.replace(/^https?:\/\//, ""))}
-                  />
-                </div>
-              </div>
-
-               <div className="space-y-2">
-                <Label htmlFor={`${id}-avail`}>Current Availability</Label>
-                <div className="flex gap-2">
-                  {['available', 'busy', 'away'].map((status) => (
-                    <button
-                      key={status}
-                      type="button"
-                      onClick={() => handleChange("availability", status)}
-                      className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
-                        form.availability === status
-                          ? "border-[#ccfd01] bg-[#ccfd01]/10 text-[#ccfd01]"
-                          : "border-white/10 bg-transparent text-white/50 hover:bg-white/5"
-                      }`}
-                    >
-                      {status.charAt(0).toUpperCase() + status.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor={`${id}-bio`}>Biography</Label>
-                <Textarea
-                  id={`${id}-bio`}
-                  placeholder="Write a few sentences about yourself"
-                  value={bio}
-                  maxLength={maxLength}
-                  onChange={handleBioChange}
-                />
-                <p className="mt-2 text-right text-xs text-white/40">
-                  <span className="tabular-nums">{limit - characterCount}</span> characters left
-                </p>
-              </div>
+                  {opt.label}
+                </button>
+              ))}
             </div>
+          </div>
+
+          {/* Bio */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <Label htmlFor={`${id}-bio`} className="text-[13px] text-white/50 font-medium">Bio</Label>
+              <span className="text-[11px] text-white/30 tabular-nums">{limit - characterCount}</span>
+            </div>
+            <Textarea
+              id={`${id}-bio`}
+              placeholder="Tell people about yourself..."
+              value={bio}
+              maxLength={maxLength}
+              onChange={handleBioChange}
+              className="min-h-[100px] bg-[#2c2c2e] border-0 rounded-xl text-[15px] placeholder:text-white/25 resize-none focus-visible:ring-1 focus-visible:ring-[#ccfd01]/50"
+            />
           </div>
         </div>
         
-        <DialogFooter className="border-t border-white/10 px-6 py-4">
-          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+        {/* Footer */}
+        <DialogFooter className="border-t border-white/[0.06] px-6 py-4 flex gap-3">
+          <Button 
+            type="button" 
+            variant="ghost" 
+            onClick={() => onOpenChange(false)}
+            className="flex-1 h-12 rounded-xl bg-[#2c2c2e] hover:bg-white/[0.08] text-white/70 text-[15px] font-medium"
+          >
             Cancel
           </Button>
-          <Button type="button" onClick={handleSave} disabled={saving}>
-            {saving ? "Saving..." : "Save changes"}
+          <Button 
+            type="button" 
+            onClick={handleSave} 
+            disabled={saving}
+            className="flex-1 h-12 rounded-xl bg-[#ccfd01] hover:bg-[#d8ff4d] text-black text-[15px] font-semibold disabled:opacity-50"
+          >
+            {saving ? "Saving..." : "Save"}
           </Button>
         </DialogFooter>
       </DialogContent>
