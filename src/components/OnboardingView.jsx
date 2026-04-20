@@ -34,7 +34,16 @@ const SKILLS = [
   { id: "3d", label: "3D Design", emoji: "🧊" },
 ];
 
-const STEPS = ["Welcome", "Your Role", "Your Skills", "Your Tools", "Your Business", "Your Profile", "Done"];
+const STEPS = ["Welcome", "Your Role", "Your Skills", "Your Tools", "Your Business", "Location & Currency", "Your Profile", "Done"];
+
+const CURRENCIES = [
+  { code: "USD", symbol: "$", label: "US Dollar", country: "🇺🇸" },
+  { code: "GBP", symbol: "£", label: "British Pound", country: "🇬🇧" },
+  { code: "EUR", symbol: "€", label: "Euro", country: "🇪🇺" },
+  { code: "CAD", symbol: "C$", label: "Canadian Dollar", country: "🇨🇦" },
+  { code: "AUD", symbol: "A$", label: "Australian Dollar", country: "🇦🇺" },
+  { code: "JPY", symbol: "¥", label: "Japanese Yen", country: "🇯🇵" },
+];
 
 function getInitials(name) {
   if (!name) return "?";
@@ -51,6 +60,9 @@ export default function OnboardingView() {
   const [username, setUsername]       = useState("");
   const [usernameError, setUsernameError] = useState("");
   const [bio, setBio]                 = useState("");
+  const [currency, setCurrency]       = useState("USD");
+  const [timezone, setTimezone]       = useState(Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC");
+  const [location, setLocation]        = useState("");
   const [avatarFile, setAvatarFile]   = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [saving, setSaving]           = useState(false);
@@ -115,6 +127,9 @@ export default function OnboardingView() {
         skills: [...skills],
         username: username.trim().toLowerCase() || null,
         bio: bio.trim() || null,
+        location: location.trim() || null,
+        currency: currency,
+        timezone: timezone,
         ...(avatar_url ? { avatar_url } : {}),
       };
 
@@ -360,8 +375,61 @@ export default function OnboardingView() {
           </div>
         )}
 
-        {/* ── Step 5: Profile (avatar + username + bio) ── */}
+        {/* ── Step 5: Location & Currency ── */}
         {step === 5 && (
+          <div style={{ width: "100%", animation: "fadeUp 0.4s ease" }}>
+            <h2 style={heading}>Where are you based?</h2>
+            <p style={sub}>This helps with currencies, timezones, and client contacts.</p>
+            
+            {/* Location input */}
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "rgba(139,143,163,0.8)", letterSpacing: 0.6, textTransform: "uppercase", display: "block", marginBottom: 8 }}>
+                City & Country
+              </label>
+              <input
+                autoFocus
+                value={location}
+                onChange={e => setLocation(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && go(6)}
+                placeholder="e.g. London, UK"
+                style={{ ...inp, fontSize: 16 }}
+                onFocus={e => e.target.style.border = `1.5px solid ${VOLT}`}
+                onBlur={e => e.target.style.border = "1.5px solid rgba(255,255,255,0.1)"}
+              />
+            </div>
+
+            {/* Currency selector */}
+            <div style={{ marginBottom: 8 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "rgba(139,143,163,0.8)", letterSpacing: 0.6, textTransform: "uppercase", display: "block", marginBottom: 8 }}>
+                Currency
+              </label>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                {CURRENCIES.map(c => (
+                  <button type="button" key={c.code} onClick={() => setCurrency(c.code)} style={{
+                    ...optionCard,
+                    padding: "12px 10px",
+                    border: `1.5px solid ${currency === c.code ? VOLT : "rgba(255,255,255,0.08)"}`,
+                    background: currency === c.code ? "rgba(204,253,1,0.07)" : "rgba(255,255,255,0.03)",
+                  }}>
+                    <span style={{ fontSize: 18, marginBottom: 4, display: "block" }}>{c.country} {c.symbol}</span>
+                    <span style={{ fontSize: 11, color: currency === c.code ? VOLT : "#fff", fontWeight: 600 }}>{c.code}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div style={navRow}>
+              <button type="button" onClick={() => go(4)} style={ghostBtn}>← Back</button>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button type="button" onClick={() => go(6)} style={ghostBtn}>Skip</button>
+                <button type="button" onClick={() => go(6)} style={primaryBtn}>Continue →</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Step 7: Profile (avatar + username + bio) ── */}
+        {step === 7 && (
           <div style={{ width: "100%", animation: "fadeUp 0.4s ease" }}>
             <h2 style={heading}>Set up your public profile</h2>
             <p style={sub}>Clients will see this when they visit your Nomaad page.</p>
@@ -464,15 +532,15 @@ export default function OnboardingView() {
             <div style={navRow}>
               <button type="button" onClick={() => go(4)} style={ghostBtn}>← Back</button>
               <div style={{ display: "flex", gap: 10 }}>
-                <button type="button" onClick={() => go(6)} style={ghostBtn}>Skip</button>
-                <button type="button" onClick={() => go(6)} style={primaryBtn}>Continue →</button>
+                <button type="button" onClick={() => go(7)} style={ghostBtn}>Skip</button>
+                <button type="button" onClick={() => go(7)} style={primaryBtn}>Continue →</button>
               </div>
             </div>
           </div>
         )}
 
-        {/* ── Step 6: Done ── */}
-        {step === 6 && (
+        {/* Keep old step 7 reference for "back" buttons in step 6 */}
+        {step === 7 && (
           <div style={{ textAlign: "center", animation: "fadeUp 0.5s ease" }}>
             <div style={{ fontSize: 72, marginBottom: 24 }}>🎉</div>
             <h1 style={{ fontSize: 34, fontWeight: 800, color: "#fff", letterSpacing: -1, marginBottom: 12 }}>

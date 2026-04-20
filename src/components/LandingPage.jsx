@@ -316,7 +316,7 @@ function Hero({ onSignIn }) {
           }}
         >
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: VOLT, boxShadow: `0 0 8px ${VOLT}`, animation: 'pulse 2s ease infinite' }} />
-          <span style={{ fontSize: 12, fontWeight: 600, color: VOLT, letterSpacing: '0.04em' }}>NOW IN BETA · WAITLIST OPEN</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: VOLT, letterSpacing: '0.04em' }}>WAITLIST OPEN</span>
         </motion.div>
 
         <motion.h1

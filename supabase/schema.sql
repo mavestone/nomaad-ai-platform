@@ -12,6 +12,8 @@ create table if not exists public.profiles (
   avatar_url text,
   bio text,
   location text,
+  currency text default 'USD',
+  timezone text,
   availability text default 'away',
   social_links jsonb default '{}',
   portfolio_projects jsonb default '[]',

@@ -8,6 +8,7 @@ import { getHostnameRoute, APP_URL } from "./lib/hostname";
 import UserProfileView from "./components/UserProfileView";
 import AIFloater from "./components/AIFloater";
 import AreaChartDemo from "./components/ui/demo";
+import { AnimatedLoader } from "./components/Loader";
 import ClientsView from "./components/ui/clients-view";
 import ProspectingView from "./components/ui/prospecting-view";
 import MessagesView from "./components/ui/messages-view";
@@ -611,14 +612,7 @@ function AppShell() {
 
   // Show loading spinner while checking session
   if (loading) {
-    return (
-      <div style={{display:'flex',alignItems:'center',justifyContent:'center',width:'100vw',height:'100vh',background:'#08080a',color:'#ccfd01',fontFamily:"-apple-system,'SF Pro Display',system-ui,sans-serif"}}>
-        <div style={{textAlign:'center'}}>
-          <div style={{width:48,height:48,borderRadius:14,background:'linear-gradient(135deg,#ccfd01,#b8e300)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,fontWeight:800,color:'#0a0a0a',margin:'0 auto 16px',boxShadow:'0 3px 18px rgba(204,253,1,0.18)'}}>N</div>
-          <div style={{fontSize:14,color:'#8b8fa3'}}>Loading...</div>
-        </div>
-      </div>
-    );
+    return <AnimatedLoader size={48} text="Loading..." />;
   }
 
   // Not logged in — show auth directly (no landing page on app subdomain)

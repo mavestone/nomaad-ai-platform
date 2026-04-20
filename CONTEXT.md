@@ -144,6 +144,7 @@ Full schema: `supabase/schema.sql`
 - **Prospecting** — Basic list view, needs curated card-based discovery UX with API search
 - **Client Portal** — Basic shell, needs full branded client view
 - **Messages** — State-managed but not fully real-time via Supabase subscriptions
+- **Onboarding** — Now includes location/currency/timezone step (needed for billing, calendar)
 
 ### ❌ Not Built Yet
 - **Settings page** — Nav item exists, no implementation
@@ -201,6 +202,7 @@ npm run dev
 | 2026-04-17 | Claude (Sonnet 4.6) | Settings UI: added currency selector. Demo UI: made charts accept real data. Dashboard UI: returned and wired up Cashflow area chart with transactions. Prospecting UI: removed hardcoded array, replaced with prospects table fetch. Hit API limit. |
 | 2026-04-18 | Antigravity | Continued from Claude's session to purge remaining dummy data. Replaced `MOCK_DELIVERABLES` with `documents` query, wired `INBOX_TASKS` in `calendar-view.jsx` to fetch from `tasks` table, removed `MOCK_USERS` from `projects-view.jsx`, replaced hardcoded `MEMBERS` array in `nomaad-connect.jsx` with real `profiles` fetch. All pages build cleanly. **Next session**: Pick up with Week 1 MVP Priorities — Wire the tasks table properly to projects in `projects-view.jsx`, add FKs to Supabase schema, and persist CRM notes/tags. |
 | 2026-04-20 | Antigravity | Rebuilt `UserProfileView.jsx` using Radix/OriginUI floating un-controlled dialog modals (`EditProfileDialog` + `ProjectDialog`). Solved bug where name change required hard-refresh (optimistic UI update via AuthContext). Inserted "Your Skills" phase in `OnboardingView.jsx`. Extended `schema.sql` profiles struct (skills, bio, use_cases, etc). Overhauled `PublicProfilePage.jsx` to feature a highly convertible Linktree-inspired aesthetic spanning Book a Call, Email, and dynamic YouTube project CTAs. Fixed minor layout overflow bounds on `LandingPage.jsx` mobile rendering. |
+| 2026-04-20 | minimax-m2.5-free | Removed "NOW IN BETA" from landing page. Created custom animated loader in Nomaad brand colors to replace "Loading..." text on auth. Added location/currency/timezone to onboarding (Step 5). Extended schema.sql with currency and timezone columns to profiles. Fixed clients adding timeout by adding null coalescing and better error handling. |
 
 > **UPDATE THIS TABLE at the end of every session with what was accomplished.**
 
