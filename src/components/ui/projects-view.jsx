@@ -134,7 +134,7 @@ export default function ProjectsView({ t, dark, mobile, onLaunchPortal }) {
         id: p.id,
         columnId: p.status,
         client: p.client_name || 'No Client',
-        title: p.name,
+        title: p.title || p.name || 'Untitled',
         value: 0, 
         dueDate: p.due_date ? p.due_date.split('T')[0] : format(new Date(), 'yyyy-MM-dd'),
         desc: p.description || '',
@@ -239,11 +239,8 @@ export default function ProjectsView({ t, dark, mobile, onLaunchPortal }) {
     const todayStr = format(new Date(), 'yyyy-MM-dd');
     const { data, error } = await supabase.from('projects').insert([{
       user_id: user.id,
-      name: addProjectForm.name.trim(),
       title: addProjectForm.name.trim(),
-      status: addProjectForm.status,
-      due_date: new Date().toISOString(),
-      color: '#ccfd01',
+      status: addProjectForm.status || 'planning',
     }]).select().single();
     setAddProjectSaving(false);
     if (error) { console.error('Add project error:', error.message); return; }
