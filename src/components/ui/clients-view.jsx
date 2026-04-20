@@ -733,29 +733,29 @@ export default function ClientsView({ t, dark, mobile, compact }) {
 
   const handleAddClient = async (form) => {
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      setSaving(true);
       const { data, error } = await supabase.from("prospects").insert({
         user_id: user.id,
         name: form.name.trim(),
-        company: form.company || null,
-        email: form.email || null,
-        phone: form.phone || null,
+        email: form.email?.trim() || null,
+        company: form.company?.trim() || null,
         value: parseFloat(form.value) || 0,
-        stage: form.stage || "lead",
+        stage: "new",
       }).select().single();
-      clearTimeout(timeoutId);
       if (error) {
         console.error("Add client error:", error);
-        throw new Error(error.message);
+        alert("Could not add client: " + error.message);
+        return;
       }
       if (data) {
-        setClients(p => [data, ...p]);
+        setClients(prev => [data, ...prev]);
         setShowAddModal(false);
       }
     } catch (err) {
       console.error("handleAddClient:", err);
-      alert(err.message || "Could not add client. Please try again.");
+      alert("Could not add client. Please try again.");
+    } finally {
+      setSaving(false);
     }
   };
 
