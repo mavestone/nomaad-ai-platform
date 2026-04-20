@@ -428,8 +428,8 @@ export default function OnboardingView() {
           </div>
         )}
 
-        {/* ── Step 7: Profile (avatar + username + bio) ── */}
-        {step === 7 && (
+        {/* ── Step 6: Profile (avatar + username + bio) ── */}
+        {step === 6 && (
           <div style={{ width: "100%", animation: "fadeUp 0.4s ease" }}>
             <h2 style={heading}>Set up your public profile</h2>
             <p style={sub}>Clients will see this when they visit your Nomaad page.</p>
@@ -539,7 +539,7 @@ export default function OnboardingView() {
           </div>
         )}
 
-        {/* Keep old step 7 reference for "back" buttons in step 6 */}
+        {/* ── Step 7: Done ── */}
         {step === 7 && (
           <div style={{ textAlign: "center", animation: "fadeUp 0.5s ease" }}>
             <div style={{ fontSize: 72, marginBottom: 24 }}>🎉</div>
