@@ -305,3 +305,19 @@ end $$;
 --   profiles, customers, prospects, projects, tasks,
 --   calendar_events, documents, channels, messages, automations,
 --   transactions, invoices
+
+-- ─── 12. WAITLIST ───────────────────────────
+create table if not exists public.waitlist_signups (
+  id uuid default gen_random_uuid() primary key,
+  email text unique not null,
+  source text,
+  created_at timestamptz default now()
+);
+
+alter table public.waitlist_signups enable row level security;
+
+create policy "Allow public inserts to waitlist"
+  on public.waitlist_signups for insert with check (true);
+
+create policy "Allow public view for total count"
+  on public.waitlist_signups for select using (true);
