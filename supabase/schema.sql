@@ -8,9 +8,21 @@
 create table if not exists public.profiles (
   id uuid references auth.users on delete cascade primary key,
   full_name text,
+  username text unique,
   avatar_url text,
+  bio text,
+  location text,
+  availability text default 'away',
+  social_links jsonb default '{}',
+  portfolio_projects jsonb default '[]',
   company text,
+  business_name text,
   role text default 'owner',
+  business_type text,
+  onboarding_complete boolean default false,
+  use_cases text[] default '{}',
+  skills text[] default '{}',
+  username_changed_at timestamptz,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );

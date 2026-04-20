@@ -23,7 +23,18 @@ const FEATURES = [
   { id: "docs",      label: "Documents",          emoji: "📄", desc: "Store & share files" },
 ];
 
-const STEPS = ["Welcome", "Your Role", "Your Tools", "Your Business", "Your Profile", "Done"];
+const SKILLS = [
+  { id: "video_editing", label: "Video Editing", emoji: "🎬" },
+  { id: "graphic_design", label: "Graphic Design", emoji: "🎨" },
+  { id: "web_dev", label: "Web Dev", emoji: "💻" },
+  { id: "copywriting", label: "Copywriting", emoji: "📝" },
+  { id: "photography", label: "Photography", emoji: "📸" },
+  { id: "motion", label: "Motion Graphics", emoji: "✨" },
+  { id: "strategy", label: "Brand Strategy", emoji: "🎯" },
+  { id: "3d", label: "3D Design", emoji: "🧊" },
+];
+
+const STEPS = ["Welcome", "Your Role", "Your Skills", "Your Tools", "Your Business", "Your Profile", "Done"];
 
 function getInitials(name) {
   if (!name) return "?";
@@ -34,6 +45,7 @@ export default function OnboardingView() {
   const { user, profile, updateProfile, session } = useAuth();
   const [step, setStep]               = useState(0);
   const [role, setRole]               = useState(null);
+  const [skills, setSkills]           = useState(new Set());
   const [features, setFeatures]       = useState(new Set(["clients", "projects"]));
   const [businessName, setBusinessName] = useState(profile?.business_name || "");
   const [username, setUsername]       = useState("");
@@ -53,6 +65,14 @@ export default function OnboardingView() {
 
   const toggleFeature = (id) => {
     setFeatures(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSkill = (id) => {
+    setSkills(prev => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
@@ -92,6 +112,7 @@ export default function OnboardingView() {
         business_type: role,
         business_name: businessName.trim() || null,
         use_cases: [...features],
+        skills: [...skills],
         username: username.trim().toLowerCase() || null,
         bio: bio.trim() || null,
         ...(avatar_url ? { avatar_url } : {}),
@@ -130,6 +151,7 @@ export default function OnboardingView() {
         business_type: role,
         business_name: businessName.trim() || null,
         use_cases: [...features],
+        skills: [...skills],
         username: username.trim().toLowerCase() || null,
         bio: bio.trim() || null,
       });
@@ -228,8 +250,49 @@ export default function OnboardingView() {
           </div>
         )}
 
-        {/* ── Step 2: Features ── */}
+        {/* ── Step 2: Skills ── */}
         {step === 2 && (
+          <div style={{ width: "100%", animation: "fadeUp 0.4s ease" }}>
+            <h2 style={heading}>What are your primary skills?</h2>
+            <p style={sub}>Select the core services you offer to clients.</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 24 }}>
+              {SKILLS.map(s => {
+                const on = skills.has(s.id);
+                return (
+                  <button type="button" key={s.id} onClick={() => toggleSkill(s.id)} style={{
+                    ...optionCard,
+                    border: `1.5px solid ${on ? VOLT : "rgba(255,255,255,0.08)"}`,
+                    background: on ? "rgba(204,253,1,0.07)" : "rgba(255,255,255,0.03)",
+                    boxShadow: on ? "0 0 0 1px rgba(204,253,1,0.15)" : "none",
+                    position: "relative", alignItems: "center", flexDirection: "row", gap: 12,
+                    padding: "16px",
+                  }}>
+                    {on && (
+                      <div style={{
+                        position: "absolute", top: 10, right: 10,
+                        width: 18, height: 18, borderRadius: "50%",
+                        background: VOLT, display: "flex", alignItems: "center", justifyContent: "center",
+                      }}>
+                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                          <path d="M1 4L3.5 6.5L9 1" stroke="#0a0a0a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                    )}
+                    <span style={{ fontSize: 24, display: "block" }}>{s.emoji}</span>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: on ? VOLT : "#fff", display: "block" }}>{s.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <div style={navRow}>
+              <button type="button" onClick={() => go(1)} style={ghostBtn}>← Back</button>
+              <button type="button" onClick={() => go(3)} disabled={skills.size === 0} style={{ ...primaryBtn, opacity: skills.size ? 1 : 0.4 }}>Continue →</button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Step 3: Features ── */}
+        {step === 3 && (
           <div style={{ width: "100%", animation: "fadeUp 0.4s ease" }}>
             <h2 style={heading}>What will you use Nomaad for?</h2>
             <p style={sub}>Pick everything that applies — you can change this later.</p>
@@ -263,14 +326,14 @@ export default function OnboardingView() {
               })}
             </div>
             <div style={navRow}>
-              <button type="button" onClick={() => go(1)} style={ghostBtn}>← Back</button>
-              <button type="button" onClick={() => go(3)} disabled={features.size === 0} style={{ ...primaryBtn, opacity: features.size ? 1 : 0.4 }}>Continue →</button>
+              <button type="button" onClick={() => go(2)} style={ghostBtn}>← Back</button>
+              <button type="button" onClick={() => go(4)} disabled={features.size === 0} style={{ ...primaryBtn, opacity: features.size ? 1 : 0.4 }}>Continue →</button>
             </div>
           </div>
         )}
 
-        {/* ── Step 3: Business name ── */}
-        {step === 3 && (
+        {/* ── Step 4: Business name ── */}
+        {step === 4 && (
           <div style={{ width: "100%", animation: "fadeUp 0.4s ease" }}>
             <h2 style={heading}>What's your business called?</h2>
             <p style={sub}>This appears across your workspace. You can update it anytime.</p>
@@ -278,7 +341,7 @@ export default function OnboardingView() {
               autoFocus
               value={businessName}
               onChange={e => setBusinessName(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && go(4)}
+              onKeyDown={e => e.key === "Enter" && go(5)}
               placeholder="e.g. Studio Maverick"
               style={{ ...inp, marginTop: 24, fontSize: 18, fontWeight: 600 }}
               onFocus={e => e.target.style.border = `1.5px solid ${VOLT}`}
@@ -288,17 +351,17 @@ export default function OnboardingView() {
               Don't have one yet? No problem — skip for now.
             </p>
             <div style={navRow}>
-              <button type="button" onClick={() => go(2)} style={ghostBtn}>← Back</button>
+              <button type="button" onClick={() => go(3)} style={ghostBtn}>← Back</button>
               <div style={{ display: "flex", gap: 10 }}>
-                <button type="button" onClick={() => go(4)} style={ghostBtn}>Skip</button>
-                <button type="button" onClick={() => go(4)} style={primaryBtn}>Continue →</button>
+                <button type="button" onClick={() => go(5)} style={ghostBtn}>Skip</button>
+                <button type="button" onClick={() => go(5)} style={primaryBtn}>Continue →</button>
               </div>
             </div>
           </div>
         )}
 
-        {/* ── Step 4: Profile (avatar + username + bio) ── */}
-        {step === 4 && (
+        {/* ── Step 5: Profile (avatar + username + bio) ── */}
+        {step === 5 && (
           <div style={{ width: "100%", animation: "fadeUp 0.4s ease" }}>
             <h2 style={heading}>Set up your public profile</h2>
             <p style={sub}>Clients will see this when they visit your Nomaad page.</p>
@@ -399,17 +462,17 @@ export default function OnboardingView() {
             </div>
 
             <div style={navRow}>
-              <button type="button" onClick={() => go(3)} style={ghostBtn}>← Back</button>
+              <button type="button" onClick={() => go(4)} style={ghostBtn}>← Back</button>
               <div style={{ display: "flex", gap: 10 }}>
-                <button type="button" onClick={() => go(5)} style={ghostBtn}>Skip</button>
-                <button type="button" onClick={() => go(5)} style={primaryBtn}>Continue →</button>
+                <button type="button" onClick={() => go(6)} style={ghostBtn}>Skip</button>
+                <button type="button" onClick={() => go(6)} style={primaryBtn}>Continue →</button>
               </div>
             </div>
           </div>
         )}
 
-        {/* ── Step 5: Done ── */}
-        {step === 5 && (
+        {/* ── Step 6: Done ── */}
+        {step === 6 && (
           <div style={{ textAlign: "center", animation: "fadeUp 0.5s ease" }}>
             <div style={{ fontSize: 72, marginBottom: 24 }}>🎉</div>
             <h1 style={{ fontSize: 34, fontWeight: 800, color: "#fff", letterSpacing: -1, marginBottom: 12 }}>

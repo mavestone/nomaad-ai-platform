@@ -199,20 +199,52 @@ function Nav({ onSignIn }) {
         zIndex: 999,
         display: 'flex', justifyContent: 'center', alignItems: 'center',
         pointerEvents: 'none', fontFamily: FF,
+        padding: '0 16px' // give padding to prevent full stretch on very small screens
       }}
     >
-      <div style={{
-        pointerEvents: 'auto',
-        display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center',
-        padding: '10px 20px 10px 16px',
-        background: scrolled ? 'rgba(8,8,10,0.9)' : 'rgba(8,8,10,0.65)',
-        backdropFilter: 'blur(24px) saturate(1.8)',
-        border: `1px solid ${scrolled ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.07)'}`,
-        borderRadius: 100,
-        boxShadow: scrolled ? '0 8px 40px rgba(0,0,0,0.5)' : '0 4px 24px rgba(0,0,0,0.3)',
-        transition: 'all 0.3s ease',
-        minWidth: 460,
-      }}>
+      <style>{`
+        .landing-nav {
+          display: grid;
+          grid-template-columns: 1fr auto 1fr;
+          align-items: center;
+          padding: 10px 20px 10px 16px;
+          border-radius: 100px;
+          min-width: 460px;
+          width: auto;
+          pointer-events: auto;
+          transition: all 0.3s ease;
+        }
+        .landing-nav-center {
+          display: flex;
+          gap: 24px;
+          align-items: center;
+          padding: 0 32px;
+        }
+        @media (max-width: 600px) {
+          .landing-nav {
+            min-width: 0;
+            width: 100%;
+            grid-template-columns: auto auto;
+            justify-content: space-between;
+            padding: 10px 12px 10px 16px;
+          }
+          .landing-nav-center {
+            display: none;
+          }
+          .landing-brand-text {
+            display: none;
+          }
+        }
+      `}</style>
+      <div 
+        className="landing-nav"
+        style={{
+          background: scrolled ? 'rgba(8,8,10,0.9)' : 'rgba(8,8,10,0.65)',
+          backdropFilter: 'blur(24px) saturate(1.8)',
+          border: `1px solid ${scrolled ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.07)'}`,
+          boxShadow: scrolled ? '0 8px 40px rgba(0,0,0,0.5)' : '0 4px 24px rgba(0,0,0,0.3)',
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
           <div style={{
             width: 28, height: 28, borderRadius: 8,
@@ -220,10 +252,10 @@ function Nav({ onSignIn }) {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: '#0a0a0a', fontWeight: 800, fontSize: 13, flexShrink: 0,
           }}>N</div>
-          <span style={{ fontWeight: 700, fontSize: 15, color: '#f0f0f5', letterSpacing: -0.3 }}>Nomaad</span>
+          <span className="landing-brand-text" style={{ fontWeight: 700, fontSize: 15, color: '#f0f0f5', letterSpacing: -0.3 }}>Nomaad</span>
         </div>
 
-        <div style={{ display: 'flex', gap: 24, alignItems: 'center', padding: '0 32px' }}>
+        <div className="landing-nav-center">
           {[['How it works', 'workflow'], ['Pricing', 'pricing']].map(([label, id]) => (
             <button key={id} onClick={() => scrollTo(id)} style={{
               background: 'none', border: 'none', color: 'rgba(240,240,245,0.55)',
@@ -248,7 +280,7 @@ function Nav({ onSignIn }) {
               padding: '7px 16px', background: `linear-gradient(135deg, ${VOLT}, ${VOLTD})`,
               color: '#0a0a0a', border: 'none', borderRadius: 100,
               fontWeight: 700, fontSize: 13, fontFamily: FF, cursor: 'pointer',
-              boxShadow: `0 3px 16px rgba(204,253,1,0.25)`,
+              boxShadow: `0 3px 16px rgba(204,253,1,0.25)`, whiteSpace: "nowrap"
             }}
           >Get early access</motion.button>
         </div>
@@ -264,7 +296,7 @@ function Hero({ onSignIn }) {
     <section style={{
       minHeight: '100vh', display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
-      padding: '140px 24px 80px', textAlign: 'center', position: 'relative',
+      padding: 'clamp(100px, 15vh, 140px) 20px 80px', textAlign: 'center', position: 'relative',
       fontFamily: FF,
     }}>
       <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
@@ -291,7 +323,7 @@ function Hero({ onSignIn }) {
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
           style={{
-            fontSize: 'clamp(42px, 7vw, 78px)', fontWeight: 800,
+            fontSize: 'clamp(34px, 8vw, 78px)', fontWeight: 800,
             lineHeight: 1.07, letterSpacing: '-0.03em',
             color: '#f0f0f5', margin: '0 0 20px',
           }}
@@ -370,11 +402,11 @@ const PAINS = [
 
 function ProblemSection() {
   return (
-    <section style={{ padding: '100px 24px', maxWidth: 1080, margin: '0 auto', fontFamily: FF }}>
+    <section style={{ padding: 'clamp(60px, 10vw, 100px) 20px', maxWidth: 1080, margin: '0 auto', fontFamily: FF }}>
       <FadeUp style={{ textAlign: 'center', marginBottom: 60 }}>
         <Label text="The reality" />
         <h2 style={{
-          fontSize: 'clamp(30px, 4.5vw, 52px)', fontWeight: 800,
+          fontSize: 'clamp(28px, 6vw, 52px)', fontWeight: 800,
           color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 16px', lineHeight: 1.1,
         }}>
           You're doing the work of 5 people.
@@ -419,11 +451,11 @@ const WORKFLOW_STEPS = [
 
 function WorkflowSection() {
   return (
-    <section id="workflow" style={{ padding: '100px 24px', maxWidth: 1080, margin: '0 auto', fontFamily: FF }}>
+    <section id="workflow" style={{ padding: 'clamp(60px, 10vw, 100px) 20px', maxWidth: 1080, margin: '0 auto', fontFamily: FF }}>
       <FadeUp style={{ textAlign: 'center', marginBottom: 64 }}>
         <Label text="How it works" />
         <h2 style={{
-          fontSize: 'clamp(30px, 4.5vw, 52px)', fontWeight: 800,
+          fontSize: 'clamp(28px, 6vw, 52px)', fontWeight: 800,
           color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 16px', lineHeight: 1.1,
         }}>
           This is how your business
@@ -491,11 +523,11 @@ const OUTCOMES = [
 
 function OutcomesSection() {
   return (
-    <section style={{ padding: '100px 24px', maxWidth: 1080, margin: '0 auto', fontFamily: FF }}>
+    <section style={{ padding: 'clamp(60px, 10vw, 100px) 20px', maxWidth: 1080, margin: '0 auto', fontFamily: FF }}>
       <FadeUp style={{ textAlign: 'center', marginBottom: 60 }}>
         <Label text="What you get back" />
         <h2 style={{
-          fontSize: 'clamp(30px, 4.5vw, 52px)', fontWeight: 800,
+          fontSize: 'clamp(28px, 6vw, 52px)', fontWeight: 800,
           color: '#f0f0f5', letterSpacing: '-0.03em', margin: 0, lineHeight: 1.1,
         }}>
           Not features. <span style={{ color: VOLT }}>Results.</span>
@@ -541,11 +573,11 @@ const OLD_STACK = [
 
 function StackSection() {
   return (
-    <section style={{ padding: '100px 24px', maxWidth: 1080, margin: '0 auto', fontFamily: FF }}>
+    <section style={{ padding: 'clamp(60px, 10vw, 100px) 20px', maxWidth: 1080, margin: '0 auto', fontFamily: FF }}>
       <FadeUp style={{ textAlign: 'center', marginBottom: 56 }}>
         <Label text="Replace your stack" />
         <h2 style={{
-          fontSize: 'clamp(30px, 4.5vw, 52px)', fontWeight: 800,
+          fontSize: 'clamp(28px, 6vw, 52px)', fontWeight: 800,
           color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 16px', lineHeight: 1.1,
         }}>
           Stop paying for 5 tools
@@ -624,11 +656,11 @@ const AVATARS = [
 
 function AvatarSection() {
   return (
-    <section style={{ padding: '80px 24px 100px', maxWidth: 860, margin: '0 auto', fontFamily: FF, textAlign: 'center' }}>
+    <section style={{ padding: 'clamp(60px, 10vw, 80px) 20px 100px', maxWidth: 860, margin: '0 auto', fontFamily: FF, textAlign: 'center' }}>
       <FadeUp>
         <Label text="Built for solo operators" />
         <h2 style={{
-          fontSize: 'clamp(28px, 4vw, 50px)', fontWeight: 800,
+          fontSize: 'clamp(26px, 6vw, 50px)', fontWeight: 800,
           color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 20px', lineHeight: 1.1,
         }}>
           Not for agencies. Not for teams.
@@ -691,11 +723,11 @@ const TESTIMONIALS = [
 
 function TestimonialsSection() {
   return (
-    <section style={{ padding: '40px 24px 80px', maxWidth: 1080, margin: '0 auto', fontFamily: FF }}>
+    <section style={{ padding: 'clamp(40px, 10vw, 60px) 20px 80px', maxWidth: 1080, margin: '0 auto', fontFamily: FF }}>
       <FadeUp style={{ textAlign: 'center', marginBottom: 48 }}>
         <Label text="Beta users" />
         <h2 style={{
-          fontSize: 'clamp(28px, 4vw, 46px)', fontWeight: 800,
+          fontSize: 'clamp(26px, 6vw, 46px)', fontWeight: 800,
           color: '#f0f0f5', letterSpacing: '-0.03em', margin: 0, lineHeight: 1.1,
         }}>
           Real people. Real results.

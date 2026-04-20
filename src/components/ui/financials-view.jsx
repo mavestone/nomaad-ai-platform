@@ -102,39 +102,44 @@ export default function FinancialsView({ t, dark, mobile, compact, IC, pal, VOLT
 
   async function fetchFinancials() {
     setLoading(true);
-    const thirteenMonthsAgo = new Date();
-    thirteenMonthsAgo.setMonth(thirteenMonthsAgo.getMonth() - 12);
+    try {
+      const thirteenMonthsAgo = new Date();
+      thirteenMonthsAgo.setMonth(thirteenMonthsAgo.getMonth() - 12);
 
-    const [txRes, invRes] = await Promise.all([
-      supabase.from('transactions').select('*').gte('created_at', thirteenMonthsAgo.toISOString()).order('created_at', { ascending: false }),
-      supabase.from('invoices').select('*').order('created_at', { ascending: false })
-    ]);
+      const [txRes, invRes] = await Promise.all([
+        supabase.from('transactions').select('*').gte('created_at', thirteenMonthsAgo.toISOString()).order('created_at', { ascending: false }),
+        supabase.from('invoices').select('*').order('created_at', { ascending: false })
+      ]);
 
-    if (txRes.data) {
-      setTransactions(txRes.data.map(d => ({
-        id: d.id,
-        desc: d.description || 'Untitled',
-        amount: Number(d.amount) || 0,
-        type: d.type,
-        status: d.status,
-        account: d.account || 'Bank',
-        date: d.transaction_date || d.created_at?.slice(0, 10) || '',
-        created_at: d.created_at,
-        category: d.category || null,
-      })));
+      if (txRes.data) {
+        setTransactions(txRes.data.map(d => ({
+          id: d.id,
+          desc: d.description || 'Untitled',
+          amount: Number(d.amount) || 0,
+          type: d.type,
+          status: d.status,
+          account: d.account || 'Bank',
+          date: d.transaction_date || d.created_at?.slice(0, 10) || '',
+          created_at: d.created_at,
+          category: d.category || null,
+        })));
+      }
+      if (invRes.data) {
+        setInvoices(invRes.data.map(d => ({
+          id: d.id,
+          number: d.number,
+          client: d.client_name || '—',
+          amount: Number(d.amount) || 0,
+          status: d.status,
+          due: d.due_date || d.created_at?.slice(0, 10) || '',
+          paid_at: d.paid_at,
+        })));
+      }
+    } catch (err) {
+      console.error("fetchFinancials:", err.message);
+    } finally {
+      setLoading(false);
     }
-    if (invRes.data) {
-      setInvoices(invRes.data.map(d => ({
-        id: d.id,
-        number: d.number,
-        client: d.client_name || '—',
-        amount: Number(d.amount) || 0,
-        status: d.status,
-        due: d.due_date || d.created_at?.slice(0, 10) || '',
-        paid_at: d.paid_at,
-      })));
-    }
-    setLoading(false);
   }
 
   // ── Computed stats ──────────────────────────────────────────────────────────

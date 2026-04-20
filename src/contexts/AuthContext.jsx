@@ -98,6 +98,9 @@ export function AuthProvider({ children }) {
 
   async function updateProfile(updates) {
     if (!user) return { error: { message: 'Not authenticated' } };
+    
+    setProfile((prev) => prev ? { ...prev, ...updates } : null);
+    
     const { error } = await supabase
       .from('profiles')
       .update(updates)
