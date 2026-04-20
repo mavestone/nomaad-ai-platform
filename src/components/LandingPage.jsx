@@ -377,7 +377,7 @@ const PAINS = [
   { title: 'Your invoices are in one app, your notes in another, your tasks somewhere else.', sub: 'Nothing talks to anything. Every job starts with 20 minutes of admin.' },
   { title: "You spent Sunday catching up on work that should've taken 20 minutes.", sub: "That's not a workload problem. That's a systems problem." },
   { title: 'A £2,000 project went quiet. You forgot to follow up.',       sub: "Not because you didn't care. Because you had nothing reminding you." },
-  { title: "You're paying for 5 tools that don't talk to each other.",    sub: 'Notion. Sheets. Calendly. FreshBooks. Gmail. £150+/mo for chaos.' },
+  { title: "You're paying for 4 tools that don't talk to each other.",    sub: 'Notion. Google Workspace. Calendly. FreshBooks. £69+/mo for chaos.' },
 ];
 
 function ProblemSection() {
@@ -556,9 +556,7 @@ const OLD_STACK = [
   { name: 'Notion',      purpose: 'Notes & tasks',       cost: '£16/mo', pain: "Can't invoice. Can't track leads. Just more tabs." },
   { name: 'FreshBooks',  purpose: 'Invoicing',           cost: '£29/mo', pain: "£29/mo for a PDF maker. Doesn't know who your clients are." },
   { name: 'Calendly',    purpose: 'Booking calls',       cost: '£12/mo', pain: "Another login. Another app. Doesn't follow up automatically." },
-  { name: 'Gmail',       purpose: 'Client comms',        cost: 'Free',   pain: 'Follow-ups buried in threads. Leads going cold in your inbox.' },
-  { name: 'Sheets',      purpose: 'Finance tracking',    cost: 'Free',   pain: 'Updated once a quarter. Usually wrong. Zero automation.' },
-  { name: 'WhatsApp',    purpose: 'Client chat',         cost: 'Free',   pain: 'Revision requests at 11pm. Work and life fully merged.' },
+  { name: 'Google Workspace', purpose: 'Email, Docs, Sheets, Meet', cost: '£12/mo', pain: 'Follow-ups buried in Gmail. Sheets never updated. Four apps for what should be one.' },
 ];
 
 function StackSection() {
@@ -613,7 +611,7 @@ function StackSection() {
           <div>
             <div style={{ fontSize: 12, color: 'rgba(240,240,245,0.4)', marginBottom: 8, letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 600 }}>All of that</div>
             <div style={{ fontSize: 28, fontWeight: 800, color: '#f0f0f5', letterSpacing: '-0.02em' }}>
-              £57–£100<span style={{ fontSize: 14, fontWeight: 500, color: 'rgba(240,240,245,0.4)' }}>/mo</span>
+              £69<span style={{ fontSize: 14, fontWeight: 500, color: 'rgba(240,240,245,0.4)' }}>/mo</span>
             </div>
             <div style={{ fontSize: 13, color: 'rgba(240,240,245,0.3)', marginTop: 4 }}>+ 3 hours/day wasted</div>
           </div>
@@ -680,60 +678,146 @@ function AvatarSection() {
 const TESTIMONIALS = [
   {
     quote: "I had invoices lost in Gmail threads for months. First month on Nomaad I got paid 3 weeks faster — purely because everything was in one place.",
-    name: 'Jake T.', role: 'Freelance Videographer · London', metric: 'Paid 3 weeks faster', color: VOLT,
+    name: 'Jake T.',
+    role: 'Freelance Videographer · London',
+    metric: 'Paid 3 weeks faster',
+    avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=400&auto=format&fit=crop',
+    variant: 'volt',
   },
   {
-    quote: "Cancelled Notion, Toggl, and FreshBooks in the same week. Saving £65/mo and actually understand my cash flow for the first time.",
-    name: 'Priya S.', role: 'Brand Designer · Manchester', metric: '£65/mo saved, 3 tools gone', color: '#5AC8FA',
+    quote: "Cancelled Notion, Toggl, and FreshBooks in the same week. Saving £65/mo and actually understanding my cash flow for the first time.",
+    name: 'Priya S.',
+    role: 'Brand Designer · Manchester',
+    metric: '£65/mo saved · 3 tools gone',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=400&auto=format&fit=crop',
+    variant: 'blue',
   },
   {
     quote: "My clients check the portal instead of WhatsApping me at 11pm. I can't overstate how much that changed my evenings.",
-    name: 'Marcus R.', role: 'Photographer · Bristol', metric: 'Zero late-night messages', color: '#FFB340',
+    name: 'Marcus R.',
+    role: 'Photographer · Bristol',
+    metric: 'Zero late-night messages',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400&auto=format&fit=crop',
+    variant: 'dark',
   },
 ];
 
+function TestimonialCard({ t, featured }) {
+  const isVolt = t.variant === 'volt';
+  const isBlue = t.variant === 'blue';
+  const isDark = t.variant === 'dark';
+
+  const bg = isVolt
+    ? 'linear-gradient(135deg, #d4ff4a 0%, #ccfd01 100%)'
+    : isBlue
+      ? 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)'
+      : 'linear-gradient(135deg, #18181b 0%, #0f0f12 100%)';
+
+  const textColor = isVolt ? '#0a0a0a' : '#f0f0f5';
+  const mutedColor = isVolt ? 'rgba(10,10,10,0.6)' : 'rgba(240,240,245,0.55)';
+  const metricBg = isVolt ? 'rgba(10,10,10,0.08)' : 'rgba(255,255,255,0.1)';
+  const metricColor = isVolt ? '#0a0a0a' : '#f0f0f5';
+  const border = isDark ? '1px solid rgba(255,255,255,0.08)' : 'none';
+
+  return (
+    <div style={{
+      background: bg,
+      borderRadius: 20,
+      padding: featured ? 36 : 28,
+      display: 'flex', flexDirection: 'column',
+      gap: 24,
+      height: '100%',
+      boxSizing: 'border-box',
+      position: 'relative',
+      overflow: 'hidden',
+      border,
+      boxShadow: isVolt ? '0 20px 60px -20px rgba(204,253,1,0.25)' : isBlue ? '0 20px 60px -20px rgba(37,99,235,0.35)' : '0 20px 40px -20px rgba(0,0,0,0.6)',
+    }}>
+      {/* Subtle grid for featured */}
+      {isVolt && (
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'linear-gradient(to right, rgba(0,0,0,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,0.06) 1px, transparent 1px)',
+          backgroundSize: '40px 40px',
+          maskImage: 'radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 90%)',
+          WebkitMaskImage: 'radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 90%)',
+          pointerEvents: 'none',
+        }} />
+      )}
+
+      <div style={{ position: 'relative', display: 'inline-flex', alignSelf: 'flex-start' }}>
+        <span style={{
+          fontSize: 11, fontWeight: 700,
+          letterSpacing: '0.06em', textTransform: 'uppercase',
+          padding: '6px 12px', borderRadius: 999,
+          background: metricBg, color: metricColor,
+        }}>
+          {t.metric}
+        </span>
+      </div>
+
+      <p style={{
+        position: 'relative',
+        fontSize: featured ? 20 : 16,
+        lineHeight: 1.5,
+        color: textColor,
+        fontWeight: featured ? 500 : 400,
+        margin: 0,
+        letterSpacing: '-0.01em',
+        flex: 1,
+      }}>
+        &ldquo;{t.quote}&rdquo;
+      </p>
+
+      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: textColor, letterSpacing: '-0.01em' }}>
+            {t.name}
+          </div>
+          <div style={{ fontSize: 12, color: mutedColor, marginTop: 2 }}>
+            {t.role}
+          </div>
+        </div>
+        <img
+          src={t.avatar}
+          alt={t.name}
+          loading="lazy"
+          style={{
+            width: 56, height: 56, borderRadius: 14,
+            objectFit: 'cover', flexShrink: 0,
+            border: isVolt ? '2px solid rgba(10,10,10,0.12)' : '2px solid rgba(255,255,255,0.1)',
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
 function TestimonialsSection() {
   return (
-    <section style={{ padding: 'clamp(80px, 12vw, 120px) 20px', maxWidth: 1100, margin: '0 auto', fontFamily: FF }}>
-      <FadeUp style={{ textAlign: 'center', marginBottom: 64 }}>
+    <section style={{ padding: 'clamp(80px, 12vw, 120px) 20px', maxWidth: 1200, margin: '0 auto', fontFamily: FF }}>
+      <FadeUp style={{ textAlign: 'center', marginBottom: 56, maxWidth: 640, marginLeft: 'auto', marginRight: 'auto' }}>
         <Label text="Beta users" />
         <h2 style={{
-          fontSize: 'clamp(26px, 6vw, 46px)', fontWeight: 800,
-          color: '#f0f0f5', letterSpacing: '-0.03em', margin: 0, lineHeight: 1.1,
+          fontSize: 'clamp(28px, 6vw, 52px)', fontWeight: 800,
+          color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 16px', lineHeight: 1.1,
         }}>
           Real people. Real results.
         </h2>
+        <p style={{ fontSize: 16, color: 'rgba(240,240,245,0.4)', margin: 0, lineHeight: 1.6 }}>
+          Freelancers who replaced their stack with Nomaad and got their time back.
+        </p>
       </FadeUp>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 40 }}>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+        gap: 20,
+      }}>
         {TESTIMONIALS.map((t, i) => (
-          <FadeUp key={t.name} delay={i * 0.08}>
-            <div style={{
-              paddingLeft: 20,
-              borderLeft: `2px solid ${t.color}40`,
-              display: 'flex', flexDirection: 'column', gap: 20,
-              height: '100%', boxSizing: 'border-box',
-            }}>
-              <div style={{
-                fontSize: 11, fontWeight: 700, color: t.color,
-                letterSpacing: '0.08em', textTransform: 'uppercase',
-              }}>
-                {t.metric}
-              </div>
-              <p style={{ fontSize: 16, color: 'rgba(240,240,245,0.8)', lineHeight: 1.6, margin: 0, flex: 1, letterSpacing: '-0.005em' }}>
-                "{t.quote}"
-              </p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{
-                  width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
-                  background: `${t.color}18`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 12, fontWeight: 700, color: t.color,
-                }}>{t.name[0]}</div>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(240,240,245,0.85)' }}>{t.name}</div>
-                  <div style={{ fontSize: 11, color: 'rgba(240,240,245,0.35)' }}>{t.role}</div>
-                </div>
-              </div>
+          <FadeUp key={t.name} delay={i * 0.08} style={{ display: 'flex' }}>
+            <div style={{ width: '100%', display: 'flex' }}>
+              <TestimonialCard t={t} featured={t.variant === 'volt'} />
             </div>
           </FadeUp>
         ))}
