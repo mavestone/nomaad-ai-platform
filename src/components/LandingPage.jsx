@@ -377,7 +377,7 @@ const PAINS = [
   { title: 'Your invoices are in one app, your notes in another, your tasks somewhere else.', sub: 'Nothing talks to anything. Every job starts with 20 minutes of admin.' },
   { title: "You spent Sunday catching up on work that should've taken 20 minutes.", sub: "That's not a workload problem. That's a systems problem." },
   { title: 'A £2,000 project went quiet. You forgot to follow up.',       sub: "Not because you didn't care. Because you had nothing reminding you." },
-  { title: "You're paying for 4 tools that don't talk to each other.",    sub: 'Notion. Google Workspace. Calendly. FreshBooks. £69+/mo for chaos.' },
+  { title: "You're running your business across 4 separate apps.",    sub: 'Notion. Google Workspace. Calendly. FreshBooks. £69+/mo — and none of them share a single client.' },
 ];
 
 function ProblemSection() {
@@ -553,27 +553,27 @@ function OutcomesSection() {
 // Redesigned: clean list of old tools with dividers, keep comparison as single accent block
 
 const OLD_STACK = [
-  { name: 'Notion',      purpose: 'Notes & tasks',       cost: '£16/mo', pain: "Can't invoice. Can't track leads. Just more tabs." },
-  { name: 'FreshBooks',  purpose: 'Invoicing',           cost: '£29/mo', pain: "£29/mo for a PDF maker. Doesn't know who your clients are." },
-  { name: 'Calendly',    purpose: 'Booking calls',       cost: '£12/mo', pain: "Another login. Another app. Doesn't follow up automatically." },
-  { name: 'Google Workspace', purpose: 'Email, Docs, Sheets, Meet', cost: '£12/mo', pain: 'Follow-ups buried in Gmail. Sheets never updated. Four apps for what should be one.' },
+  { name: 'Notion',           purpose: 'Notes & tasks',            cost: '£16/mo', gap: 'Great for docs. Not built for clients, leads or invoices.' },
+  { name: 'FreshBooks',       purpose: 'Invoicing',                cost: '£29/mo', gap: 'Solid invoicing. Disconnected from your tasks and pipeline.' },
+  { name: 'Calendly',         purpose: 'Booking calls',            cost: '£12/mo', gap: 'Clean bookings. Ends right where the client work begins.' },
+  { name: 'Google Workspace', purpose: 'Email, Docs, Sheets, Meet', cost: '£12/mo', gap: 'Essential day-to-day. Nothing links it to your business.' },
 ];
 
 function StackSection() {
   return (
     <section style={{ padding: 'clamp(80px, 12vw, 120px) 20px', maxWidth: 880, margin: '0 auto', fontFamily: FF }}>
       <FadeUp style={{ textAlign: 'center', marginBottom: 72 }}>
-        <Label text="Replace your stack" />
+        <Label text="The modern freelance stack" />
         <h2 style={{
           fontSize: 'clamp(28px, 6vw, 52px)', fontWeight: 800,
           color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 16px', lineHeight: 1.1,
         }}>
-          Stop paying for 5 tools
+          Great tools.
           <br />
-          <span style={{ color: 'rgba(240,240,245,0.3)' }}>that don't talk to each other.</span>
+          <span style={{ color: 'rgba(240,240,245,0.3)' }}>Disconnected from each other.</span>
         </h2>
-        <p style={{ fontSize: 16, color: 'rgba(240,240,245,0.4)', maxWidth: 420, margin: '0 auto' }}>
-          You're cobbling together a business from tools that were never designed to work together.
+        <p style={{ fontSize: 16, color: 'rgba(240,240,245,0.4)', maxWidth: 480, margin: '0 auto', lineHeight: 1.6 }}>
+          Each of these apps is excellent at one thing. The problem isn&apos;t the tools — it&apos;s that none of them share a single record of your clients, work, or cash flow.
         </p>
       </FadeUp>
 
@@ -592,9 +592,9 @@ function StackSection() {
                 <div style={{ fontSize: 15, fontWeight: 700, color: 'rgba(240,240,245,0.85)', marginBottom: 3 }}>{t.name}</div>
                 <div style={{ fontSize: 12, color: 'rgba(240,240,245,0.35)' }}>{t.purpose}</div>
               </div>
-              <div style={{ fontSize: 13, color: 'rgba(240,240,245,0.45)', lineHeight: 1.55 }}>{t.pain}</div>
+              <div style={{ fontSize: 13, color: 'rgba(240,240,245,0.5)', lineHeight: 1.55 }}>{t.gap}</div>
               <div style={{
-                fontSize: 12, fontWeight: 700, color: 'rgba(255,98,89,0.65)',
+                fontSize: 12, fontWeight: 700, color: 'rgba(240,240,245,0.5)',
                 fontVariantNumeric: 'tabular-nums',
                 textAlign: 'right', whiteSpace: 'nowrap',
               }}>{t.cost}</div>
@@ -613,7 +613,7 @@ function StackSection() {
             <div style={{ fontSize: 28, fontWeight: 800, color: '#f0f0f5', letterSpacing: '-0.02em' }}>
               £69<span style={{ fontSize: 14, fontWeight: 500, color: 'rgba(240,240,245,0.4)' }}>/mo</span>
             </div>
-            <div style={{ fontSize: 13, color: 'rgba(240,240,245,0.3)', marginTop: 4 }}>+ 3 hours/day wasted</div>
+            <div style={{ fontSize: 13, color: 'rgba(240,240,245,0.3)', marginTop: 4 }}>4 apps · 4 logins · 0 shared data</div>
           </div>
           <div style={{ color: 'rgba(240,240,245,0.15)', fontSize: 24, fontWeight: 300 }}>→</div>
           <div>
@@ -625,6 +625,142 @@ function StackSection() {
           </div>
         </div>
       </FadeUp>
+    </section>
+  );
+}
+
+// ─── Integrations Marquee ────────────────────────────────────────────────────
+// Infinite horizontal scroller showing real brand logos for apps Nomaad plugs into.
+
+const INTEGRATIONS = [
+  {
+    name: 'Stripe',
+    color: '#635BFF',
+    path: 'M13.479 9.883c-1.626-.604-2.512-1.067-2.512-1.81 0-.626.5-.98 1.395-.98 1.64 0 3.339.632 4.507 1.206l.684-4.217c-.927-.43-2.79-1.16-5.338-1.16-1.81 0-3.312.467-4.384 1.368-1.116.944-1.687 2.296-1.687 3.956 0 3.01 1.848 4.276 4.904 5.376 1.974.686 2.633 1.165 2.633 1.908 0 .717-.625 1.147-1.74 1.147-1.405 0-3.716-.69-5.207-1.572l-.688 4.268c1.275.732 3.645 1.485 6.09 1.485 1.918 0 3.513-.455 4.584-1.309 1.195-.954 1.81-2.381 1.81-4.239-.013-3.137-1.899-4.453-4.951-5.427z',
+  },
+  {
+    name: 'Gmail',
+    color: '#EA4335',
+    path: 'M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z',
+  },
+  {
+    name: 'Google Meet',
+    color: '#00AC47',
+    path: 'M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm4.5 15.75h-3v2.25l-3-3 3-3v2.25h3v-1.5l3 3-3 3v-2zm-7.5-4.5v-2.25l-3 3 3 3v-2.25h3v-1.5h-3z',
+  },
+  {
+    name: 'Google Calendar',
+    color: '#4285F4',
+    path: 'M22 5v14a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3h14a3 3 0 0 1 3 3zM5 20h14a1 1 0 0 0 1-1v-9H4v9a1 1 0 0 0 1 1zm15-12V5a1 1 0 0 0-1-1h-1v1a1 1 0 0 1-2 0V4H8v1a1 1 0 0 1-2 0V4H5a1 1 0 0 0-1 1v3zM9 14h6v2H9zm0 3h4v2H9z',
+  },
+  {
+    name: 'Claude',
+    color: '#D97757',
+    path: 'M17.304 3.541h-3.672l6.696 16.918H24Zm-10.608 0L0 20.459h3.744l1.37-3.553h7.005l1.369 3.553h3.744L10.536 3.541Zm-.371 10.223L8.616 7.82l2.291 5.945Z',
+  },
+  {
+    name: 'WhatsApp',
+    color: '#25D366',
+    path: 'M.057 24l1.687-6.163a11.867 11.867 0 0 1-1.587-5.945C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 0 1 8.413 3.488 11.824 11.824 0 0 1 3.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 0 1-5.688-1.448L0 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z',
+  },
+  {
+    name: 'Google Drive',
+    color: '#FBBC04',
+    path: 'M12.01 1.485c-2.082 0-3.754.02-3.743.047.01.02 1.708 3.001 3.774 6.62l3.76 6.574h3.76c2.081 0 3.753-.02 3.742-.047-.005-.02-1.708-3.001-3.775-6.62l-3.76-6.574zm-4.76 1.73a789.828 789.828 0 0 0-3.63 6.319L0 15.868l1.89 3.298 1.885 3.297 3.62-6.335 3.618-6.33-1.88-3.287C8.1 4.704 7.255 3.22 7.25 3.214zm2.259 12.653-.203.348c-.114.198-.96 1.672-1.88 3.287a402.13 402.13 0 0 1-1.698 2.97c-.01.026 3.24.042 7.222.042h7.244l1.796-3.157c.992-1.736 1.85-3.24 1.906-3.344l.104-.18h-7.249c-5.8 0-7.256.013-7.242.034z',
+  },
+];
+
+function IntegrationTile({ item }) {
+  return (
+    <div style={{
+      display: 'inline-flex', alignItems: 'center', gap: 14,
+      padding: '18px 28px',
+      borderRadius: 16,
+      background: 'rgba(255,255,255,0.025)',
+      border: '1px solid rgba(255,255,255,0.06)',
+      flexShrink: 0,
+      height: 72,
+      boxSizing: 'border-box',
+      backdropFilter: 'blur(8px)',
+      WebkitBackdropFilter: 'blur(8px)',
+    }}>
+      <div style={{
+        width: 34, height: 34, borderRadius: 9,
+        background: `${item.color}14`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexShrink: 0,
+      }}>
+        <svg viewBox="0 0 24 24" width={20} height={20} fill={item.color} aria-hidden="true">
+          <path d={item.path} />
+        </svg>
+      </div>
+      <span style={{
+        fontSize: 15, fontWeight: 600, color: 'rgba(240,240,245,0.85)',
+        whiteSpace: 'nowrap', letterSpacing: '-0.01em',
+      }}>{item.name}</span>
+    </div>
+  );
+}
+
+function IntegrationsSection() {
+  // Duplicate the list so the marquee can loop seamlessly
+  const track = [...INTEGRATIONS, ...INTEGRATIONS, ...INTEGRATIONS];
+
+  return (
+    <section style={{
+      padding: 'clamp(80px, 12vw, 120px) 0',
+      fontFamily: FF,
+      position: 'relative',
+      overflow: 'hidden',
+    }}>
+      <FadeUp style={{
+        textAlign: 'center', marginBottom: 64, padding: '0 20px',
+        maxWidth: 720, marginLeft: 'auto', marginRight: 'auto',
+      }}>
+        <Label text="Plays well with others" />
+        <h2 style={{
+          fontSize: 'clamp(28px, 6vw, 52px)', fontWeight: 800,
+          color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 16px', lineHeight: 1.1,
+        }}>
+          Connects to the tools
+          <br />
+          <span style={{ color: VOLT }}>you already love.</span>
+        </h2>
+        <p style={{ fontSize: 16, color: 'rgba(240,240,245,0.4)', margin: 0, lineHeight: 1.6 }}>
+          Keep your inbox, calendar, calls and payments exactly where they are. Nomaad sits on top and gives you the single view you&apos;ve been missing.
+        </p>
+      </FadeUp>
+
+      {/* Marquee track */}
+      <div style={{
+        position: 'relative',
+        maskImage: 'linear-gradient(to right, transparent, #000 10%, #000 90%, transparent)',
+        WebkitMaskImage: 'linear-gradient(to right, transparent, #000 10%, #000 90%, transparent)',
+      }}>
+        <div
+          className="nomaad-marquee"
+          style={{
+            display: 'flex', alignItems: 'center', gap: 16,
+            width: 'max-content',
+            animation: 'nomaad-marquee 40s linear infinite',
+          }}
+        >
+          {track.map((item, i) => (
+            <IntegrationTile key={`${item.name}-${i}`} item={item} />
+          ))}
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes nomaad-marquee {
+          from { transform: translateX(0); }
+          to   { transform: translateX(calc(-100% / 3)); }
+        }
+        .nomaad-marquee:hover { animation-play-state: paused; }
+        @media (prefers-reduced-motion: reduce) {
+          .nomaad-marquee { animation: none; }
+        }
+      `}</style>
     </section>
   );
 }
@@ -672,7 +808,7 @@ function AvatarSection() {
   );
 }
 
-// ─── Testimonials ─────────────────────────────────────────────────────────────
+// ─── Testimonials ─���───────────────────────────────────────────────────────────
 // Redesigned: transparent quotes with left accent line, no boxed cards
 
 const TESTIMONIALS = [
@@ -1031,6 +1167,7 @@ export default function LandingPage({ onGetStarted }) {
       <WorkflowSection />
       <OutcomesSection />
       <StackSection />
+      <IntegrationsSection />
       <AvatarSection />
       <TestimonialsSection />
       <FounderNote />
