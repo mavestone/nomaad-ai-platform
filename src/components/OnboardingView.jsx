@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { supabase } from "../lib/supabase";
 
 const VOLT = "#ccfd01";
+const VOLTD = "#b8e300";
 
 const ROLES = [
   { id: "freelancer",  label: "Freelancer",       emoji: "💻", desc: "Solo work, multiple clients" },
@@ -21,16 +23,26 @@ const FEATURES = [
   { id: "docs",      label: "Documents",          emoji: "📄", desc: "Store & share files" },
 ];
 
-const STEPS = ["Welcome", "Your Role", "Your Tools", "Your Business", "Done"];
+const STEPS = ["Welcome", "Your Role", "Your Tools", "Your Business", "Your Profile", "Done"];
+
+function getInitials(name) {
+  if (!name) return "?";
+  return name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
+}
 
 export default function OnboardingView() {
-  const { user, profile, updateProfile } = useAuth();
-  const [step, setStep]             = useState(0);
-  const [role, setRole]             = useState(null);
-  const [features, setFeatures]     = useState(new Set(["clients", "projects"]));
+  const { user, profile, updateProfile, session } = useAuth();
+  const [step, setStep]               = useState(0);
+  const [role, setRole]               = useState(null);
+  const [features, setFeatures]       = useState(new Set(["clients", "projects"]));
   const [businessName, setBusinessName] = useState(profile?.business_name || "");
-  const [saving, setSaving]         = useState(false);
-  const [direction, setDirection]   = useState(1); // 1=forward, -1=back
+  const [username, setUsername]       = useState("");
+  const [usernameError, setUsernameError] = useState("");
+  const [bio, setBio]                 = useState("");
+  const [avatarFile, setAvatarFile]   = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [saving, setSaving]           = useState(false);
+  const [direction, setDirection]     = useState(1);
 
   const name = profile?.full_name?.split(" ")[0] || user?.user_metadata?.full_name?.split(" ")[0] || "there";
 
@@ -47,18 +59,91 @@ export default function OnboardingView() {
     });
   };
 
+  const handleAvatarChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
+  };
+
   const finish = async () => {
     setSaving(true);
-    await updateProfile({
-      onboarding_complete: true,
-      business_type: role,
-      business_name: businessName.trim() || null,
-      use_cases: [...features],
-    });
-    // updateProfile updates context — App.jsx re-renders without onboarding
+    try {
+      let avatar_url = null;
+
+      // Upload avatar to Supabase Storage if provided
+      if (avatarFile && user?.id) {
+        const ext = avatarFile.name.split(".").pop();
+        const path = `${user.id}/avatar.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from("avatars")
+          .upload(path, avatarFile, { upsert: true, contentType: avatarFile.type });
+
+        if (!uploadError) {
+          const { data: { publicUrl } } = supabase.storage
+            .from("avatars")
+            .getPublicUrl(path);
+          avatar_url = publicUrl;
+        }
+      }
+
+      const updates = {
+        onboarding_complete: true,
+        business_type: role,
+        business_name: businessName.trim() || null,
+        use_cases: [...features],
+        username: username.trim().toLowerCase() || null,
+        bio: bio.trim() || null,
+        ...(avatar_url ? { avatar_url } : {}),
+      };
+
+      // Use raw fetch so auth lock doesn't stall us
+      if (session?.access_token) {
+        const res = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/profiles?id=eq.${user.id}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+              "Authorization": `Bearer ${session.access_token}`,
+              "Prefer": "return=minimal",
+            },
+            body: JSON.stringify(updates),
+          }
+        );
+        if (res.ok) {
+          // Trigger context refresh so App.jsx sees onboarding_complete = true
+          await updateProfile({});
+        } else {
+          // Fallback to context method
+          await updateProfile(updates);
+        }
+      } else {
+        await updateProfile(updates);
+      }
+    } catch (err) {
+      console.error("Onboarding finish error:", err);
+      // Try fallback
+      await updateProfile({
+        onboarding_complete: true,
+        business_type: role,
+        business_name: businessName.trim() || null,
+        use_cases: [...features],
+        username: username.trim().toLowerCase() || null,
+        bio: bio.trim() || null,
+      });
+    }
   };
 
   const progress = step / (STEPS.length - 1);
+  const inp = {
+    width: "100%", background: "rgba(255,255,255,0.04)",
+    border: "1.5px solid rgba(255,255,255,0.1)", borderRadius: 14,
+    padding: "14px 18px", fontSize: 15, fontWeight: 500, color: "#fff",
+    outline: "none", boxSizing: "border-box", caretColor: VOLT,
+    transition: "border 0.2s", fontFamily: "inherit",
+  };
 
   return (
     <div style={{
@@ -80,7 +165,7 @@ export default function OnboardingView() {
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "rgba(255,255,255,0.06)" }}>
         <div style={{
           height: "100%", width: `${progress * 100}%`,
-          background: `linear-gradient(90deg, ${VOLT}, #b8e300)`,
+          background: `linear-gradient(90deg, ${VOLT}, ${VOLTD})`,
           transition: "width 0.5s cubic-bezier(.4,0,.2,1)",
           borderRadius: "0 2px 2px 0",
         }} />
@@ -94,18 +179,14 @@ export default function OnboardingView() {
       )}
 
       {/* Content */}
-      <div style={{
-        width: "100%", maxWidth: 520,
-        display: "flex", flexDirection: "column", alignItems: "center",
-        gap: 32,
-      }}>
+      <div style={{ width: "100%", maxWidth: 520, display: "flex", flexDirection: "column", alignItems: "center", gap: 32 }}>
 
-        {/* ── Step 0: Welcome ──────────────────────────────────────────────── */}
+        {/* ── Step 0: Welcome ── */}
         {step === 0 && (
           <div style={{ textAlign: "center", animation: "fadeUp 0.5s ease" }}>
             <div style={{
               width: 72, height: 72, borderRadius: 22, margin: "0 auto 28px",
-              background: "linear-gradient(135deg,#ccfd01,#b8e300)",
+              background: `linear-gradient(135deg,${VOLT},${VOLTD})`,
               display: "flex", alignItems: "center", justifyContent: "center",
               fontSize: 30, fontWeight: 900, color: "#0a0a0a",
               boxShadow: "0 4px 32px rgba(204,253,1,0.25)",
@@ -117,20 +198,18 @@ export default function OnboardingView() {
               Welcome to Nomaad — your all-in-one business OS.<br/>
               Let's get your workspace set up in 2 minutes.
             </p>
-            <button onClick={() => go(1)} style={primaryBtn}>
-              Let's go →
-            </button>
+            <button type="button" onClick={() => go(1)} style={primaryBtn}>Let's go →</button>
           </div>
         )}
 
-        {/* ── Step 1: Role ────────────────────────────────────────────────── */}
+        {/* ── Step 1: Role ── */}
         {step === 1 && (
           <div style={{ width: "100%", animation: "fadeUp 0.4s ease" }}>
             <h2 style={heading}>What best describes you?</h2>
             <p style={sub}>This helps us tailor your dashboard.</p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 24 }}>
               {ROLES.map(r => (
-                <button key={r.id} onClick={() => setRole(r.id)} style={{
+                <button type="button" key={r.id} onClick={() => setRole(r.id)} style={{
                   ...optionCard,
                   border: `1.5px solid ${role === r.id ? VOLT : "rgba(255,255,255,0.08)"}`,
                   background: role === r.id ? "rgba(204,253,1,0.07)" : "rgba(255,255,255,0.03)",
@@ -143,13 +222,13 @@ export default function OnboardingView() {
               ))}
             </div>
             <div style={navRow}>
-              <button onClick={() => go(0)} style={ghostBtn}>← Back</button>
-              <button onClick={() => go(2)} disabled={!role} style={{ ...primaryBtn, opacity: role ? 1 : 0.4 }}>Continue →</button>
+              <button type="button" onClick={() => go(0)} style={ghostBtn}>← Back</button>
+              <button type="button" onClick={() => go(2)} disabled={!role} style={{ ...primaryBtn, opacity: role ? 1 : 0.4 }}>Continue →</button>
             </div>
           </div>
         )}
 
-        {/* ── Step 2: Features ────────────────────────────────────────────── */}
+        {/* ── Step 2: Features ── */}
         {step === 2 && (
           <div style={{ width: "100%", animation: "fadeUp 0.4s ease" }}>
             <h2 style={heading}>What will you use Nomaad for?</h2>
@@ -158,7 +237,7 @@ export default function OnboardingView() {
               {FEATURES.map(f => {
                 const on = features.has(f.id);
                 return (
-                  <button key={f.id} onClick={() => toggleFeature(f.id)} style={{
+                  <button type="button" key={f.id} onClick={() => toggleFeature(f.id)} style={{
                     ...optionCard,
                     border: `1.5px solid ${on ? VOLT : "rgba(255,255,255,0.08)"}`,
                     background: on ? "rgba(204,253,1,0.07)" : "rgba(255,255,255,0.03)",
@@ -184,13 +263,13 @@ export default function OnboardingView() {
               })}
             </div>
             <div style={navRow}>
-              <button onClick={() => go(1)} style={ghostBtn}>← Back</button>
-              <button onClick={() => go(3)} disabled={features.size === 0} style={{ ...primaryBtn, opacity: features.size ? 1 : 0.4 }}>Continue →</button>
+              <button type="button" onClick={() => go(1)} style={ghostBtn}>← Back</button>
+              <button type="button" onClick={() => go(3)} disabled={features.size === 0} style={{ ...primaryBtn, opacity: features.size ? 1 : 0.4 }}>Continue →</button>
             </div>
           </div>
         )}
 
-        {/* ── Step 3: Business name ───────────────────────────────────────── */}
+        {/* ── Step 3: Business name ── */}
         {step === 3 && (
           <div style={{ width: "100%", animation: "fadeUp 0.4s ease" }}>
             <h2 style={heading}>What's your business called?</h2>
@@ -199,18 +278,9 @@ export default function OnboardingView() {
               autoFocus
               value={businessName}
               onChange={e => setBusinessName(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && businessName.trim() && go(4)}
+              onKeyDown={e => e.key === "Enter" && go(4)}
               placeholder="e.g. Studio Maverick"
-              style={{
-                width: "100%", marginTop: 24,
-                background: "rgba(255,255,255,0.04)",
-                border: "1.5px solid rgba(255,255,255,0.1)",
-                borderRadius: 16, padding: "16px 20px",
-                fontSize: 18, fontWeight: 600, color: "#fff",
-                outline: "none", boxSizing: "border-box",
-                caretColor: VOLT,
-                transition: "border 0.2s",
-              }}
+              style={{ ...inp, marginTop: 24, fontSize: 18, fontWeight: 600 }}
               onFocus={e => e.target.style.border = `1.5px solid ${VOLT}`}
               onBlur={e => e.target.style.border = "1.5px solid rgba(255,255,255,0.1)"}
             />
@@ -218,26 +288,148 @@ export default function OnboardingView() {
               Don't have one yet? No problem — skip for now.
             </p>
             <div style={navRow}>
-              <button onClick={() => go(2)} style={ghostBtn}>← Back</button>
+              <button type="button" onClick={() => go(2)} style={ghostBtn}>← Back</button>
               <div style={{ display: "flex", gap: 10 }}>
-                <button onClick={() => go(4)} style={ghostBtn}>Skip</button>
-                <button onClick={() => go(4)} style={primaryBtn}>Continue →</button>
+                <button type="button" onClick={() => go(4)} style={ghostBtn}>Skip</button>
+                <button type="button" onClick={() => go(4)} style={primaryBtn}>Continue →</button>
               </div>
             </div>
           </div>
         )}
 
-        {/* ── Step 4: Done ────────────────────────────────────────────────── */}
+        {/* ── Step 4: Profile (avatar + username + bio) ── */}
         {step === 4 && (
+          <div style={{ width: "100%", animation: "fadeUp 0.4s ease" }}>
+            <h2 style={heading}>Set up your public profile</h2>
+            <p style={sub}>Clients will see this when they visit your Nomaad page.</p>
+
+            {/* Avatar upload */}
+            <div style={{ display: "flex", justifyContent: "center", marginTop: 24, marginBottom: 20 }}>
+              <label style={{ cursor: "pointer", position: "relative", display: "inline-block" }}>
+                <input
+                  type="file" accept="image/*"
+                  onChange={handleAvatarChange}
+                  style={{ display: "none" }}
+                />
+                <div style={{
+                  width: 96, height: 96, borderRadius: "50%",
+                  background: avatarPreview
+                    ? `url(${avatarPreview}) center/cover`
+                    : `linear-gradient(135deg, ${VOLT}cc, ${VOLT}66)`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 28, fontWeight: 800, color: "#0a0a0a",
+                  border: `3px solid ${VOLT}44`,
+                  boxShadow: "0 4px 24px rgba(204,253,1,0.15)",
+                  overflow: "hidden",
+                }}>
+                  {!avatarPreview && getInitials(profile?.full_name || user?.user_metadata?.full_name)}
+                </div>
+                {/* Camera badge */}
+                <div style={{
+                  position: "absolute", bottom: 2, right: 2,
+                  width: 28, height: 28, borderRadius: "50%",
+                  background: VOLT, border: "2.5px solid #08080a",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                    <circle cx="12" cy="13" r="4"/>
+                  </svg>
+                </div>
+              </label>
+            </div>
+            <p style={{ textAlign: "center", fontSize: 12, color: "#8b8fa3", marginBottom: 20, marginTop: -8 }}>
+              Click to upload a photo
+            </p>
+
+            {/* Username */}
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "rgba(139,143,163,0.8)", letterSpacing: 0.6, textTransform: "uppercase", display: "block", marginBottom: 8 }}>
+                Username
+              </label>
+              <div style={{ position: "relative" }}>
+                <input
+                  value={username}
+                  onChange={e => {
+                    setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""));
+                    setUsernameError("");
+                  }}
+                  placeholder="your-username"
+                  style={{ ...inp, paddingRight: 100 }}
+                  onFocus={e => e.target.style.border = `1.5px solid ${VOLT}`}
+                  onBlur={e => e.target.style.border = "1.5px solid rgba(255,255,255,0.1)"}
+                />
+                <span style={{
+                  position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)",
+                  fontSize: 13, color: "#8b8fa3", pointerEvents: "none",
+                }}>.nomaad.ai</span>
+              </div>
+              {usernameError && (
+                <p style={{ fontSize: 12, color: "#FF453A", marginTop: 6 }}>{usernameError}</p>
+              )}
+              {username && !usernameError && (
+                <p style={{ fontSize: 12, color: VOLT, marginTop: 6 }}>
+                  ✓ Your page will be at {username}.nomaad.ai
+                </p>
+              )}
+              {!username && (
+                <p style={{ fontSize: 12, color: "#8b8fa3", marginTop: 6 }}>
+                  Lowercase letters, numbers and hyphens only. You can change this later.
+                </p>
+              )}
+            </div>
+
+            {/* Bio */}
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "rgba(139,143,163,0.8)", letterSpacing: 0.6, textTransform: "uppercase", display: "block", marginBottom: 8 }}>
+                Bio
+              </label>
+              <textarea
+                value={bio}
+                onChange={e => setBio(e.target.value)}
+                placeholder="Short bio or tagline — e.g. 'Brand designer helping startups launch fast'"
+                rows={3}
+                style={{
+                  ...inp, resize: "vertical", lineHeight: 1.6,
+                  fontSize: 14,
+                }}
+                onFocus={e => e.target.style.border = `1.5px solid ${VOLT}`}
+                onBlur={e => e.target.style.border = "1.5px solid rgba(255,255,255,0.1)"}
+              />
+            </div>
+
+            <div style={navRow}>
+              <button type="button" onClick={() => go(3)} style={ghostBtn}>← Back</button>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button type="button" onClick={() => go(5)} style={ghostBtn}>Skip</button>
+                <button type="button" onClick={() => go(5)} style={primaryBtn}>Continue →</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Step 5: Done ── */}
+        {step === 5 && (
           <div style={{ textAlign: "center", animation: "fadeUp 0.5s ease" }}>
             <div style={{ fontSize: 72, marginBottom: 24 }}>🎉</div>
             <h1 style={{ fontSize: 34, fontWeight: 800, color: "#fff", letterSpacing: -1, marginBottom: 12 }}>
               You're all set{businessName ? `, ${businessName}` : ""}!
             </h1>
-            <p style={{ fontSize: 15, color: "#8b8fa3", lineHeight: 1.7, maxWidth: 360, margin: "0 auto 40px" }}>
-              Your workspace is ready. We've customised Nomaad based on your choices — everything else can be changed in Settings.
+            <p style={{ fontSize: 15, color: "#8b8fa3", lineHeight: 1.7, maxWidth: 360, margin: "0 auto 16px" }}>
+              Your workspace is ready. We've customised Nomaad based on your choices.
             </p>
-            <button onClick={finish} disabled={saving} style={{ ...primaryBtn, minWidth: 200, opacity: saving ? 0.7 : 1 }}>
+            {username && (
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "8px 16px", borderRadius: 20, marginBottom: 28,
+                background: "rgba(204,253,1,0.08)", border: "1px solid rgba(204,253,1,0.2)",
+                fontSize: 13, color: VOLT, fontWeight: 600,
+              }}>
+                🌐 {username}.nomaad.ai
+              </div>
+            )}
+            {!username && <div style={{ marginBottom: 28 }} />}
+            <button type="button" onClick={finish} disabled={saving} style={{ ...primaryBtn, minWidth: 200, opacity: saving ? 0.7 : 1 }}>
               {saving ? "Setting up…" : "Go to Dashboard →"}
             </button>
           </div>
@@ -249,7 +441,8 @@ export default function OnboardingView() {
           from { opacity: 0; transform: translateY(14px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        input::placeholder { color: #454859; }
+        input::placeholder, textarea::placeholder { color: #454859; }
+        textarea { font-family: -apple-system,'SF Pro Display',system-ui,sans-serif; }
       `}</style>
     </div>
   );
@@ -257,7 +450,7 @@ export default function OnboardingView() {
 
 // ── Shared styles ──────────────────────────────────────────────────────────────
 const primaryBtn = {
-  background: "linear-gradient(135deg,#ccfd01,#b8e300)",
+  background: `linear-gradient(135deg,#ccfd01,#b8e300)`,
   color: "#0a0a0a", border: "none", borderRadius: 14,
   padding: "14px 28px", fontSize: 15, fontWeight: 700,
   cursor: "pointer", letterSpacing: -0.2,
