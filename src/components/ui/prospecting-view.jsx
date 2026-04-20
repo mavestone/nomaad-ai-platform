@@ -697,28 +697,35 @@ function FindCreatorsTab({ t, dark }) {
     if (!user) return;
     (async () => {
       try {
-        // Single query — use portfolio_projects JSONB instead of N+1 projects fetch
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('id, full_name, avatar_url, bio, location, business_type, portfolio_projects, username, availability')
-          .eq('onboarding_complete', true);
+        // Raw fetch — bypasses Supabase JS client which stalls on auth lock.
+        // Public SELECT policy (USING true) means no auth token needed.
+        const res = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/profiles?select=id,full_name,avatar_url,bio,location,business_type,portfolio_projects,username,availability`,
+          { headers: { apikey: import.meta.env.VITE_SUPABASE_ANON_KEY } }
+        );
 
-        if (!profiles) return;
+        if (!res.ok) {
+          console.error('[FindCreators] fetch failed:', res.status, await res.text());
+          return;
+        }
+
+        const profiles = await res.json();
+        if (!Array.isArray(profiles)) return;
 
         const mapped = profiles
-          .filter(p => p.id !== user.id)
+          .filter(p => p.id !== user.id && p.full_name)   // exclude self + empty profiles
           .map(p => ({
-            id:          p.id,
-            name:        p.full_name || 'Nomaad Creator',
-            role:        ROLE_MAP[p.business_type] || 'Creator',
-            type:        TYPE_MAP[p.business_type] || 'create',
-            loc:         p.location || '',
-            img:         p.avatar_url || null,
-            bio:         p.bio || '',
-            username:    p.username || null,
+            id:           p.id,
+            name:         p.full_name,
+            role:         ROLE_MAP[p.business_type] || 'Creator',
+            type:         TYPE_MAP[p.business_type] || 'create',
+            loc:          p.location || '',
+            img:          p.avatar_url || null,
+            bio:          p.bio || '',
+            username:     p.username || null,
             availability: p.availability || 'away',
-            connections: Math.floor(Math.random() * 300 + 20),
-            projects:    (p.portfolio_projects || []).slice(0, 6).map(pr => ({
+            connections:  Math.floor(Math.random() * 300 + 20),
+            projects:     (p.portfolio_projects || []).slice(0, 6).map(pr => ({
               id:    pr.id,
               title: pr.title,
               year:  pr.year,
@@ -727,8 +734,11 @@ function FindCreatorsTab({ t, dark }) {
           }));
 
         setMembers(mapped);
-      } catch (e) { console.error(e); }
-      finally { setLoading(false); }
+      } catch (e) {
+        console.error('[FindCreators] error:', e);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, [user]);
 
