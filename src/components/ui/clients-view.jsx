@@ -298,7 +298,7 @@ function ClientRecord({ client, onClose, onUpdate, t, dark }) {
         client_id: client.id,
         client_name: client.company || client.name,
         due_date: newProject.due_date || null, 
-        status: "active",
+        status: "planning",
       }).select().single();
       if (error) throw error;
       setProjects(p => [data, ...p]);
@@ -796,7 +796,7 @@ export default function ClientsView({ t, dark, mobile, compact }) {
         client_id: wonModal.id,
         client_name: wonModal.company || wonModal.name,
         due_date: dueDate || null, 
-        status: "active",
+        status: "planning",
       });
     } catch (err) { console.error(err.message); }
     setWonModal(null);
