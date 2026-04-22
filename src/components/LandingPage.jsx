@@ -795,6 +795,243 @@ function ProductFlowSection() {
   );
 }
 
+// ─── Feature Mocks (one per Core Value row) ──────────────────────────────────
+
+function MockShell({ children, title, badge }) {
+  return (
+    <div style={{
+      borderRadius: 18,
+      background: 'linear-gradient(180deg, rgba(22,22,26,0.96) 0%, rgba(14,14,18,0.96) 100%)',
+      border: '1px solid rgba(255,255,255,0.08)',
+      boxShadow: '0 24px 64px rgba(0,0,0,0.45)',
+      overflow: 'hidden',
+      fontFamily: FF,
+    }}>
+      <div style={{
+        padding: '12px 16px',
+        borderBottom: '1px solid rgba(255,255,255,0.05)',
+        background: 'rgba(255,255,255,0.015)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}>
+        <div style={{ display: 'flex', gap: 6 }}>
+          {['#ff5f57','#ffbd2e','#28c840'].map(c => (
+            <span key={c} style={{ width: 9, height: 9, borderRadius: '50%', background: c, opacity: 0.7 }} />
+          ))}
+        </div>
+        <span style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.04em' }}>{title}</span>
+        {badge
+          ? <span style={{ padding: '3px 9px', borderRadius: 999, fontSize: 10, fontWeight: 700, color: VOLT, background: 'rgba(204,253,1,0.08)', letterSpacing: '0.04em' }}>{badge}</span>
+          : <span style={{ width: 50 }} />
+        }
+      </div>
+      <div style={{ padding: 16 }}>{children}</div>
+    </div>
+  );
+}
+
+// FIND — AI prospecting lead list
+function FindMock() {
+  const leads = [
+    { name: 'Bloom Studio',   type: 'Brand',      score: 94, status: 'Hot',    color: '#FF6B6B' },
+    { name: 'Kojo Creative',  type: 'Agency',     score: 87, status: 'Warm',   color: '#FFB340' },
+    { name: 'Mara & Co.',     type: 'Startup',    score: 79, status: 'Warm',   color: '#FFB340' },
+    { name: 'North Digital',  type: 'E-commerce', score: 61, status: 'Cold',   color: 'rgba(255,255,255,0.25)' },
+  ];
+  return (
+    <MockShell title="app.nomaad.ai / prospecting" badge="AI">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {/* Search bar */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '8px 12px', borderRadius: 10,
+          background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)',
+          marginBottom: 8,
+        }}>
+          <svg viewBox="0 0 24 24" width={13} height={13} fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
+          </svg>
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>Find brands in London needing video...</span>
+        </div>
+        {/* Leads */}
+        {leads.map(l => (
+          <div key={l.name} style={{
+            display: 'flex', alignItems: 'center', gap: 12,
+            padding: '10px 12px', borderRadius: 10,
+            background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)',
+          }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: 9, flexShrink: 0,
+              background: 'rgba(255,255,255,0.06)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.5)',
+            }}>{l.name[0]}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#f0f0f5' }}>{l.name}</div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>{l.type}</div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: l.color }}>{l.status}</div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>Score {l.score}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </MockShell>
+  );
+}
+
+// TRACK — pipeline kanban columns
+function TrackMock() {
+  const cols = [
+    { label: 'Lead',     color: 'rgba(255,255,255,0.3)', cards: ['Brand deal – TFL', 'Wedding promo'] },
+    { label: 'Proposal', color: '#FFB340',               cards: ['Southbank Films'] },
+    { label: 'Active',   color: VOLT,                    cards: ['Oat Studio S2', 'Pulse Gym Reel'] },
+  ];
+  return (
+    <MockShell title="app.nomaad.ai / pipeline">
+      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+        {cols.map(col => (
+          <div key={col.label} style={{ flex: '1 1 0', minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: col.color, flexShrink: 0 }} />
+              <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.45)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{col.label}</span>
+              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginLeft: 'auto' }}>{col.cards.length}</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+              {col.cards.map(c => (
+                <div key={c} style={{
+                  padding: '9px 11px', borderRadius: 10,
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.05)',
+                  fontSize: 11, fontWeight: 600, color: 'rgba(240,240,245,0.85)',
+                  lineHeight: 1.4,
+                }}>{c}</div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      {/* Progress bar */}
+      <div style={{ marginTop: 16, padding: '12px', borderRadius: 10, background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.04)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+          <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.6)' }}>Pipeline value</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: VOLT }}>£12,400</span>
+        </div>
+        <div style={{ height: 4, borderRadius: 99, background: 'rgba(255,255,255,0.06)' }}>
+          <div style={{ width: '68%', height: '100%', borderRadius: 99, background: VOLT }} />
+        </div>
+      </div>
+    </MockShell>
+  );
+}
+
+// DELIVER — project task list with milestones
+function DeliverMock() {
+  const tasks = [
+    { label: 'Brief confirmed',    done: true  },
+    { label: 'Shoot day completed', done: true  },
+    { label: 'First cut delivered', done: true  },
+    { label: 'Client revisions',    done: false, active: true },
+    { label: 'Final export',        done: false },
+  ];
+  return (
+    <MockShell title="app.nomaad.ai / projects" badge="Oat Studio S2">
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)' }}>Milestone progress</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: VOLT }}>3 / 5</span>
+        </div>
+        <div style={{ display: 'flex', gap: 4 }}>
+          {tasks.map((t, i) => (
+            <div key={i} style={{
+              flex: 1, height: 5, borderRadius: 99,
+              background: t.done ? VOLT : t.active ? 'rgba(204,253,1,0.3)' : 'rgba(255,255,255,0.07)',
+            }} />
+          ))}
+        </div>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {tasks.map((t, i) => (
+          <div key={i} style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            padding: '8px 10px', borderRadius: 9,
+            background: t.active ? 'rgba(204,253,1,0.04)' : 'transparent',
+            border: t.active ? '1px solid rgba(204,253,1,0.1)' : '1px solid transparent',
+          }}>
+            <span style={{
+              width: 16, height: 16, borderRadius: 5, flexShrink: 0,
+              background: t.done ? VOLT : 'rgba(255,255,255,0.06)',
+              border: t.done ? 'none' : t.active ? `1px solid ${VOLT}40` : '1px solid rgba(255,255,255,0.1)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              {t.done && (
+                <svg viewBox="0 0 24 24" width={9} height={9} fill="none" stroke="#0a0a0a" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+              )}
+            </span>
+            <span style={{
+              fontSize: 12, fontWeight: 600,
+              color: t.done ? 'rgba(255,255,255,0.4)' : t.active ? '#f0f0f5' : 'rgba(255,255,255,0.55)',
+              textDecoration: t.done ? 'line-through' : 'none',
+            }}>{t.label}</span>
+            {t.active && (
+              <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 700, color: VOLT, letterSpacing: '0.04em' }}>In progress</span>
+            )}
+          </div>
+        ))}
+      </div>
+    </MockShell>
+  );
+}
+
+// HIRE — same as CollabMock but self-contained inline
+function HireMock() {
+  const roster = [
+    { name: 'Ana Ríos',    role: 'Editor',    rate: '£65/hr', avatar: 'A', color: '#FFB340', rating: '4.9', avail: 'Available' },
+    { name: 'Marcus Lee',  role: 'Colourist', rate: '£90/hr', avatar: 'M', color: '#BF5AF2', rating: '5.0', avail: 'Booked · Fri' },
+    { name: 'Halo Studio', role: 'Motion',    rate: '£110/hr', avatar: 'H', color: '#5AC8FA', rating: '4.8', avail: 'Available' },
+  ];
+  return (
+    <MockShell title="app.nomaad.ai / marketplace" badge="3 matches">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {roster.map(p => (
+          <div key={p.name} style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            padding: '10px 12px', borderRadius: 11,
+            background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)',
+          }}>
+            <div style={{
+              width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+              background: p.color,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 14, fontWeight: 800, color: '#0a0a0a',
+            }}>{p.avatar}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: '#f0f0f5' }}>{p.name}</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 10, color: '#FFB340', fontWeight: 700 }}>
+                  <svg viewBox="0 0 24 24" width={9} height={9} fill="currentColor" aria-hidden="true">
+                    <path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.9L12 17.8 5.8 21l1.2-6.9-5-4.9 6.9-1z" />
+                  </svg>
+                  {p.rating}
+                </span>
+              </div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{p.role} · {p.rate} · {p.avail}</div>
+            </div>
+            <button style={{
+              padding: '5px 11px', borderRadius: 7,
+              background: 'rgba(204,253,1,0.1)', border: '1px solid rgba(204,253,1,0.25)',
+              color: VOLT, fontSize: 10, fontWeight: 700, letterSpacing: '0.04em',
+              cursor: 'pointer', fontFamily: FF,
+            }}>Add</button>
+          </div>
+        ))}
+      </div>
+    </MockShell>
+  );
+}
+
 // ─── Core Value Section ───────────────────────────────────────────────────────
 // 5 outcome blocks: FIND / TRACK / DELIVER / CLIENT PORTAL / HIRE
 
@@ -803,6 +1040,7 @@ const CORE_VALUES = [
     tag: 'Find clients',
     headline: 'AI-powered prospecting that actually finds real opportunities.',
     body: 'Surface the right leads — without endless searching, scraping or paying for 3 different tools.',
+    mock: <FindMock />,
     icon: (
       <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
@@ -813,6 +1051,7 @@ const CORE_VALUES = [
     tag: 'Track everything',
     headline: 'Know exactly where every lead, project, and client stands.',
     body: 'A single pipeline across prospects, proposals, and active jobs — at a glance, not buried in tabs.',
+    mock: <TrackMock />,
     icon: (
       <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M4 20V10" /><path d="M10 20V4" /><path d="M16 20v-8" /><path d="M22 20H2" />
@@ -823,6 +1062,7 @@ const CORE_VALUES = [
     tag: 'Deliver without chaos',
     headline: 'Structured project workflows so nothing gets missed.',
     body: 'Briefs, files, milestones, payments — one place, tied to one client, moving in one direction.',
+    mock: <DeliverMock />,
     icon: (
       <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><path d="m9 11 3 3L22 4" />
@@ -834,6 +1074,7 @@ const CORE_VALUES = [
     featured: true,
     headline: 'Give clients one place to track progress, review edits, and request changes.',
     body: 'No more chasing messages across email, DMs and WhatsApp. They log in — everything they need is there.',
+    mock: <ClientPortalMock />,
     icon: (
       <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <rect x="3" y="4" width="18" height="16" rx="2" />
@@ -845,6 +1086,7 @@ const CORE_VALUES = [
     tag: 'Hire & collaborate',
     headline: 'Find and hire other creators inside Nomaad.',
     body: 'Editors, designers, shooters — vetted, bookable, and ready to plug straight into your projects.',
+    mock: <HireMock />,
     icon: (
       <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <circle cx="9" cy="8" r="3.4" /><path d="M2 20c0-3.4 3.1-6 7-6s7 2.6 7 6" />
@@ -913,25 +1155,9 @@ function CoreValueSection() {
                 </p>
               </div>
 
-              {/* Visual side — placeholder for future product screenshots */}
-              <div style={{
-                order: i % 2 === 0 ? 2 : 1,
-                aspectRatio: '4 / 3',
-                borderRadius: 20,
-                background: v.featured
-                  ? 'linear-gradient(135deg, rgba(204,253,1,0.06) 0%, rgba(204,253,1,0.02) 100%)'
-                  : 'linear-gradient(135deg, rgba(255,255,255,0.025) 0%, rgba(255,255,255,0.01) 100%)',
-                border: v.featured
-                  ? '1px solid rgba(204,253,1,0.12)'
-                  : '1px solid rgba(255,255,255,0.05)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <span style={{
-                  fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.2)',
-                  letterSpacing: '0.06em', textTransform: 'uppercase',
-                }}>
-                  Coming soon
-                </span>
+              {/* Visual side — product UI mock */}
+              <div style={{ order: i % 2 === 0 ? 2 : 1 }}>
+                {v.mock}
               </div>
             </div>
           </FadeUp>
@@ -1571,7 +1797,7 @@ function AvatarSection() {
   );
 }
 
-// ─── Testimonials ─���───────────────────────────────────────────────────────────
+// ─── Testimonials ─���──────────────────────────────────────────────��────────────
 // Redesigned: transparent quotes with left accent line, no boxed cards
 
 const TESTIMONIALS = [
