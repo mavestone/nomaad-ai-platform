@@ -253,7 +253,7 @@ function Nav({ onSignIn }) {
         </div>
 
         <div className="landing-nav-center">
-          {[['How it works', 'workflow'], ['Pricing', 'pricing']].map(([label, id]) => (
+          {[['How it works', 'how-it-works'], ['Pricing', 'pricing']].map(([label, id]) => (
             <button key={id} onClick={() => scrollTo(id)} style={{
               background: 'none', border: 'none', color: 'rgba(240,240,245,0.55)',
               fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: FF,
@@ -279,7 +279,7 @@ function Nav({ onSignIn }) {
               fontWeight: 700, fontSize: 13, fontFamily: FF, cursor: 'pointer',
               boxShadow: `0 3px 16px rgba(204,253,1,0.25)`, whiteSpace: "nowrap"
             }}
-          >Get early access</motion.button>
+          >Join the waitlist</motion.button>
         </div>
       </div>
     </motion.nav>
@@ -292,8 +292,8 @@ function Hero({ onSignIn }) {
   return (
     <section style={{
       minHeight: '100vh', display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center',
-      padding: 'clamp(100px, 15vh, 140px) 20px 80px', textAlign: 'center', position: 'relative',
+      justifyContent: 'center',
+      padding: 'clamp(100px, 15vh, 140px) 20px 80px', position: 'relative',
       fontFamily: FF,
     }}>
       <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
@@ -301,70 +301,311 @@ function Hero({ onSignIn }) {
         <div style={{ position: 'absolute', bottom: '-5%', left: '-5%', width: 600, height: 600, borderRadius: '50%', background: '#5AC8FA', filter: 'blur(140px)', opacity: 0.035 }} />
       </div>
 
-      <div style={{ position: 'relative', maxWidth: 800, margin: '0 auto' }}>
+      <div
+        className="nomaad-hero-grid"
+        style={{
+          position: 'relative',
+          width: '100%', maxWidth: 1200, margin: '0 auto',
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0, 1.05fr) minmax(0, 1fr)',
+          alignItems: 'center',
+          gap: 'clamp(32px, 6vw, 80px)',
+        }}
+      >
+        {/* ─── Left column: copy ─── */}
+        <div style={{ minWidth: 0 }}>
+          <motion.div
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              padding: '6px 14px 6px 10px',
+              background: 'rgba(204,253,1,0.07)', border: '1px solid rgba(204,253,1,0.2)',
+              borderRadius: 100, marginBottom: 32,
+            }}
+          >
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: VOLT, boxShadow: `0 0 8px ${VOLT}`, animation: 'pulse 2s ease infinite' }} />
+            <span style={{ fontSize: 12, fontWeight: 600, color: VOLT, letterSpacing: '0.04em' }}>WAITLIST OPEN</span>
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              fontSize: 'clamp(34px, 6.2vw, 68px)', fontWeight: 800,
+              lineHeight: 1.05, letterSpacing: '-0.035em',
+              color: '#f0f0f5', margin: '0 0 20px',
+            }}
+          >
+            Your entire creative workflow.
+            {' '}
+            <span style={{ color: VOLT }}>Finally in one place.</span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              fontSize: 'clamp(16px, 1.6vw, 19px)',
+              color: 'rgba(240,240,245,0.55)', lineHeight: 1.6,
+              maxWidth: 540, margin: '0 0 16px',
+            }}
+          >
+            Find clients, manage projects, deliver work, and hire collaborators — without juggling 5 different tools.
+          </motion.p>
+
+          <motion.p
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: 0.20, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              fontSize: 14,
+              color: 'rgba(240,240,245,0.35)', lineHeight: 1.55,
+              maxWidth: 520, margin: '0 0 36px',
+            }}
+          >
+            Built for solo creatives who are done with messy workflows and scattered systems.
+          </motion.p>
+
+          <motion.div
+            id="waitlist"
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: 0.24, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <WaitlistForm source="hero" label="Join the waitlist →" />
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 16,
+              marginTop: 14, flexWrap: 'wrap',
+            }}>
+              <WaitlistCount />
+              <a href="#how-it-works" style={{
+                fontSize: 13, fontWeight: 600, color: 'rgba(240,240,245,0.5)',
+                textDecoration: 'none', letterSpacing: '-0.01em',
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+              }}>
+                See how it works
+                <span aria-hidden="true" style={{ opacity: 0.6 }}>→</span>
+              </a>
+            </div>
+          </motion.div>
+
+          <motion.p
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.52 }}
+            style={{ fontSize: 12, color: 'rgba(240,240,245,0.3)', marginTop: 20 }}
+          >
+            Already have an account?{' '}
+            <button onClick={onSignIn} style={{
+              background: 'none', border: 'none', color: 'rgba(204,253,1,0.7)',
+              fontFamily: FF, fontSize: 12, cursor: 'pointer', fontWeight: 600, padding: 0,
+            }}>Sign in →</button>
+          </motion.p>
+        </div>
+
+        {/* ─── Right column: product UI mock ─── */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-            padding: '6px 14px 6px 10px',
-            background: 'rgba(204,253,1,0.07)', border: '1px solid rgba(204,253,1,0.2)',
-            borderRadius: 100, marginBottom: 32,
-          }}
+          initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          className="nomaad-hero-mock"
+          style={{ position: 'relative', minWidth: 0 }}
         >
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: VOLT, boxShadow: `0 0 8px ${VOLT}`, animation: 'pulse 2s ease infinite' }} />
-          <span style={{ fontSize: 12, fontWeight: 600, color: VOLT, letterSpacing: '0.04em' }}>WAITLIST OPEN</span>
+          <HeroDashboardMock />
         </motion.div>
-
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
-          style={{
-            fontSize: 'clamp(34px, 8vw, 78px)', fontWeight: 800,
-            lineHeight: 1.07, letterSpacing: '-0.03em',
-            color: '#f0f0f5', margin: '0 0 20px',
-          }}
-        >
-          You didn't start freelancing
-          <br />
-          <span style={{ color: VOLT }}>to drown in admin.</span>
-        </motion.h1>
-
-        <motion.p
-          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
-          style={{
-            fontSize: 'clamp(16px, 2.2vw, 19px)',
-            color: 'rgba(240,240,245,0.5)', lineHeight: 1.65,
-            maxWidth: 560, margin: '0 auto 36px',
-          }}
-        >
-          Nomaad runs your client pipeline, follow-ups, invoicing, and projects automatically —
-          so you can spend your time on work that actually pays.
-        </motion.p>
-
-        <motion.div
-          id="waitlist"
-          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, delay: 0.24, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <WaitlistForm source="hero" label="Get early access →" />
-          <WaitlistCount />
-        </motion.div>
-
-        <motion.p
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.52 }}
-          style={{ fontSize: 12, color: 'rgba(240,240,245,0.3)', marginTop: 20 }}
-        >
-          Already have an account?{' '}
-          <button onClick={onSignIn} style={{
-            background: 'none', border: 'none', color: 'rgba(204,253,1,0.7)',
-            fontFamily: FF, fontSize: 12, cursor: 'pointer', fontWeight: 600, padding: 0,
-          }}>Sign in →</button>
-        </motion.p>
       </div>
+
+      <style>{`
+        @media (max-width: 920px) {
+          .nomaad-hero-grid {
+            grid-template-columns: 1fr !important;
+            text-align: left;
+          }
+          .nomaad-hero-mock {
+            margin-top: 24px;
+          }
+        }
+      `}</style>
     </section>
+  );
+}
+
+// ─── Hero Dashboard Mock ──────────────────────────────────────────────────────
+
+function HeroDashboardMock() {
+  return (
+    <div style={{
+      position: 'relative',
+      width: '100%',
+      borderRadius: 18,
+      background: 'linear-gradient(180deg, rgba(22,22,26,0.9) 0%, rgba(14,14,18,0.9) 100%)',
+      border: '1px solid rgba(255,255,255,0.08)',
+      boxShadow: '0 30px 80px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.02) inset',
+      overflow: 'hidden',
+      fontFamily: FF,
+    }}>
+      {/* Window chrome */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 8,
+        padding: '10px 14px',
+        borderBottom: '1px solid rgba(255,255,255,0.05)',
+        background: 'rgba(255,255,255,0.015)',
+      }}>
+        <div style={{ display: 'flex', gap: 6 }}>
+          {['#ff5f57','#ffbd2e','#28c840'].map(c => (
+            <span key={c} style={{ width: 10, height: 10, borderRadius: '50%', background: c, opacity: 0.75 }} />
+          ))}
+        </div>
+        <div style={{
+          flex: 1, textAlign: 'center',
+          fontSize: 10, color: 'rgba(255,255,255,0.35)',
+          fontWeight: 600, letterSpacing: '0.04em',
+        }}>
+          app.nomaad.ai / dashboard
+        </div>
+      </div>
+
+      {/* Body: sidebar + content */}
+      <div style={{ display: 'grid', gridTemplateColumns: '56px 1fr', minHeight: 360 }}>
+        {/* Sidebar */}
+        <div style={{
+          borderRight: '1px solid rgba(255,255,255,0.04)',
+          padding: '14px 0',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+          background: 'rgba(255,255,255,0.012)',
+        }}>
+          <div style={{
+            width: 26, height: 26, borderRadius: 7,
+            background: VOLT, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 12, fontWeight: 900, color: '#0a0a0a', letterSpacing: '-0.04em',
+            marginBottom: 6,
+          }}>N</div>
+          {[
+            { active: true,  glyph: '◨' },
+            { active: false, glyph: '◩' },
+            { active: false, glyph: '◧' },
+            { active: false, glyph: '◐' },
+          ].map((item, i) => (
+            <div key={i} style={{
+              width: 30, height: 30, borderRadius: 8,
+              background: item.active ? 'rgba(204,253,1,0.1)' : 'transparent',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 13,
+              color: item.active ? VOLT : 'rgba(255,255,255,0.3)',
+            }}>{item.glyph}</div>
+          ))}
+        </div>
+
+        {/* Content */}
+        <div style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0 }}>
+          {/* Header row */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                Pipeline
+              </div>
+              <div style={{ fontSize: 15, color: '#f0f0f5', fontWeight: 700, marginTop: 2, letterSpacing: '-0.01em' }}>
+                This week
+              </div>
+            </div>
+            <div style={{
+              padding: '4px 9px', borderRadius: 6,
+              fontSize: 10, fontWeight: 700, color: VOLT,
+              background: 'rgba(204,253,1,0.08)',
+              border: '1px solid rgba(204,253,1,0.18)',
+              letterSpacing: '0.02em',
+            }}>+£4,200</div>
+          </div>
+
+          {/* Kanban */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
+            {[
+              { stage: 'LEAD',     count: 4, color: '#5AC8FA', items: [{ name: 'Ana · Brand film', value: '£1.2k' }, { name: 'Moss Studio',   value: '£800' }] },
+              { stage: 'PROPOSAL', count: 2, color: '#FFB340', items: [{ name: 'Ridgeway × 2',      value: '£2.4k' }, { name: 'Luma coffee',   value: '£600' }] },
+              { stage: 'BOOKED',   count: 3, color: VOLT,      items: [{ name: 'Soren weddings',    value: '£3.5k' }, { name: 'Halo / launch', value: '£1.8k' }] },
+            ].map((col) => (
+              <div key={col.stage} style={{
+                background: 'rgba(255,255,255,0.015)',
+                border: '1px solid rgba(255,255,255,0.05)',
+                borderRadius: 10,
+                padding: 8,
+                display: 'flex', flexDirection: 'column', gap: 6,
+                minWidth: 0,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 2px 4px' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 9, fontWeight: 700, color: col.color, letterSpacing: '0.06em' }}>
+                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: col.color }} />
+                    {col.stage}
+                  </span>
+                  <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', fontWeight: 600 }}>{col.count}</span>
+                </div>
+                {col.items.map((it, i) => (
+                  <div key={i} style={{
+                    background: 'rgba(255,255,255,0.025)',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    borderRadius: 7, padding: '7px 8px',
+                    display: 'flex', flexDirection: 'column', gap: 4,
+                  }}>
+                    <div style={{ fontSize: 10, color: 'rgba(240,240,245,0.85)', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.name}</div>
+                    <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', fontVariantNumeric: 'tabular-nums' }}>{it.value}</div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+
+          {/* Active project row */}
+          <div style={{
+            background: 'rgba(255,255,255,0.02)',
+            border: '1px solid rgba(255,255,255,0.06)',
+            borderRadius: 10,
+            padding: 12,
+            display: 'flex', flexDirection: 'column', gap: 10,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{
+                  width: 22, height: 22, borderRadius: 5,
+                  background: 'linear-gradient(135deg, #5AC8FA, #0f7ad6)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 9, fontWeight: 800, color: '#fff',
+                }}>SW</div>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#f0f0f5', letterSpacing: '-0.01em' }}>Soren weddings — highlight reel</div>
+                  <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>Due Fri · Client portal live</div>
+                </div>
+              </div>
+              <span style={{
+                padding: '3px 7px', borderRadius: 5,
+                fontSize: 9, fontWeight: 700, color: VOLT,
+                background: 'rgba(204,253,1,0.08)', letterSpacing: '0.04em',
+              }}>IN REVIEW</span>
+            </div>
+            {/* Progress bar */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ flex: 1, height: 5, borderRadius: 4, background: 'rgba(255,255,255,0.05)', overflow: 'hidden' }}>
+                <div style={{ width: '72%', height: '100%', background: `linear-gradient(90deg, ${VOLT}, ${VOLTD})`, borderRadius: 4 }} />
+              </div>
+              <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.6)', fontVariantNumeric: 'tabular-nums' }}>72%</span>
+            </div>
+            {/* Quick avatars */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex' }}>
+                {['#FFB340', '#BF5AF2', '#5AC8FA'].map((c, i) => (
+                  <span key={i} style={{
+                    width: 18, height: 18, borderRadius: '50%',
+                    background: c, border: '2px solid #101014',
+                    marginLeft: i === 0 ? 0 : -6,
+                    fontSize: 9, fontWeight: 700, color: '#0a0a0a',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>{['A','M','L'][i]}</span>
+                ))}
+              </div>
+              <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>
+                3 collaborators · 2 new comments
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -372,30 +613,26 @@ function Hero({ onSignIn }) {
 // Redesigned: clean editorial list with red hairline separators instead of cards
 
 const PAINS = [
-  { title: 'You copied a lead from Instagram into a spreadsheet. Again.', sub: 'Manual data entry is not a business system.' },
-  { title: "A client emailed 3 days ago. You still haven't replied.",     sub: 'Buried in your inbox under 200 other things.' },
-  { title: 'Your invoices are in one app, your notes in another, your tasks somewhere else.', sub: 'Nothing talks to anything. Every job starts with 20 minutes of admin.' },
-  { title: "You spent Sunday catching up on work that should've taken 20 minutes.", sub: "That's not a workload problem. That's a systems problem." },
-  { title: 'A £2,000 project went quiet. You forgot to follow up.',       sub: "Not because you didn't care. Because you had nothing reminding you." },
-  { title: "You're running your business across 4 separate apps.",    sub: 'Notion. Google Workspace. Calendly. FreshBooks. £69+/mo — and none of them share a single client.' },
+  { title: 'Leads in one place, messages in another',           sub: 'DMs, inbox, spreadsheet — pick whichever one you forgot to check.' },
+  { title: 'Projects scattered across half a dozen tools',      sub: 'Notes here, files there, tasks in a third app. Nothing stays in sync.' },
+  { title: 'Clients constantly asking "any updates?"',          sub: 'Because there\u2019s nowhere for them to see the answer themselves.' },
+  { title: 'Feedback buried in emails and DMs',                 sub: 'Every round of revisions turns into a treasure hunt through threads.' },
+  { title: 'Hiring people is slow and messy',                   sub: 'Chasing editors on Instagram. Contracts over email. Briefs in a doc they never find.' },
 ];
 
 function ProblemSection() {
   return (
     <section style={{ padding: 'clamp(80px, 12vw, 120px) 20px', maxWidth: 880, margin: '0 auto', fontFamily: FF }}>
       <FadeUp style={{ textAlign: 'center', marginBottom: 72 }}>
-        <Label text="The reality" />
+        <Label text="Sound familiar?" />
         <h2 style={{
           fontSize: 'clamp(28px, 6vw, 52px)', fontWeight: 800,
           color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 16px', lineHeight: 1.1,
         }}>
-          You're doing the work of 5 people.
+          This is what your workflow
           <br />
-          <span style={{ color: 'rgba(240,240,245,0.3)' }}>With 8 different tools.</span>
+          <span style={{ color: 'rgba(240,240,245,0.3)' }}>probably looks like.</span>
         </h2>
-        <p style={{ fontSize: 16, color: 'rgba(240,240,245,0.4)', maxWidth: 460, margin: '0 auto' }}>
-          This is what running a solo creative business actually looks like right now.
-        </p>
       </FadeUp>
 
       <div>
@@ -421,130 +658,312 @@ function ProblemSection() {
           </FadeUp>
         ))}
       </div>
-    </section>
-  );
-}
 
-// ─── Workflow Section ─────────────────────────────────────────────────────────
-// Redesigned: timeline with connecting line, no boxed cards
-
-const WORKFLOW_STEPS = [
-  { n: '01', title: 'Lead comes in',        body: 'From Instagram, email, referral — Nomaad logs it instantly. No copying. No forgetting.',                         color: VOLT },
-  { n: '02', title: 'Follow-up goes out',   body: 'A personalised email fires automatically. The lead hears from you before you even open your laptop.',           color: '#5AC8FA' },
-  { n: '03', title: 'Call gets booked',     body: 'Your calendar link is in the email. They pick a slot. You show up and close.',                                  color: '#FFB340' },
-  { n: '04', title: 'Client is onboarded',  body: 'Contract sent. Questionnaire filled. Brief captured. Everything handled before the project even starts.',        color: '#BF5AF2' },
-  { n: '05', title: 'Project is tracked',   body: 'Tasks, deadlines, files, and client comms — all linked in one place. Nothing falls through the cracks.',        color: '#5AC8FA' },
-  { n: '06', title: 'Invoice is paid',      body: 'Invoice raised automatically when the job is done. Payment tracked. You know exactly where every pound is.',    color: VOLT },
-];
-
-function WorkflowSection() {
-  return (
-    <section id="workflow" style={{ padding: 'clamp(80px, 12vw, 120px) 20px', maxWidth: 760, margin: '0 auto', fontFamily: FF }}>
-      <FadeUp style={{ textAlign: 'center', marginBottom: 80 }}>
-        <Label text="How it works" />
-        <h2 style={{
-          fontSize: 'clamp(28px, 6vw, 52px)', fontWeight: 800,
-          color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 16px', lineHeight: 1.1,
-        }}>
-          This is how your business
-          <br />
-          <span style={{ color: VOLT }}>runs on Nomaad.</span>
-        </h2>
-        <p style={{ fontSize: 16, color: 'rgba(240,240,245,0.4)', maxWidth: 440, margin: '0 auto' }}>
-          One flow. No dropped balls. No manual steps. Just clients in — revenue out.
-        </p>
-      </FadeUp>
-
-      <div style={{ position: 'relative' }}>
-        <div style={{
-          position: 'absolute', left: 19, top: 8, bottom: 8, width: 1,
-          background: 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.08) 10%, rgba(255,255,255,0.08) 90%, transparent)',
-        }} />
-        {WORKFLOW_STEPS.map((s, i) => (
-          <FadeUp key={s.n} delay={i * 0.07}>
-            <div style={{
-              display: 'flex', gap: 28, padding: '20px 0 36px',
-              position: 'relative',
-            }}>
-              <div style={{
-                width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
-                background: SHELL,
-                border: `1px solid ${s.color}35`,
-                boxShadow: `0 0 0 4px ${SHELL}, 0 0 20px ${s.color}20`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 12, fontWeight: 800, color: s.color,
-                fontVariantNumeric: 'tabular-nums', zIndex: 1,
-                letterSpacing: '0.02em',
-              }}>{s.n}</div>
-              <div style={{ flex: 1, paddingTop: 6 }}>
-                <h3 style={{
-                  fontSize: 22, fontWeight: 700, color: '#f0f0f5',
-                  margin: '0 0 8px', letterSpacing: '-0.02em', lineHeight: 1.2,
-                }}>{s.title}</h3>
-                <p style={{ fontSize: 15, color: 'rgba(240,240,245,0.5)', lineHeight: 1.65, margin: 0, maxWidth: 520 }}>
-                  {s.body}
-                </p>
-              </div>
-            </div>
-          </FadeUp>
-        ))}
-      </div>
-
-      <FadeUp style={{ textAlign: 'center', marginTop: 32 }}>
+      <FadeUp style={{ textAlign: 'center', marginTop: 56 }}>
         <p style={{
-          fontSize: 15, color: 'rgba(240,240,245,0.55)', lineHeight: 1.6,
-          maxWidth: 520, margin: '0 auto',
+          fontSize: 'clamp(20px, 2.8vw, 26px)', fontWeight: 700,
+          color: '#f0f0f5', lineHeight: 1.3, letterSpacing: '-0.02em',
+          margin: 0, maxWidth: 520, marginLeft: 'auto', marginRight: 'auto',
         }}>
-          This replaces <span style={{ color: VOLT, fontWeight: 700 }}>5 separate tools</span> and{' '}
-          <span style={{ color: VOLT, fontWeight: 700 }}>hours of manual work</span> every week.
+          It&apos;s not you.{' '}
+          <span style={{ color: VOLT }}>Your system is broken.</span>
         </p>
       </FadeUp>
     </section>
   );
 }
 
-// ─── Outcomes Section ─────────────────────────────────────────────────────────
-// Redesigned: clean 2-column grid with icons + text, no card backgrounds
+// ─── Product Flow Section ─────────────────────────────────────────────────────
+// 3-step horizontal flow: FIND → MANAGE → DELIVER
 
-const OUTCOMES = [
-  { icon: '⏱', headline: '2–3 hours back every day', body: 'Admin that used to eat your mornings now happens automatically in the background.' },
-  { icon: '🎯', headline: 'Zero missed leads',        body: 'Every enquiry is logged and followed up. You stop losing work you never knew you had.' },
-  { icon: '💸', headline: 'Invoices that get paid',   body: 'Automated reminders and instant invoicing mean you stop chasing and start collecting.' },
-  { icon: '🧠', headline: 'One less thing to think about', body: 'One dashboard. Every client, every project, every payment. Nothing living in your head.' },
-  { icon: '📵', headline: 'Weekends that are actually off', body: 'When your system runs itself, Sunday admin catch-ups stop being a thing.' },
-  { icon: '⚡', headline: 'A business that scales with you', body: 'Take on more clients without taking on more chaos. The system handles the growth.' },
+const FLOW_STEPS = [
+  {
+    n: '01', title: 'Find',
+    body: 'Discover and capture leads instantly.',
+    color: VOLT,
+    icon: (
+      <svg viewBox="0 0 24 24" width={20} height={20} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
+      </svg>
+    ),
+  },
+  {
+    n: '02', title: 'Manage',
+    body: 'Track deals, projects, and communication in one system.',
+    color: '#5AC8FA',
+    icon: (
+      <svg viewBox="0 0 24 24" width={20} height={20} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <rect x="3" y="4" width="7" height="16" rx="1.5" />
+        <rect x="14" y="4" width="7" height="9" rx="1.5" />
+        <path d="M14 17h7" />
+      </svg>
+    ),
+  },
+  {
+    n: '03', title: 'Deliver',
+    body: 'Share progress, collect feedback, and complete projects cleanly.',
+    color: '#BF5AF2',
+    icon: (
+      <svg viewBox="0 0 24 24" width={20} height={20} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M5 12h14" /><path d="m13 6 6 6-6 6" />
+      </svg>
+    ),
+  },
 ];
 
-function OutcomesSection() {
+function ProductFlowSection() {
   return (
-    <section style={{ padding: 'clamp(80px, 12vw, 120px) 20px', maxWidth: 1040, margin: '0 auto', fontFamily: FF }}>
+    <section id="how-it-works" style={{ padding: 'clamp(80px, 12vw, 120px) 20px', maxWidth: 1080, margin: '0 auto', fontFamily: FF }}>
       <FadeUp style={{ textAlign: 'center', marginBottom: 72 }}>
-        <Label text="What you get back" />
+        <Label text="How it works" />
         <h2 style={{
           fontSize: 'clamp(28px, 6vw, 52px)', fontWeight: 800,
           color: '#f0f0f5', letterSpacing: '-0.03em', margin: 0, lineHeight: 1.1,
         }}>
-          Not features. <span style={{ color: VOLT }}>Results.</span>
+          From idea <span style={{ color: 'rgba(240,240,245,0.3)' }}>→</span> to paid{' '}
+          <span style={{ color: 'rgba(240,240,245,0.3)' }}>→</span> to <span style={{ color: VOLT }}>delivered.</span>
         </h2>
       </FadeUp>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', columnGap: 48, rowGap: 40 }}>
-        {OUTCOMES.map((o, i) => (
-          <FadeUp key={i} delay={i * 0.05}>
-            <div style={{ display: 'flex', gap: 18, alignItems: 'flex-start' }}>
+      <div
+        className="nomaad-flow-grid"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+          alignItems: 'stretch',
+          gap: 16,
+          position: 'relative',
+        }}
+      >
+        {FLOW_STEPS.map((s, i) => (
+          <div key={s.n}>
+            <FadeUp delay={i * 0.08}>
               <div style={{
-                width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-                background: 'rgba(204,253,1,0.08)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16,
-              }}>{o.icon}</div>
-              <div>
-                <div style={{ fontSize: 17, fontWeight: 700, color: '#f0f0f5', marginBottom: 8, lineHeight: 1.3, letterSpacing: '-0.01em' }}>{o.headline}</div>
-                <div style={{ fontSize: 14, color: 'rgba(240,240,245,0.45)', lineHeight: 1.65 }}>{o.body}</div>
+                padding: 28,
+                borderRadius: 18,
+                background: 'rgba(255,255,255,0.015)',
+                border: '1px solid rgba(255,255,255,0.06)',
+                height: '100%',
+                display: 'flex', flexDirection: 'column', gap: 16,
+                position: 'relative', overflow: 'hidden',
+              }}>
+                <div style={{
+                  position: 'absolute', top: 0, left: 0, right: 0, height: 2,
+                  background: `linear-gradient(90deg, ${s.color}00 0%, ${s.color}80 50%, ${s.color}00 100%)`,
+                }} />
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{
+                    width: 40, height: 40, borderRadius: 11,
+                    background: `${s.color}12`,
+                    border: `1px solid ${s.color}28`,
+                    color: s.color,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    {s.icon}
+                  </div>
+                  <span style={{
+                    fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.25)',
+                    fontVariantNumeric: 'tabular-nums', letterSpacing: '0.04em',
+                  }}>{s.n}</span>
+                </div>
+
+                <div>
+                  <h3 style={{
+                    fontSize: 22, fontWeight: 700,
+                    color: '#f0f0f5', margin: '0 0 10px',
+                    letterSpacing: '-0.02em', lineHeight: 1.15,
+                  }}>
+                    {s.title}
+                  </h3>
+                  <p style={{
+                    fontSize: 14, color: 'rgba(240,240,245,0.5)',
+                    lineHeight: 1.6, margin: 0,
+                  }}>
+                    {s.body}
+                  </p>
+                </div>
               </div>
-            </div>
-          </FadeUp>
+            </FadeUp>
+          </div>
         ))}
+
+        {/* Connecting arrows overlay (desktop only) */}
+        <div aria-hidden="true" className="nomaad-flow-arrows" style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          display: 'flex',
+        }}>
+          {[33.33, 66.66].map(left => (
+            <div key={left} style={{
+              position: 'absolute', top: '50%', left: `${left}%`,
+              transform: 'translate(-50%, -50%)',
+              width: 24, height: 24, borderRadius: '50%',
+              background: SHELL,
+              border: '1px solid rgba(255,255,255,0.1)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'rgba(255,255,255,0.5)',
+              fontSize: 12, fontWeight: 700,
+            }}>→</div>
+          ))}
+        </div>
       </div>
+
+      <style>{`
+        @media (max-width: 820px) {
+          .nomaad-flow-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .nomaad-flow-arrows {
+            display: none !important;
+          }
+        }
+      `}</style>
+    </section>
+  );
+}
+
+// ─── Core Value Section ───────────────────────────────────────────────────────
+// 5 outcome blocks: FIND / TRACK / DELIVER / CLIENT PORTAL / HIRE
+
+const CORE_VALUES = [
+  {
+    tag: 'Find clients',
+    headline: 'AI-powered prospecting that actually finds real opportunities.',
+    body: 'Surface the right leads — without endless searching, scraping or paying for 3 different tools.',
+    icon: (
+      <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
+      </svg>
+    ),
+  },
+  {
+    tag: 'Track everything',
+    headline: 'Know exactly where every lead, project, and client stands.',
+    body: 'A single pipeline across prospects, proposals, and active jobs — at a glance, not buried in tabs.',
+    icon: (
+      <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M4 20V10" /><path d="M10 20V4" /><path d="M16 20v-8" /><path d="M22 20H2" />
+      </svg>
+    ),
+  },
+  {
+    tag: 'Deliver without chaos',
+    headline: 'Structured project workflows so nothing gets missed.',
+    body: 'Briefs, files, milestones, payments — one place, tied to one client, moving in one direction.',
+    icon: (
+      <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><path d="m9 11 3 3L22 4" />
+      </svg>
+    ),
+  },
+  {
+    tag: 'Client portal',
+    featured: true,
+    headline: 'Give clients one place to track progress, review edits, and request changes.',
+    body: 'No more chasing messages across email, DMs and WhatsApp. They log in — everything they need is there.',
+    icon: (
+      <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <rect x="3" y="4" width="18" height="16" rx="2" />
+        <path d="M3 8h18" /><circle cx="7" cy="6" r="0.6" fill="currentColor" />
+      </svg>
+    ),
+  },
+  {
+    tag: 'Hire & collaborate',
+    headline: 'Find and hire other creators inside Nomaad.',
+    body: 'Editors, designers, shooters — vetted, bookable, and ready to plug straight into your projects.',
+    icon: (
+      <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <circle cx="9" cy="8" r="3.4" /><path d="M2 20c0-3.4 3.1-6 7-6s7 2.6 7 6" />
+        <circle cx="17.5" cy="9.5" r="2.4" /><path d="M17.5 14c2.8 0 4.5 1.8 4.5 4" />
+      </svg>
+    ),
+  },
+];
+
+function CoreValueSection() {
+  return (
+    <section style={{ padding: 'clamp(80px, 12vw, 120px) 20px', maxWidth: 1080, margin: '0 auto', fontFamily: FF }}>
+      <FadeUp style={{ textAlign: 'center', marginBottom: 72 }}>
+        <Label text="Everything in one place" />
+        <h2 style={{
+          fontSize: 'clamp(28px, 6vw, 52px)', fontWeight: 800,
+          color: '#f0f0f5', letterSpacing: '-0.03em', margin: 0, lineHeight: 1.1,
+        }}>
+          Everything connected.
+          {' '}
+          <span style={{ color: VOLT }}>Nothing scattered.</span>
+        </h2>
+      </FadeUp>
+
+      <div
+        className="nomaad-core-grid"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(6, minmax(0, 1fr))',
+          gap: 16,
+        }}
+      >
+        {CORE_VALUES.map((v, i) => {
+          // Layout: 3 across top row (cols 1-2, 3-4, 5-6), then featured portal spans 4 cols + hire spans 2
+          const span = v.featured ? 4 : (i === 4 ? 2 : 2);
+          return (
+            <FadeUp key={v.tag} delay={i * 0.06} style={{ gridColumn: `span ${span}` }}>
+              <div style={{
+                padding: 28,
+                borderRadius: 18,
+                background: v.featured
+                  ? 'linear-gradient(180deg, rgba(204,253,1,0.04) 0%, rgba(204,253,1,0.01) 100%)'
+                  : 'rgba(255,255,255,0.015)',
+                border: v.featured
+                  ? '1px solid rgba(204,253,1,0.16)'
+                  : '1px solid rgba(255,255,255,0.06)',
+                height: '100%',
+                display: 'flex', flexDirection: 'column', gap: 16,
+                position: 'relative', overflow: 'hidden',
+                minHeight: 220,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{
+                    width: 34, height: 34, borderRadius: 10,
+                    background: v.featured ? 'rgba(204,253,1,0.14)' : 'rgba(255,255,255,0.04)',
+                    border: v.featured ? '1px solid rgba(204,253,1,0.28)' : '1px solid rgba(255,255,255,0.05)',
+                    color: v.featured ? VOLT : 'rgba(240,240,245,0.75)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>{v.icon}</div>
+                  <span style={{
+                    fontSize: 10, fontWeight: 700,
+                    color: v.featured ? VOLT : 'rgba(240,240,245,0.4)',
+                    letterSpacing: '0.12em', textTransform: 'uppercase',
+                  }}>{v.tag}</span>
+                </div>
+
+                <div>
+                  <div style={{
+                    fontSize: v.featured ? 20 : 17, fontWeight: 700,
+                    color: '#f0f0f5', marginBottom: 8,
+                    lineHeight: 1.3, letterSpacing: '-0.015em',
+                  }}>{v.headline}</div>
+                  <div style={{ fontSize: 13.5, color: 'rgba(240,240,245,0.5)', lineHeight: 1.6 }}>
+                    {v.body}
+                  </div>
+                </div>
+              </div>
+            </FadeUp>
+          );
+        })}
+      </div>
+
+      <style>{`
+        @media (max-width: 880px) {
+          .nomaad-core-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .nomaad-core-grid > * {
+            grid-column: span 1 !important;
+          }
+        }
+      `}</style>
     </section>
   );
 }
@@ -983,6 +1402,414 @@ function IntegrationsSection() {
   );
 }
 
+// ─── Client Portal Showcase ───────────────────────────────────────────────────
+
+const PORTAL_BULLETS = [
+  { title: 'Clients log in anytime',        body: 'A single link. No app to install. Bookmarkable.' },
+  { title: 'See project progress instantly', body: 'Status, milestones, next step — visible without asking.' },
+  { title: 'Review edits in one place',     body: 'Drafts, cuts and references all queued for feedback.' },
+  { title: 'Submit change requests clearly', body: 'Timestamped notes, not 20-message Slack threads.' },
+  { title: 'No more messy email threads',   body: 'Everything said, shared or sent lives alongside the project.' },
+];
+
+function ClientPortalShowcase() {
+  return (
+    <section style={{ padding: 'clamp(80px, 12vw, 120px) 20px', maxWidth: 1120, margin: '0 auto', fontFamily: FF }}>
+      <FadeUp style={{ textAlign: 'center', marginBottom: 64, maxWidth: 680, marginLeft: 'auto', marginRight: 'auto' }}>
+        <Label text="Client portal" />
+        <h2 style={{
+          fontSize: 'clamp(28px, 6vw, 52px)', fontWeight: 800,
+          color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 16px', lineHeight: 1.1,
+        }}>
+          Clients stop asking{' '}
+          <span style={{ color: VOLT }}>&ldquo;any updates?&rdquo;</span>
+        </h2>
+        <p style={{ fontSize: 16, color: 'rgba(240,240,245,0.4)', margin: 0, lineHeight: 1.6 }}>
+          One login. Everything they need. Nothing they have to chase you for.
+        </p>
+      </FadeUp>
+
+      <div
+        className="nomaad-portal-grid"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1.1fr 1fr',
+          alignItems: 'center',
+          gap: 48,
+        }}
+      >
+        <FadeUp>
+          <ClientPortalMock />
+        </FadeUp>
+
+        <FadeUp delay={0.1}>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 18 }}>
+            {PORTAL_BULLETS.map((b, i) => (
+              <li key={i} style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+                <span style={{
+                  width: 22, height: 22, borderRadius: '50%',
+                  background: 'rgba(204,253,1,0.1)',
+                  border: '1px solid rgba(204,253,1,0.25)',
+                  color: VOLT,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0, marginTop: 2,
+                }}>
+                  <svg viewBox="0 0 24 24" width={12} height={12} fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M20 6 9 17l-5-5" />
+                  </svg>
+                </span>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: '#f0f0f5', letterSpacing: '-0.01em' }}>
+                    {b.title}
+                  </div>
+                  <div style={{ fontSize: 13, color: 'rgba(240,240,245,0.45)', marginTop: 3, lineHeight: 1.55 }}>
+                    {b.body}
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          <p style={{
+            marginTop: 32, padding: '14px 18px',
+            border: '1px solid rgba(204,253,1,0.16)',
+            background: 'rgba(204,253,1,0.04)',
+            borderRadius: 12,
+            fontSize: 14, fontWeight: 600, color: '#f0f0f5',
+            letterSpacing: '-0.01em',
+          }}>
+            Clear for them.{' '}
+            <span style={{ color: VOLT }}>Easy for you.</span>
+          </p>
+        </FadeUp>
+      </div>
+
+      <style>{`
+        @media (max-width: 880px) {
+          .nomaad-portal-grid {
+            grid-template-columns: 1fr !important;
+            gap: 32px !important;
+          }
+        }
+      `}</style>
+    </section>
+  );
+}
+
+function ClientPortalMock() {
+  return (
+    <div style={{
+      borderRadius: 18,
+      background: 'linear-gradient(180deg, rgba(22,22,26,0.95) 0%, rgba(14,14,18,0.95) 100%)',
+      border: '1px solid rgba(255,255,255,0.08)',
+      boxShadow: '0 30px 80px rgba(0,0,0,0.4)',
+      overflow: 'hidden',
+    }}>
+      {/* Window chrome */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 10,
+        padding: '12px 16px',
+        borderBottom: '1px solid rgba(255,255,255,0.05)',
+        background: 'rgba(255,255,255,0.015)',
+      }}>
+        <div style={{ display: 'flex', gap: 6 }}>
+          {['#ff5f57','#ffbd2e','#28c840'].map(c => (
+            <span key={c} style={{ width: 10, height: 10, borderRadius: '50%', background: c, opacity: 0.75 }} />
+          ))}
+        </div>
+        <div style={{
+          flex: 1, textAlign: 'center',
+          fontSize: 11, color: 'rgba(255,255,255,0.4)',
+          fontWeight: 600, letterSpacing: '0.02em',
+        }}>
+          portal.nomaad.ai/soren-weddings
+        </div>
+      </div>
+
+      <div style={{ padding: 22, display: 'flex', flexDirection: 'column', gap: 18 }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+              Soren Weddings
+            </div>
+            <div style={{ fontSize: 18, color: '#f0f0f5', fontWeight: 700, marginTop: 3, letterSpacing: '-0.015em' }}>
+              Highlight reel · Autumn 2026
+            </div>
+          </div>
+          <span style={{
+            padding: '5px 10px', borderRadius: 6,
+            fontSize: 10, fontWeight: 700, color: VOLT,
+            background: 'rgba(204,253,1,0.08)',
+            border: '1px solid rgba(204,253,1,0.18)',
+            letterSpacing: '0.04em',
+          }}>IN REVIEW</span>
+        </div>
+
+        {/* Milestones */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+          {[
+            { label: 'Brief',    done: true  },
+            { label: 'Shoot',    done: true  },
+            { label: 'Rough cut', done: true },
+            { label: 'Review',   done: false, active: true },
+            { label: 'Final',    done: false },
+          ].map((m, i, arr) => (
+            <div key={m.label} style={{ display: 'flex', alignItems: 'center', flex: i === arr.length - 1 ? '0 0 auto' : 1 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                <span style={{
+                  width: 20, height: 20, borderRadius: '50%',
+                  background: m.done ? VOLT : m.active ? 'rgba(204,253,1,0.15)' : 'rgba(255,255,255,0.06)',
+                  border: m.active ? `2px solid ${VOLT}` : '2px solid transparent',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  {m.done && (
+                    <svg viewBox="0 0 24 24" width={10} height={10} fill="none" stroke="#0a0a0a" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                  )}
+                </span>
+                <span style={{
+                  fontSize: 9, fontWeight: 600,
+                  color: m.active ? VOLT : m.done ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.35)',
+                  letterSpacing: '0.02em',
+                }}>{m.label}</span>
+              </div>
+              {i < arr.length - 1 && (
+                <div style={{
+                  flex: 1, height: 2, marginTop: -18,
+                  background: m.done ? VOLT : 'rgba(255,255,255,0.06)',
+                  opacity: m.done ? 0.5 : 1,
+                }} />
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Latest draft card */}
+        <div style={{
+          background: 'rgba(255,255,255,0.02)',
+          border: '1px solid rgba(255,255,255,0.06)',
+          borderRadius: 12,
+          padding: 14,
+          display: 'flex', gap: 12, alignItems: 'center',
+        }}>
+          <div style={{
+            width: 56, height: 40, borderRadius: 8,
+            background: 'linear-gradient(135deg, #5AC8FA, #0f7ad6)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <svg viewBox="0 0 24 24" width={16} height={16} fill="#fff" aria-hidden="true">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#f0f0f5', letterSpacing: '-0.01em' }}>Rough cut · v3.mp4</div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>Uploaded 2h ago · 3:42 runtime</div>
+          </div>
+          <button style={{
+            padding: '6px 10px', borderRadius: 7,
+            background: VOLT, color: '#0a0a0a',
+            fontSize: 10, fontWeight: 800, letterSpacing: '0.02em',
+            border: 'none', cursor: 'pointer', fontFamily: FF,
+          }}>Review</button>
+        </div>
+
+        {/* Latest request */}
+        <div style={{
+          background: 'rgba(255,179,64,0.06)',
+          border: '1px solid rgba(255,179,64,0.18)',
+          borderRadius: 12,
+          padding: 12,
+          display: 'flex', gap: 10, alignItems: 'flex-start',
+        }}>
+          <span style={{
+            width: 22, height: 22, borderRadius: '50%',
+            background: '#FFB340',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 10, fontWeight: 800, color: '#0a0a0a',
+            flexShrink: 0,
+          }}>A</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#f0f0f5' }}>
+              Ana left a note on <span style={{ color: '#FFB340' }}>01:24</span>
+            </div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 2, lineHeight: 1.45 }}>
+              &ldquo;Can we soften the audio here and hold the shot slightly longer before the cut?&rdquo;
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Collaboration Section ────────────────────────────────────────────────────
+
+const COLLAB_BULLETS = [
+  { title: 'Find vetted creators',           body: 'Editors, shooters, designers, strategists — with real portfolios.' },
+  { title: 'Plug them in instantly',         body: 'Add them to a project in one click. No onboarding cycle.' },
+  { title: 'Keep everything in one system',  body: 'Briefs, files, comments — shared, not scattered.' },
+  { title: 'Manage team and client together', body: 'Same workspace. Different permissions. No confusion.' },
+];
+
+function CollaborationSection() {
+  return (
+    <section style={{ padding: 'clamp(80px, 12vw, 120px) 20px', maxWidth: 1120, margin: '0 auto', fontFamily: FF }}>
+      <FadeUp style={{ textAlign: 'center', marginBottom: 64, maxWidth: 680, marginLeft: 'auto', marginRight: 'auto' }}>
+        <Label text="Collaborate" />
+        <h2 style={{
+          fontSize: 'clamp(28px, 6vw, 52px)', fontWeight: 800,
+          color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 16px', lineHeight: 1.1,
+        }}>
+          Need help on a project?{' '}
+          <span style={{ color: VOLT }}>Hire inside Nomaad.</span>
+        </h2>
+        <p style={{ fontSize: 16, color: 'rgba(240,240,245,0.4)', margin: 0, lineHeight: 1.6 }}>
+          No more hunting through Instagram or random contacts.
+        </p>
+      </FadeUp>
+
+      <div
+        className="nomaad-collab-grid"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1.1fr',
+          alignItems: 'center',
+          gap: 48,
+        }}
+      >
+        <FadeUp>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 18 }}>
+            {COLLAB_BULLETS.map((b, i) => (
+              <li key={i} style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+                <span style={{
+                  width: 22, height: 22, borderRadius: '50%',
+                  background: 'rgba(204,253,1,0.1)',
+                  border: '1px solid rgba(204,253,1,0.25)',
+                  color: VOLT,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0, marginTop: 2,
+                }}>
+                  <svg viewBox="0 0 24 24" width={12} height={12} fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M20 6 9 17l-5-5" />
+                  </svg>
+                </span>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: '#f0f0f5', letterSpacing: '-0.01em' }}>
+                    {b.title}
+                  </div>
+                  <div style={{ fontSize: 13, color: 'rgba(240,240,245,0.45)', marginTop: 3, lineHeight: 1.55 }}>
+                    {b.body}
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </FadeUp>
+
+        <FadeUp delay={0.1}>
+          <CollabMock />
+        </FadeUp>
+      </div>
+
+      <style>{`
+        @media (max-width: 880px) {
+          .nomaad-collab-grid {
+            grid-template-columns: 1fr !important;
+            gap: 32px !important;
+          }
+        }
+      `}</style>
+    </section>
+  );
+}
+
+function CollabMock() {
+  const roster = [
+    { name: 'Ana Ríos',    role: 'Editor',       rate: '£65/hr', avatar: 'A', color: '#FFB340', rating: '4.9', status: 'Available' },
+    { name: 'Marcus Lee',  role: 'Colourist',    rate: '£90/hr', avatar: 'M', color: '#BF5AF2', rating: '5.0', status: 'Booked · Fri' },
+    { name: 'Halo Studio', role: 'Motion',       rate: '£110/hr', avatar: 'H', color: '#5AC8FA', rating: '4.8', status: 'Available' },
+  ];
+
+  return (
+    <div style={{
+      borderRadius: 18,
+      background: 'linear-gradient(180deg, rgba(22,22,26,0.95) 0%, rgba(14,14,18,0.95) 100%)',
+      border: '1px solid rgba(255,255,255,0.08)',
+      boxShadow: '0 30px 80px rgba(0,0,0,0.4)',
+      overflow: 'hidden',
+    }}>
+      <div style={{
+        padding: '14px 18px',
+        borderBottom: '1px solid rgba(255,255,255,0.05)',
+        background: 'rgba(255,255,255,0.015)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}>
+        <div>
+          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            Hire
+          </div>
+          <div style={{ fontSize: 14, color: '#f0f0f5', fontWeight: 700, marginTop: 2 }}>
+            Creators for your project
+          </div>
+        </div>
+        <span style={{
+          padding: '5px 10px', borderRadius: 999,
+          fontSize: 10, fontWeight: 700, color: VOLT,
+          background: 'rgba(204,253,1,0.08)', letterSpacing: '0.04em',
+        }}>3 matches</span>
+      </div>
+
+      <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {roster.map(p => (
+          <div key={p.name} style={{
+            display: 'flex', alignItems: 'center', gap: 12,
+            padding: 12,
+            background: 'rgba(255,255,255,0.02)',
+            border: '1px solid rgba(255,255,255,0.05)',
+            borderRadius: 12,
+          }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: 10,
+              background: p.color,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 14, fontWeight: 800, color: '#0a0a0a',
+              flexShrink: 0,
+            }}>{p.avatar}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#f0f0f5', letterSpacing: '-0.01em' }}>{p.name}</span>
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 3,
+                  fontSize: 10, color: '#FFB340', fontWeight: 700,
+                }}>
+                  <svg viewBox="0 0 24 24" width={10} height={10} fill="currentColor" aria-hidden="true">
+                    <path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.9L12 17.8 5.8 21l1.2-6.9-5-4.9 6.9-1z" />
+                  </svg>
+                  {p.rating}
+                </span>
+              </div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>
+                {p.role} · {p.rate} · {p.status}
+              </div>
+            </div>
+            <button style={{
+              padding: '6px 12px', borderRadius: 8,
+              background: 'rgba(204,253,1,0.1)',
+              border: '1px solid rgba(204,253,1,0.25)',
+              color: VOLT,
+              fontSize: 10, fontWeight: 700, letterSpacing: '0.04em',
+              cursor: 'pointer', fontFamily: FF,
+            }}>Add</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Avatar Section ───────────────────────────────────────────────────────────
 
 function AvatarSection() {
@@ -1151,15 +1978,16 @@ function TestimonialsSection() {
   return (
     <section style={{ padding: 'clamp(80px, 12vw, 120px) 20px', maxWidth: 1200, margin: '0 auto', fontFamily: FF }}>
       <FadeUp style={{ textAlign: 'center', marginBottom: 56, maxWidth: 640, marginLeft: 'auto', marginRight: 'auto' }}>
-        <Label text="Beta users" />
+        <Label text="Social proof" />
         <h2 style={{
           fontSize: 'clamp(28px, 6vw, 52px)', fontWeight: 800,
           color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 16px', lineHeight: 1.1,
         }}>
-          Real people. Real results.
+          Built for how creatives{' '}
+          <span style={{ color: VOLT }}>actually work.</span>
         </h2>
         <p style={{ fontSize: 16, color: 'rgba(240,240,245,0.4)', margin: 0, lineHeight: 1.6 }}>
-          Freelancers who replaced their stack with Nomaad and got their time back.
+          Early access users replacing their scattered stacks with one system.
         </p>
       </FadeUp>
 
@@ -1330,14 +2158,14 @@ function CloserSection() {
           fontSize: 'clamp(32px, 5vw, 58px)', fontWeight: 800,
           color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 16px', lineHeight: 1.08,
         }}>
-          Stop managing your business.
+          Stop juggling tools.
           <br />
-          <span style={{ color: VOLT }}>Let it run itself.</span>
+          <span style={{ color: VOLT }}>Start running your business.</span>
         </h2>
         <p style={{ fontSize: 16, color: 'rgba(240,240,245,0.4)', lineHeight: 1.65, margin: '0 0 40px' }}>
-          Join the waitlist now. Be first in when we launch.
+          This is how your workflow should feel.
         </p>
-        <WaitlistForm source="closer" label="Get early access →" />
+        <WaitlistForm source="closer" label="Join the waitlist →" />
         <p style={{ fontSize: 12, color: 'rgba(240,240,245,0.25)', marginTop: 16 }}>
           No card required · 14-day free trial on launch · Cancel anytime
         </p>
@@ -1382,8 +2210,10 @@ export default function LandingPage({ onGetStarted }) {
       <Nav onSignIn={onGetStarted} />
       <Hero onSignIn={onGetStarted} />
       <ProblemSection />
-      <WorkflowSection />
-      <OutcomesSection />
+      <CoreValueSection />
+      <ProductFlowSection />
+      <ClientPortalShowcase />
+      <CollaborationSection />
       <StackSection />
       <IntegrationsSection />
       <AvatarSection />
