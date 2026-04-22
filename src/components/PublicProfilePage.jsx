@@ -14,27 +14,63 @@ const VOLTD = '#b8e300';
 const SHELL = '#08080a';
 const FF    = "-apple-system,'SF Pro Display','SF Pro Text','Helvetica Neue',system-ui,sans-serif";
 
-const CAT_COLORS = {
-  photo:   { bg: 'rgba(90,200,250,0.1)',  border: 'rgba(90,200,250,0.2)',  text: '#5AC8FA' },
-  video:   { bg: 'rgba(255,98,89,0.1)',   border: 'rgba(255,98,89,0.2)',   text: '#FF6259' },
-  design:  { bg: 'rgba(191,90,242,0.1)',  border: 'rgba(191,90,242,0.2)',  text: '#BF5AF2' },
-  edit:    { bg: 'rgba(255,179,64,0.1)',  border: 'rgba(255,179,64,0.2)',  text: '#FFB340' },
-  create:  { bg: 'rgba(204,253,1,0.08)', border: 'rgba(204,253,1,0.18)', text: VOLT },
-  produce: { bg: 'rgba(48,209,88,0.1)',   border: 'rgba(48,209,88,0.2)',   text: '#30D158' },
-};
+const SOCIAL_DISPLAY = [
+  { key: 'instagram', label: 'Instagram' },
+  { key: 'linkedin',  label: 'LinkedIn' },
+  { key: 'tiktok',    label: 'TikTok' },
+  { key: 'x',         label: 'X' },
+  { key: 'youtube',   label: 'YouTube' },
+  { key: 'vimeo',     label: 'Vimeo' },
+  { key: 'website',   label: 'Website' },
+];
 
-function catStyle(cat) {
-  return CAT_COLORS[cat?.toLowerCase()] || CAT_COLORS.create;
+function normalizeSocialUrl(value, platform) {
+  if (!value || !value.trim()) return null;
+  const v = value.trim();
+  if (v.startsWith('http')) return v;
+  if (platform === 'linkedin') return `https://linkedin.com/in/${v.replace(/^\//, '')}`;
+  if (platform === 'youtube') return `https://youtube.com/${v}`;
+  if (platform === 'vimeo') return `https://vimeo.com/${v}`;
+  if (['instagram', 'tiktok', 'x'].includes(platform)) return `https://${platform}.com/${v.replace(/^@/, '')}`;
+  return `https://${v}`;
+}
+
+function SocialIcon({ platform }) {
+  const p = { width: 18, height: 18, fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' };
+  if (platform === 'instagram') return <svg {...p} viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>;
+  if (platform === 'linkedin') return <svg {...p} viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>;
+  if (platform === 'tiktok') return <svg {...p} viewBox="0 0 24 24"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg>;
+  if (platform === 'x') return <svg width={18} height={18} viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>;
+  if (platform === 'youtube') return <svg width={18} height={18} viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>;
+  if (platform === 'vimeo') return <svg {...p} viewBox="0 0 24 24"><path d="M22 8.1C22 6 20.9 4.9 19.7 4.9c-.7 0-1.3.3-1.8.9-.5.6-.9 1.4-.9 2.5 0 2.3 1.4 3.5 4.1 3.5 1.5 0 2.9-.3 3.9-1.1V12c-1.1.5-2.3.8-3.6.8-2.9 0-4.9-1.6-4.9-4.7 0-1.5.5-2.7 1.7-3.6 1.2-1 2.7-1.4 4.5-1.4 1.7 0 3.1.4 4.1 1.2.9.9 1.4 2 1.4 3.5v5.5c0 .8.1 1.4.3 1.8.2.4.6.8 1.2 1 .6.3 1.4.4 2.3.4 1.3 0 2.4-.4 3.2-1.2.8-.8 1.3-2 1.3-3.5-.2-2.3-1.7-3.7-4.3-4.2z"/></svg>;
+  if (platform === 'website') return <svg {...p} viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>;
+  return null;
+}
+
+function SocialLink({ href, label, platform }) {
+  if (!href) return null;
+  return (
+    <a href={href} target="_blank" rel="noreferrer" title={label} style={{
+      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+      width: 44, height: 44, borderRadius: '50%',
+      background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+      color: 'rgba(240,240,245,0.5)', fontSize: 18,
+      textDecoration: 'none', transition: 'all 0.2s', fontFamily: FF,
+    }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(204,253,1,0.3)'; e.currentTarget.style.color = VOLT; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = 'rgba(240,240,245,0.5)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+    >
+      <SocialIcon platform={platform} />
+    </a>
+  );
 }
 
 function Avatar({ name, url, size = 112 }) {
   const [err, setErr] = useState(false);
   if (url && !err) {
     return (
-      <img
-        src={url} alt={name}
-        onError={() => setErr(true)}
-        style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', display: 'block', margin: "0 auto", border: "4px solid #111115", boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}
+      <img src={url} alt={name} onError={() => setErr(true)}
+        style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', display: "block", margin: "0 auto", border: "4px solid #111115", boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}
       />
     );
   }
@@ -51,27 +87,7 @@ function Avatar({ name, url, size = 112 }) {
   );
 }
 
-function SocialLink({ href, label, icon }) {
-  if (!href) return null;
-  const full = href.startsWith('http') ? href : `https://${href}`;
-  return (
-    <a href={full} target="_blank" rel="noreferrer" title={label} style={{
-      display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-      width: 44, height: 44, borderRadius: '50%',
-      background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
-      color: 'rgba(240,240,245,0.6)', fontSize: 18,
-      textDecoration: 'none', transition: 'all 0.2s', fontFamily: FF,
-    }}
-      onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(204,253,1,0.3)'; e.currentTarget.style.color = VOLT; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-      onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = 'rgba(240,240,245,0.6)'; e.currentTarget.style.transform = 'translateY(0)'; }}
-    >
-      <span>{icon}</span>
-    </a>
-  );
-}
-
 function ProjectCard({ project }) {
-  const cs = catStyle(project.category);
   const href = project.media_url && project.media_url.trim() !== "" ? project.media_url : null;
   const validHref = href ? (href.startsWith("http") ? href : `https://${href}`) : null;
 
@@ -91,34 +107,26 @@ function ProjectCard({ project }) {
         onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; }}
         onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)'; }}
       >
-        {/* Cover */}
         <div style={{
           width: '100%', aspectRatio: '16/10', overflow: 'hidden',
           background: 'rgba(255,255,255,0.03)', position: 'relative',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
           {project.cover_url ? (
-            <img src={project.cover_url} alt={project.title}
-              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            <img src={project.cover_url} alt={project.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: "block" }} />
           ) : (
             <span style={{ fontSize: 32, opacity: 0.3 }}>{project.media_type === "Video" ? "🎥" : "🎨"}</span>
           )}
           {project.media_type && project.media_type !== "Image" && (
              <div style={{ position: "absolute", top: 12, right: 12, padding: "4px 8px", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)", borderRadius: 8, fontSize: 10, fontWeight: 700, color: "#fff", display: "flex", alignItems: "center", gap: 4 }}>
-               {project.media_type === "YouTube" ? "▶" : "▶"} {project.media_type}
+               ▶ {project.media_type}
              </div>
           )}
         </div>
-
         <div style={{ padding: '16px 20px', flex: 1, display: "flex", flexDirection: "column" }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
             {project.category && (
-              <div style={{
-                display: 'inline-block', padding: '2px 10px', borderRadius: 100,
-                background: cs.bg, border: `1px solid ${cs.border}`,
-                color: cs.text, fontSize: 10, fontWeight: 700,
-                letterSpacing: '0.04em',
-              }}>{project.category}</div>
+              <div style={{ display: 'inline-block', padding: '2px 10px', borderRadius: 100, background: 'rgba(204,253,1,0.08)', border: '1px solid rgba(204,253,1,0.18)', color: VOLT, fontSize: 10, fontWeight: 700, letterSpacing: '0.04em' }}>{project.category}</div>
             )}
             {validHref && <ExternalLink size={14} color="rgba(255,255,255,0.3)" />}
           </div>
@@ -132,31 +140,12 @@ function ProjectCard({ project }) {
 
 function NotFound({ username }) {
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      minHeight: '100vh', background: SHELL, fontFamily: FF, textAlign: 'center',
-      padding: 24,
-    }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: SHELL, fontFamily: FF, textAlign: 'center', padding: 24 }}>
       <div>
-        <div style={{
-          width: 72, height: 72, borderRadius: 20,
-          background: `linear-gradient(135deg, ${VOLT}, ${VOLTD})`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 32, fontWeight: 900, color: '#0a0a0a',
-          margin: '0 auto 24px', boxShadow: "0 8px 32px rgba(204,253,1,0.2)"
-        }}>N</div>
-        <div style={{ fontSize: 24, fontWeight: 800, color: '#f0f0f5', marginBottom: 8, letterSpacing: -0.5 }}>
-          Not Found
-        </div>
-        <div style={{ fontSize: 15, color: 'rgba(240,240,245,0.4)', marginBottom: 32, maxWidth: 300, margin: "0 auto 32px" }}>
-          The profile for "{username}" doesn't exist or hasn't been set up yet.
-        </div>
-        <a href={APP_URL} style={{
-          display: 'inline-block', padding: '12px 28px', borderRadius: 100,
-          background: `linear-gradient(135deg, ${VOLT}, ${VOLTD})`,
-          color: '#0a0a0a', fontWeight: 700, fontSize: 15,
-          textDecoration: 'none', fontFamily: FF, boxShadow: "0 4px 24px rgba(204,253,1,0.2)"
-        }}>Claim your Nomaad page →</a>
+        <div style={{ width: 72, height: 72, borderRadius: 20, background: `linear-gradient(135deg, ${VOLT}, ${VOLTD})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, fontWeight: 900, color: '#0a0a0a', margin: '0 auto 24px', boxShadow: "0 8px 32px rgba(204,253,1,0.2)" }}>N</div>
+        <div style={{ fontSize: 24, fontWeight: 800, color: '#f0f0f5', marginBottom: 8, letterSpacing: -0.5 }}>Not Found</div>
+        <div style={{ fontSize: 15, color: 'rgba(240,240,245,0.4)', marginBottom: 32, maxWidth: 300, margin: "0 auto 32px" }}>The profile for "{username}" doesn't exist or hasn't been set up yet.</div>
+        <a href={APP_URL} style={{ display: 'inline-block', padding: '12px 28px', borderRadius: 100, background: `linear-gradient(135deg, ${VOLT}, ${VOLTD})`, color: '#0a0a0a', fontWeight: 700, fontSize: 15, textDecoration: 'none', fontFamily: FF, boxShadow: "0 4px 24px rgba(204,253,1,0.2)" }}>Claim your Nomaad page →</a>
       </div>
     </div>
   );
@@ -173,25 +162,16 @@ export default function PublicProfilePage({ username }) {
       .select('*')
       .eq('username', username.toLowerCase())
       .single()
-      .then(({ data, error }) => {
-        if (data && !error) setProfile(data);
+      .then(({ data }) => {
+        if (data) setProfile(data);
         setLoading(false);
       });
   }, [username]);
 
   if (loading) {
     return (
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        minHeight: '100vh', background: SHELL,
-      }}>
-        <div style={{
-          width: 56, height: 56, borderRadius: 16,
-          background: `linear-gradient(135deg, ${VOLT}, ${VOLTD})`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 24, fontWeight: 800, color: '#0a0a0a',
-          animation: 'pulse 1.5s ease-in-out infinite',
-        }}>N</div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: SHELL }}>
+        <div style={{ width: 56, height: 56, borderRadius: 16, background: `linear-gradient(135deg, ${VOLT}, ${VOLTD})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 800, color: '#0a0a0a', animation: 'pulse 1.5s ease-in-out infinite' }}>N</div>
         <style>{`@keyframes pulse { 0%,100%{opacity:1; transform:scale(1)} 50%{opacity:0.6; transform:scale(0.95)} }`}</style>
       </div>
     );
@@ -199,99 +179,55 @@ export default function PublicProfilePage({ username }) {
 
   if (!profile) return <NotFound username={username} />;
 
-  const name     = profile.full_name || username;
-  const bio      = profile.bio || '';
-  const location = profile.location || '';
-  const links    = profile.social_links || {};
-  const projects = (profile.portfolio_projects || []).filter(p => p.title);
-  const avail    = profile.availability;
-
-  const availConfig = {
-    available: { label: 'Available for work', color: '#30D158' },
-    soon:      { label: 'Available soon',     color: '#FFB340' },
-    away:      { label: 'Not taking on work', color: '#8b8fa3' },
-  };
-  const availInfo = availConfig[avail] || availConfig.away;
+  const name      = profile.full_name || username;
+  const bio       = profile.bio || '';
+  const location  = profile.location || '';
+  const links     = profile.social_links || {};
+  const projects  = (profile.portfolio_projects || []).filter(p => p.title);
 
   return (
     <div style={{ background: SHELL, minHeight: '100vh', color: '#f0f0f5', fontFamily: FF, WebkitFontSmoothing: 'antialiased', position: "relative" }}>
-
-      {/* Decorative Blur Backgrounds */}
       <div style={{ position: "absolute", top: -100, left: "50%", transform: "translateX(-50%)", width: "80%", maxWidth: 800, height: 400, background: `radial-gradient(ellipse at top, ${VOLT}1A 0%, transparent 60%)`, pointerEvents: "none", zIndex: 0 }} />
 
-      {/* Top bar */}
-      <div style={{
-        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
-        background: 'transparent',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '24px', pointerEvents: "none"
-      }}>
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', pointerEvents: "none" }}>
         <div style={{ pointerEvents: "auto", display: 'flex', alignItems: 'center', gap: 8, background: "rgba(8,8,10,0.6)", backdropFilter: "blur(12px)", padding: "10px 16px", borderRadius: 100, border: "1px solid rgba(255,255,255,0.08)" }}>
-          <div style={{
-            width: 20, height: 20, borderRadius: 6,
-            background: `linear-gradient(135deg, ${VOLT}, ${VOLTD})`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 10, fontWeight: 800, color: '#0a0a0a',
-          }}>N</div>
+          <div style={{ width: 20, height: 20, borderRadius: 6, background: `linear-gradient(135deg, ${VOLT}, ${VOLTD})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: '#0a0a0a' }}>N</div>
           <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.8)' }}>Powered by Nomaad</span>
         </div>
       </div>
 
       <div style={{ position: "relative", zIndex: 10 }}>
-        {/* Linktree style Hero */}
         <div style={{ paddingTop: 100, paddingBottom: 40, maxWidth: 640, margin: '0 auto', textAlign: 'center', paddingLeft: 24, paddingRight: 24 }}>
-          <Avatar name={name} url={profile.avatar_url} size={100} />
+          <Avatar name={name} url={profile?.avatar_url} size={100} />
 
           <div style={{ marginTop: 24 }}>
-            <h1 style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 4px', lineHeight: 1.1 }}>
-              {name}
-            </h1>
+            <h1 style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 4px', lineHeight: 1.1 }}>{name}</h1>
 
             {profile.business_name && (
               <div style={{ fontSize: 16, fontWeight: 500, color: 'rgba(240,240,245,0.6)', marginBottom: 12 }}>{profile.business_name}</div>
             )}
 
-            <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 20 }}>
-               {location && (
-                 <div style={{ fontSize: 13, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", padding: "4px 12px", borderRadius: 20, color: 'rgba(240,240,245,0.6)' }}>📍 {location}</div>
-               )}
-               <div style={{
-                 display: 'inline-flex', alignItems: 'center', gap: 6,
-                 padding: '4px 12px', borderRadius: 20,
-                 background: `${availInfo.color}15`, border: `1px solid ${availInfo.color}30`,
-               }}>
-                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: availInfo.color }} />
-                 <span style={{ fontSize: 12, fontWeight: 600, color: availInfo.color }}>{availInfo.label}</span>
-               </div>
-            </div>
-
-            {bio && (
-              <p style={{
-                fontSize: 16, color: 'rgba(240,240,245,0.7)', lineHeight: 1.6,
-                maxWidth: 480, margin: '0 auto 32px',
-              }}>{bio}</p>
+            {location && (
+              <div style={{ fontSize: 13, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", padding: "4px 12px", borderRadius: 20, color: 'rgba(240,240,245,0.6)', display: 'inline-block', marginBottom: 20 }}>📍 {location}</div>
             )}
 
-            {/* Social links */}
+            {bio && (
+              <p style={{ fontSize: 16, color: 'rgba(240,240,245,0.7)', lineHeight: 1.6, maxWidth: 480, margin: '0 auto 32px' }}>{bio}</p>
+            )}
+
             <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 40 }}>
-              {links.instagram && <SocialLink href={`https://instagram.com/${links.instagram.replace(/^@/, '')}`} label="Instagram" icon="📸" />}
-              {links.linkedin  && <SocialLink href={links.linkedin}  label="LinkedIn"  icon="💼" />}
-              {links.website   && <SocialLink href={links.website}   label="Website"   icon="🌐" />}
-              {links.twitter   && <SocialLink href={`https://twitter.com/${links.twitter.replace(/^@/, '')}`} label="Twitter" icon="𝕏" />}
-              {links.tiktok    && <SocialLink href={`https://tiktok.com/@${links.tiktok.replace(/^@/, '')}`} label="TikTok"  icon="🎵" />}
-              {links.youtube   && <SocialLink href={links.youtube}   label="YouTube"   icon="▶️" />}
+              {SOCIAL_DISPLAY.map(({ key, label }) => {
+                const url = links[key];
+                if (!url) return null;
+                const href = normalizeSocialUrl(url, key);
+                if (!href) return null;
+                return <SocialLink key={key} href={href} label={label} platform={key} />;
+              })}
             </div>
 
-            {/* Core CTAs */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 400, margin: '0 auto' }}>
               {links.bookingUrl && (
-                 <a href={links.bookingUrl.startsWith('http') ? links.bookingUrl : `https://${links.bookingUrl}`} target="_blank" rel="noreferrer" style={{
-                   display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-                   background: `linear-gradient(135deg, ${VOLT}, ${VOLTD})`, color: "#0a0a0a",
-                   padding: "16px 24px", borderRadius: 16, textDecoration: "none",
-                   fontWeight: 800, fontSize: 16, letterSpacing: "-0.01em",
-                   boxShadow: "0 4px 20px rgba(204,253,1,0.25)", transition: "transform 0.2s"
-                 }}
+                 <a href={links.bookingUrl.startsWith('http') ? links.bookingUrl : `https://${links.bookingUrl}`} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, background: `linear-gradient(135deg, ${VOLT}, ${VOLTD})`, color: "#0a0a0a", padding: "16px 24px", borderRadius: 16, textDecoration: "none", fontWeight: 800, fontSize: 16, letterSpacing: "-0.01em", boxShadow: "0 4px 20px rgba(204,253,1,0.25)", transition: "transform 0.2s" }}
                    onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
                    onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                  >
@@ -299,13 +235,7 @@ export default function PublicProfilePage({ username }) {
                  </a>
               )}
               {links.email && (
-                 <a href={`mailto:${links.email}`} style={{
-                   display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-                   background: "rgba(255,255,255,0.06)", color: "#fff", border: "1px solid rgba(255,255,255,0.1)",
-                   padding: "16px 24px", borderRadius: 16, textDecoration: "none",
-                   fontWeight: 700, fontSize: 16,
-                   transition: "transform 0.2s, background 0.2s"
-                 }}
+                 <a href={`mailto:${links.email}`} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, background: "rgba(255,255,255,0.06)", color: "#fff", border: "1px solid rgba(255,255,255,0.1)", padding: "16px 24px", borderRadius: 16, textDecoration: "none", fontWeight: 700, fontSize: 16, transition: "transform 0.2s, background 0.2s" }}
                    onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.background = 'rgba(255,255,255,0.09)' }}
                    onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)' }}
                  >
@@ -316,21 +246,12 @@ export default function PublicProfilePage({ username }) {
           </div>
         </div>
 
-        {/* Portfolio */}
         {projects.length > 0 && (
           <div style={{ padding: '0 24px 100px', maxWidth: 1100, margin: '0 auto' }}>
-            <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 32,
-              paddingTop: 32, borderTop: '1px solid rgba(255,255,255,0.08)'
-            }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 32, paddingTop: 32, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
               <h2 style={{ fontSize: 24, fontWeight: 800, margin: 0, letterSpacing: '-0.02em', color: "#fff" }}>Portfolio</h2>
-              <span style={{
-                padding: '4px 12px', borderRadius: 100,
-                background: 'rgba(204,253,1,0.15)', border: `1px solid ${VOLT}44`,
-                fontSize: 12, color: VOLT, fontWeight: 700,
-              }}>{projects.length}</span>
+              <span style={{ padding: '4px 12px', borderRadius: 100, background: 'rgba(204,253,1,0.15)', border: `1px solid ${VOLT}44`, fontSize: 12, color: VOLT, fontWeight: 700 }}>{projects.length}</span>
             </div>
-            {/* Grid adapted nicely for various devices */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
               {projects.map((p, i) => <ProjectCard key={p.id || i} project={p} />)}
             </div>

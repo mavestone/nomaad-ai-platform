@@ -25,11 +25,16 @@ const ROLE_LABELS = {
   other:      "Other",
 };
 
-const AVAIL_CONFIG = {
-  available: { label: "Available", color: "#34C759" },
-  busy:      { label: "Busy",      color: "#FFB340" },
-  away:      { label: "Away",      color: "#8b8fa3" },
-};
+const SOCIAL_DISPLAY = [
+  { key: "instagram", label: "Instagram" },
+  { key: "linkedin",  label: "LinkedIn" },
+  { key: "tiktok",    label: "TikTok" },
+  { key: "x",         label: "X" },
+  { key: "youtube",   label: "YouTube" },
+  { key: "vimeo",     label: "Vimeo" },
+  { key: "website",   label: "Website" },
+  { key: "email",     label: "Email" },
+];
 
 const COVER_IMAGES = [
   "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=400&fit=crop",
@@ -50,15 +55,12 @@ function getRoleColor(businessType) {
 // ── Sub-components ────────────────────────────────────────────────────────────
 
 function Avatar({ profile, size = 112 }) {
-  const avail = profile?.availability || "away";
-  const availColor = AVAIL_CONFIG[avail]?.color || AVAIL_CONFIG.away.color;
-
   return (
     <div style={{ position: "relative", flexShrink: 0 }}>
       {profile?.avatar_url ? (
         <img
           src={profile.avatar_url}
-          alt={profile.full_name || "Avatar"}
+          alt={profile?.full_name || "Avatar"}
           style={{
             width: size, height: size, borderRadius: "50%",
             objectFit: "cover",
@@ -78,12 +80,6 @@ function Avatar({ profile, size = 112 }) {
           {getInitials(profile?.full_name)}
         </div>
       )}
-      <div style={{
-        position: "absolute", bottom: 4, right: 4,
-        width: 20, height: 20, borderRadius: "50%",
-        background: availColor,
-        border: "4px solid #0a0a0a",
-      }} />
     </div>
   );
 }
@@ -99,22 +95,6 @@ function RoleBadge({ businessType }) {
       fontSize: 12, fontWeight: 600,
     }}>
       <BriefcaseIcon /> {label}
-    </span>
-  );
-}
-
-function AvailabilityBadge({ availability }) {
-  const cfg = AVAIL_CONFIG[availability] || AVAIL_CONFIG.away;
-  return (
-    <span style={{
-      display: "inline-flex", alignItems: "center", gap: 6,
-      padding: "6px 12px", borderRadius: 999,
-      background: "rgba(255,255,255,0.05)",
-      border: "1px solid rgba(255,255,255,0.1)",
-      color: "rgba(255,255,255,0.7)", fontSize: 12,
-    }}>
-      <div style={{ width: 6, height: 6, borderRadius: "50%", background: cfg.color }} />
-      {cfg.label}
     </span>
   );
 }
@@ -139,14 +119,16 @@ function SocialIconButton({ platform, url }) {
     instagram: <InstagramIcon />,
     youtube: <YouTubeIcon />,
     vimeo: <VimeoIcon />,
-    twitter: <XIcon />,
+    x: <XIcon />,
     linkedin: <LinkedInIcon />,
     website: <GlobeIcon />,
+    email: <MailIcon />,
   };
 
   const getUrl = () => {
     if (!url) return "#";
     if (url.startsWith("http")) return url;
+    if (platform === "email") return `mailto:${url}`;
     if (platform === "website" || platform === "linkedin") return `https://${url}`;
     return `https://${platform}.com/${url.replace(/^@/, "")}`;
   };
@@ -361,7 +343,6 @@ export default function UserProfileView({ signOut }) {
               {/* Badges */}
               <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: 8 }}>
                 <RoleBadge businessType={profile?.business_type} />
-                <AvailabilityBadge availability={profile?.availability} />
                 <LocationBadge location={profile?.location} />
               </div>
 
@@ -374,9 +355,10 @@ export default function UserProfileView({ signOut }) {
 
               {/* Social Icons + Profile URL */}
               <div style={{ marginTop: 20, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                {Object.entries(socialLinks).map(([platform, url]) => {
+                {SOCIAL_DISPLAY.map(({ key }) => {
+                  const url = socialLinks[key];
                   if (!url) return null;
-                  return <SocialIconButton key={platform} platform={platform} url={url} />;
+                  return <SocialIconButton key={key} platform={key} url={url} />;
                 })}
                 
                 <button onClick={copyLink} style={{
@@ -385,7 +367,7 @@ export default function UserProfileView({ signOut }) {
                   background: "rgba(255,255,255,0.05)",
                   border: "1px solid rgba(255,255,255,0.08)",
                   color: VOLT, fontSize: 13, cursor: "pointer",
-                  marginLeft: Object.keys(socialLinks).length > 0 ? 8 : 0,
+                  marginLeft: Object.values(socialLinks).some(v => v) ? 8 : 0,
                 }}>
                   <span>{shareableUrl}</span>
                   {copiedLink ? <CheckIcon /> : <CopyIcon />}
@@ -536,4 +518,7 @@ function LinkedInIcon() {
 }
 function GlobeIcon() {
   return <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg>;
+}
+function MailIcon() {
+  return <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>;
 }
