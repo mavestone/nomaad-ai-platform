@@ -6,40 +6,23 @@ import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabase";
 
 const SOCIAL_PLATFORMS = [
-  { key: "instagram", label: "Instagram", placeholder: "@username" },
-  { key: "linkedin",  label: "LinkedIn",  placeholder: "linkedin.com/in/username" },
-  { key: "tiktok",    label: "TikTok",    placeholder: "@username" },
-  { key: "x",         label: "X",         placeholder: "@username" },
-  { key: "youtube",   label: "YouTube",   placeholder: "@username" },
-  { key: "vimeo",     label: "Vimeo",     placeholder: "vimeo.com/username" },
+  { key: "instagram", label: "Instagram" },
+  { key: "linkedin",  label: "LinkedIn" },
+  { key: "tiktok",    label: "TikTok" },
+  { key: "x",         label: "X" },
+  { key: "youtube",   label: "YouTube" },
+  { key: "vimeo",     label: "Vimeo" },
 ];
 
-function normalizeSocialUrl(value, platform) {
-  if (!value || !value.trim()) return "";
-  const v = value.trim();
-  if (v.startsWith("http")) return v;
-  if (platform === "linkedin") return `https://linkedin.com/in/${v.replace(/^\//, "")}`;
-  if (platform === "youtube") return `https://youtube.com/${v}`;
-  if (platform === "vimeo") return `https://vimeo.com/${v}`;
-  if (["instagram", "tiktok", "x"].includes(platform)) {
-    return `https://${platform}.com/${v.replace(/^@/, "")}`;
-  }
-  return `https://${v}`;
-}
-
 function SocialIcon({ platform }) {
-  const props = { width: 16, height: 16, fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round" };
-  if (platform === "instagram") return <svg {...props} viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>;
-  if (platform === "linkedin") return <svg {...props} viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>;
-  if (platform === "tiktok") return <svg {...props} viewBox="0 0 24 24"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg>;
-  if (platform === "x") return <svg width={16} height={16} viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>;
-  if (platform === "youtube") return <svg width={16} height={16} viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>;
-  if (platform === "vimeo") return <svg {...props} viewBox="0 0 24 24"><path d="M22 8.1C22 6 20.9 4.9 19.7 4.9c-.7 0-1.3.3-1.8.9-.5.6-.9 1.4-.9 2.5 0 2.3 1.4 3.5 4.1 3.5 1.5 0 2.9-.3 3.9-1.1V12c-1.1.5-2.3.8-3.6.8-2.9 0-4.9-1.6-4.9-4.7 0-1.5.5-2.7 1.7-3.6 1.2-1 2.7-1.4 4.5-1.4 1.7 0 3.1.4 4.1 1.2.9.9 1.4 2 1.4 3.5v5.5c0 .8.1 1.4.3 1.8.2.4.6.8 1.2 1 .6.3 1.4.4 2.3.4 1.3 0 2.4-.4 3.2-1.2.8-.8 1.3-2 1.3-3.5-.2-2.3-1.7-3.7-4.3-4.2z"/></svg>;
-  return <GlobeFallback />;
-}
-
-function GlobeFallback() {
-  return <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>;
+  const p = { width: 14, height: 14, fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round" };
+  if (platform === "instagram") return <svg {...p} viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>;
+  if (platform === "linkedin") return <svg {...p} viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>;
+  if (platform === "tiktok") return <svg {...p} viewBox="0 0 24 24"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg>;
+  if (platform === "x") return <svg width={14} height={14} viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>;
+  if (platform === "youtube") return <svg width={14} height={14} viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>;
+  if (platform === "vimeo") return <svg width={14} height={14} viewBox="0 0 24 24" fill="currentColor"><path d="M22.396 7.164c-.093 2.026-1.507 4.799-4.245 8.318C15.16 19.24 13.18 21 11.18 21c-1.214 0-2.25-1.12-3.108-3.36-.622-2.08-1.274-4.16-1.959-6.24-.749-2.22-1.553-3.36-2.414-3.36-.156 0-.7.327-1.634.98L1 7.732c1.022-.903 2.028-1.805 3.018-2.707 1.371-1.17 2.404-1.79 3.098-1.858 1.61-.156 2.596.944 2.957 3.3.385 2.52.665 4.08.84 4.68.515 2.08.998 3.12 1.448 3.12.406 0 1.012-.64 1.813-1.91.801-1.27 1.224-2.24 1.268-2.907.094-1.22-.354-1.837-1.346-1.837-.485 0-.99.11-1.513.33.998-3.28 2.902-4.896 5.716-4.843 2.068.048 3.045 1.37 2.928 3.96z"/></svg>;
+  return null;
 }
 
 function useCharacterLimit({ maxLength, initialValue = "" }) {
@@ -55,7 +38,6 @@ function useImageUpload() {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [fileObject, setFileObject] = useState(null);
   const fileInputId = useId();
-
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -64,20 +46,17 @@ function useImageUpload() {
     reader.onloadend = () => setPreviewUrl(reader.result);
     reader.readAsDataURL(file);
   };
-
   return { previewUrl, fileObject, handleFileChange, fileInputId };
 }
 
-function FieldGroup({ label, htmlFor, children, hint }) {
+function FieldRow({ label, htmlFor, children, hint }) {
   return (
-    <div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 7 }}>
-        <label htmlFor={htmlFor} style={{ fontSize: 12.5, fontWeight: 500, color: "rgba(240,240,245,0.5)", letterSpacing: "0.01em" }}>
-          {label}
-        </label>
-        {hint && <span style={{ fontSize: 11.5, color: "rgba(240,240,245,0.3)" }}>{hint}</span>}
-      </div>
-      {children}
+    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      <label htmlFor={htmlFor} style={{ fontSize: 13, fontWeight: 500, color: "rgba(240,240,245,0.45)", width: 76, flexShrink: 0 }}>
+        {label}
+      </label>
+      <div style={{ flex: 1, position: "relative" }}>{children}</div>
+      {hint && <span style={{ fontSize: 11, color: "rgba(240,240,245,0.25)", flexShrink: 0 }}>{hint}</span>}
     </div>
   );
 }
@@ -86,9 +65,7 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSaveComplete 
   const id = useId();
   const { user, updateProfile } = useAuth();
   const [mounted, setMounted] = useState(false);
-
   useEffect(() => { setMounted(true); }, []);
-
   useEffect(() => {
     if (open) document.body.style.overflow = "hidden";
     else document.body.style.overflow = "";
@@ -96,25 +73,12 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSaveComplete 
   }, [open]);
 
   const maxLength = 200;
-  const { value: bio, characterCount, handleChange: handleBioChange } = useCharacterLimit({
-    maxLength,
-    initialValue: profile?.bio || "",
-  });
+  const { value: bio, characterCount, handleChange: handleBioChange } = useCharacterLimit({ maxLength, initialValue: profile?.bio || "" });
 
   const [form, setForm] = useState({
-    fullName: "",
-    username: "",
-    website: "",
-    email: "",
-    location: "",
-    instagram: "",
-    linkedin: "",
-    tiktok: "",
-    x: "",
-    youtube: "",
-    vimeo: "",
+    fullName: "", username: "", website: "", email: "", location: "",
+    instagram: "", linkedin: "", tiktok: "", x: "", youtube: "", vimeo: "",
   });
-
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const { previewUrl, fileObject, fileInputId, handleFileChange } = useImageUpload();
@@ -144,48 +108,34 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSaveComplete 
     if (!user?.id) return;
     setSaving(true);
     setError(null);
-
     try {
       let avatar_url = profile?.avatar_url || null;
-
       if (fileObject) {
         const ext = fileObject.name.split(".").pop();
         const path = `${user.id}/avatar-${Date.now()}.${ext}`;
-        const { error: uploadError } = await supabase.storage
-          .from("avatars")
-          .upload(path, fileObject, { upsert: true, contentType: fileObject.type });
-
+        const { error: uploadError } = await supabase.storage.from("avatars").upload(path, fileObject, { upsert: true, contentType: fileObject.type });
         if (!uploadError) {
           const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
           avatar_url = publicUrl;
         }
       }
-
-      const existingSl = profile?.social_links || {};
       const updates = {
         full_name: form.fullName.trim() || null,
         bio: bio.trim() || null,
         location: form.location.trim() || null,
         social_links: {
-          website: form.website || null,
-          email: form.email || null,
-          instagram: form.instagram || null,
-          linkedin: form.linkedin || null,
-          tiktok: form.tiktok || null,
-          x: form.x || null,
-          youtube: form.youtube || null,
-          vimeo: form.vimeo || null,
+          website: form.website || null, email: form.email || null,
+          instagram: form.instagram || null, linkedin: form.linkedin || null,
+          tiktok: form.tiktok || null, x: form.x || null,
+          youtube: form.youtube || null, vimeo: form.vimeo || null,
         },
         username: form.username.trim().toLowerCase() || null,
         avatar_url,
       };
-
       if (form.username !== (profile?.username || "") && form.username) {
         updates.username_changed_at = new Date().toISOString();
       }
-
       const { error: updateErr } = await updateProfile(updates);
-
       if (!updateErr) {
         onSaveComplete?.(updates);
         onOpenChange(false);
@@ -220,87 +170,75 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSaveComplete 
               </button>
             </div>
 
-            <div style={{ overflowY: "auto", flex: 1, padding: "32px 40px", display: "flex", flexDirection: "column", gap: 32 }}>
+            <div style={{ overflowY: "auto", flex: 1, padding: "24px 40px", display: "flex", flexDirection: "column", gap: 24 }}>
               {error && (
                 <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderRadius: 12, background: "rgba(255,98,89,0.08)", border: "1px solid rgba(255,98,89,0.2)", fontSize: 13, color: "#FF6259" }}>
                   <X size={14} />{error}
                 </div>
               )}
 
-              <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
                 <div onClick={() => document.getElementById(fileInputId)?.click()} style={{ position: "relative", cursor: "pointer", flexShrink: 0 }}>
-                  <div style={{ width: 96, height: 96, borderRadius: "50%", overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,0.4)", border: "3px solid rgba(255,255,255,0.08)", background: currentImage ? "transparent" : "#ccfd01", display: "flex", alignItems: "center", justifyContent: "center", transition: "box-shadow 0.2s" }}>
+                  <div style={{ width: 80, height: 80, borderRadius: "50%", overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.4)", border: "2px solid rgba(255,255,255,0.08)", background: currentImage ? "transparent" : "#ccfd01", display: "flex", alignItems: "center", justifyContent: "center", transition: "box-shadow 0.2s" }}>
                     {currentImage ? (
                       <img src={currentImage} alt="Profile" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     ) : (
-                      <span style={{ fontSize: 36, fontWeight: 700, color: "#0a0a0a" }}>{initials}</span>
+                      <span style={{ fontSize: 30, fontWeight: 700, color: "#0a0a0a" }}>{initials}</span>
                     )}
                   </div>
                   <div style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0, transition: "opacity 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.opacity = 1} onMouseLeave={(e) => e.currentTarget.style.opacity = 0}>
-                    <Camera size={22} color="#fff" />
+                    <Camera size={18} color="#fff" />
                   </div>
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <h2 style={{ fontSize: 20, fontWeight: 600, color: "#f0f0f5", margin: "0 0 4px", letterSpacing: "-0.02em" }}>{form.fullName || "Your Name"}</h2>
-                  <p style={{ fontSize: 13.5, color: "rgba(240,240,245,0.4)", margin: "0 0 14px", fontFamily: "monospace" }}>@{form.username || "username"}</p>
-                  <button type="button" onClick={() => document.getElementById(fileInputId)?.click()} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 14px", borderRadius: 9, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: "rgba(240,240,245,0.6)", fontSize: 12.5, fontWeight: 500, cursor: "pointer", transition: "all 0.15s" }} onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#f0f0f5"; }} onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "rgba(240,240,245,0.6)"; }}>
-                    <Camera size={13} />Change photo
+                  <h2 style={{ fontSize: 18, fontWeight: 600, color: "#f0f0f5", margin: "0 0 4px", letterSpacing: "-0.02em" }}>{form.fullName || "Your Name"}</h2>
+                  <p style={{ fontSize: 13, color: "rgba(240,240,245,0.4)", margin: "0 0 12px", fontFamily: "monospace" }}>@{form.username || "username"}</p>
+                  <button type="button" onClick={() => document.getElementById(fileInputId)?.click()} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)", color: "rgba(240,240,245,0.6)", fontSize: 12, fontWeight: 500, cursor: "pointer", transition: "all 0.15s" }} onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#f0f0f5"; }} onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "rgba(240,240,245,0.6)"; }}>
+                    <Camera size={12} />Change photo
                   </button>
                 </div>
               </div>
 
               <div style={{ height: 1, background: "rgba(255,255,255,0.05)" }} />
 
-              <div>
-                <h3 style={{ fontSize: 12, fontWeight: 600, color: "rgba(240,240,245,0.35)", letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 20px" }}>Personal Details</h3>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                  <FieldGroup label="Name" htmlFor={`${id}-name`}>
-                    <input id={`${id}-name`} value={form.fullName} onChange={(e) => handleChange("fullName", e.target.value)} placeholder="Your name" className="ep-input" />
-                  </FieldGroup>
-                  <FieldGroup label="Username" htmlFor={`${id}-username`} hint={isUsernameChanged ? "URL will update" : null}>
-                    <div style={{ position: "relative" }}>
-                      <input id={`${id}-username`} value={form.username} onChange={(e) => handleChange("username", e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, ""))} placeholder="username" className="ep-input ep-input-icon" />
-                      <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}><Check size={13} color={form.username ? "rgba(52,199,89,0.9)" : "rgba(255,255,255,0.2)"} /></span>
-                    </div>
-                  </FieldGroup>
-                  <FieldGroup label="Location" htmlFor={`${id}-location`}>
-                    <div style={{ position: "relative" }}>
-                      <input id={`${id}-location`} value={form.location} onChange={(e) => handleChange("location", e.target.value)} placeholder="City, Country" className="ep-input ep-input-icon" />
-                      <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}><MapPin size={13} color="rgba(255,255,255,0.25)" /></span>
-                    </div>
-                  </FieldGroup>
-                  <FieldGroup label="Website" htmlFor={`${id}-website`}>
-                    <div style={{ position: "relative" }}>
-                      <input id={`${id}-website`} value={form.website} onChange={(e) => handleChange("website", e.target.value.replace(/^https?:\/\//, ""))} placeholder="yourdomain.com" className="ep-input ep-input-icon" />
-                      <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}><Link2 size={13} color="rgba(255,255,255,0.25)" /></span>
-                    </div>
-                  </FieldGroup>
-                </div>
-                <div style={{ marginTop: 16 }}>
-                  <FieldGroup label="Email" htmlFor={`${id}-email`}>
-                    <div style={{ position: "relative" }}>
-                      <input id={`${id}-email`} type="email" value={form.email} onChange={(e) => handleChange("email", e.target.value)} placeholder="hello@example.com" className="ep-input ep-input-icon" />
-                      <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}><Mail size={13} color="rgba(255,255,255,0.25)" /></span>
-                    </div>
-                  </FieldGroup>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <FieldRow label="Name" htmlFor={`${id}-name`}>
+                    <input id={`${id}-name`} value={form.fullName} onChange={(e) => handleChange("fullName", e.target.value)} placeholder="Your name" className="sl-input" />
+                  </FieldRow>
+                  <FieldRow label="Username" htmlFor={`${id}-username`} hint={isUsernameChanged ? "URL updates" : null}>
+                    <input id={`${id}-username`} value={form.username} onChange={(e) => handleChange("username", e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, ""))} placeholder="username" className="sl-input" />
+                  </FieldRow>
+                  <FieldRow label="Location" htmlFor={`${id}-location`}>
+                    <input id={`${id}-location`} value={form.location} onChange={(e) => handleChange("location", e.target.value)} placeholder="City, Country" className="sl-input" />
+                  </FieldRow>
+                  <FieldRow label="Website" htmlFor={`${id}-website`}>
+                    <input id={`${id}-website`} value={form.website} onChange={(e) => handleChange("website", e.target.value.replace(/^https?:\/\//, ""))} placeholder="yourdomain.com" className="sl-input" />
+                  </FieldRow>
+                  <FieldRow label="Email" htmlFor={`${id}-email`}>
+                    <input id={`${id}-email`} type="email" value={form.email} onChange={(e) => handleChange("email", e.target.value)} placeholder="hello@example.com" className="sl-input" />
+                  </FieldRow>
                 </div>
               </div>
 
               <div style={{ height: 1, background: "rgba(255,255,255,0.05)" }} />
 
               <div>
-                <h3 style={{ fontSize: 12, fontWeight: 600, color: "rgba(240,240,245,0.35)", letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 20px" }}>Social Links</h3>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <h3 style={{ fontSize: 11, fontWeight: 600, color: "rgba(240,240,245,0.35)", letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 14px" }}>Social Links</h3>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {SOCIAL_PLATFORMS.map((p) => (
-                    <div key={p.key} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <span style={{ color: "rgba(240,240,245,0.35)", flexShrink: 0 }}><SocialIcon platform={p.key} /></span>
-                      <input
-                        value={form[p.key] || ""}
-                        onChange={(e) => handleChange(p.key, e.target.value)}
-                        placeholder={p.placeholder}
-                        className="ep-input ep-input-social"
-                        style={{ flex: 1 }}
-                      />
+                    <div key={p.key} style={{ display: "flex", alignItems: "center", gap: 12, padding: "7px 0" }}>
+                      <span style={{ color: "rgba(240,240,245,0.35)", width: 76, flexShrink: 0, fontSize: 13, fontWeight: 500 }}>{p.label}</span>
+                      <div style={{ position: "relative", flex: 1 }}>
+                        <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "rgba(255,255,255,0.2)" }}><SocialIcon platform={p.key} /></span>
+                        <input
+                          value={form[p.key] || ""}
+                          onChange={(e) => handleChange(p.key, e.target.value)}
+                          placeholder={p.label === "X" ? "@username" : p.label === "LinkedIn" ? "username" : p.label === "YouTube" ? "@username" : p.label === "Vimeo" ? "username" : "@username"}
+                          className="sl-input sl-input-icon"
+                          style={{ paddingLeft: 32 }}
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -309,24 +247,23 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSaveComplete 
               <div style={{ height: 1, background: "rgba(255,255,255,0.05)" }} />
 
               <div>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                  <h3 style={{ fontSize: 12, fontWeight: 600, color: "rgba(240,240,245,0.35)", letterSpacing: "0.1em", textTransform: "uppercase", margin: 0 }}>Bio</h3>
-                  <span style={{ fontSize: 11.5, color: "rgba(240,240,245,0.25)", fontVariantNumeric: "tabular-nums" }}>{bioRemaining} remaining</span>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                  <h3 style={{ fontSize: 11, fontWeight: 600, color: "rgba(240,240,245,0.35)", letterSpacing: "0.1em", textTransform: "uppercase", margin: 0 }}>Bio</h3>
+                  <span style={{ fontSize: 11, color: "rgba(240,240,245,0.2)", fontVariantNumeric: "tabular-nums" }}>{bioRemaining}</span>
                 </div>
-                <textarea id={`${id}-bio`} value={bio} maxLength={maxLength} onChange={handleBioChange} placeholder="Tell people what you make, who you help, and what sets you apart..." rows={5} className="ep-input ep-textarea" />
+                <textarea id={`${id}-bio`} value={bio} maxLength={maxLength} onChange={handleBioChange} placeholder="Tell people what you make, who you help, and what sets you apart..." rows={4} className="sl-input sl-textarea" />
               </div>
             </div>
 
             <style>{`
               @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-              .ep-input { width: 100%; min-height: 44px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); color: #f0f0f5; font-size: 14px; padding: 0 12px; outline: none; transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease; font-family: -apple-system, 'SF Pro Display', system-ui, sans-serif; }
-              .ep-input.ep-input-icon { padding-left: 36px; }
-              .ep-input.ep-input-social { padding-left: 10px; font-size: 13px; min-height: 40px; }
-              .ep-input::placeholder { color: rgba(240,240,245,0.25); }
-              .ep-input:hover { border-color: rgba(255,255,255,0.18); background: rgba(255,255,255,0.05); }
-              .ep-input:focus-visible { border-color: rgba(204,253,1,0.7); box-shadow: 0 0 0 3px rgba(204,253,1,0.12); background: rgba(255,255,255,0.05); }
-              .ep-textarea { min-height: 130px; padding: 12px; resize: vertical; line-height: 1.6; }
-              @media (max-width: 640px) { .ep-input { font-size: 16px; } }
+              .sl-input { width: 100%; min-height: 38px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); color: #f0f0f5; font-size: 13px; padding: 0 10px; outline: none; transition: border-color 0.18s ease, background 0.18s ease; font-family: -apple-system, 'SF Pro Display', system-ui, sans-serif; }
+              .sl-input.sl-input-icon { padding-left: 32px; }
+              .sl-input::placeholder { color: rgba(240,240,245,0.2); }
+              .sl-input:hover { border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); }
+              .sl-input:focus-visible { border-color: rgba(204,253,1,0.6); background: rgba(255,255,255,0.05); }
+              .sl-textarea { min-height: 100px; padding: 10px; resize: vertical; line-height: 1.6; }
+              @media (max-width: 640px) { .sl-input { font-size: 16px; } }
             `}</style>
           </motion.div>
         </div>
