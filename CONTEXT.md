@@ -140,7 +140,7 @@ Full schema: `supabase/schema.sql`
 - **Docs** — Document CRUD, project assignment
 - **Messages** — Channel list, message thread, send messages
 - **Profile editing popup** — Fully redesigned `EditProfileDialog` with dark glassmorphic shell, stronger field hierarchy, improved accessibility/focus states, better mobile touch targets, refined availability controls, and clearer save/error feedback
-- **Landing page hero** — Mockup-inspired dark glassmorphic hero with centered pill nav, bold split headline, integrated waitlist CTA, product dashboard preview, volt orbital glow, and responsive feature rail
+- **Landing page hero** — Mockup-inspired dark glassmorphic hero with centered pill nav, bold split headline, integrated waitlist CTA, product dashboard preview, volt orbital glow, responsive feature rail, and additional anti-clipping breakpoints for desktop/tablet
 
 ### 🔶 Built But Basic / Needs Overhaul
 - **Prospecting** — Basic list view, needs curated card-based discovery UX with API search
@@ -210,6 +210,7 @@ npm run dev
 | 2026-04-22 | Codex (GPT-5.3) | Refined profile surfaces for premium composition: rebuilt `EditProfileDialog.jsx` with lighter social metadata rows (2-column desktop), corrected Vimeo icon mark, tightened modal spacing and hierarchy, and re-composed `UserProfileView.jsx` identity header/social actions to fix alignment and sidebar-gap visual issue. Updated social helper in `SocialIcons.jsx` and synced `PublicProfilePage.jsx` to shared icon/URL logic. |
 | 2026-04-22 | minimax-m2.5-free | Full redesign of `EditProfileDialog.jsx`: Apple-inspired modal with custom backdrop, 860px max-width, 28px radius, clean top bar (Cancel text-left, centered title, Save pill-right), 96px avatar in identity block, 2-column grid fields with subtle icon prefix inputs, segmented availability control, spacious sections with subtle dividers, smooth motion animations, refined `form-input` styles with volt focus glow. |
 | 2026-04-23 | Codex (GPT-5) | Redesigned `src/components/LandingPage.jsx` hero to match the supplied mockup direction with improved execution: wider centered pill nav, stronger editorial headline, integrated glass waitlist form, larger dashboard preview composition, subtle volt orbital glow, bottom feature rail, responsive mobile behavior, and Motion component aliases so the landing file passes ESLint. Verified with `npx eslint src/components/LandingPage.jsx` and `npm run build`. |
+| 2026-04-23 | Codex (GPT-5) | Follow-up hero polish from production screenshot feedback: reviewed `interface-design` skill guidance, then rebalanced `src/components/LandingPage.jsx` hero proportions (smaller headline scale, tighter vertical rhythm), improved waitlist input/button default styling, added earlier desktop/tablet breakpoints to prevent right-side clipping, constrained mock width, and tuned feature-rail spacing. Verified with `npx eslint src/components/LandingPage.jsx` and `npm run build`. |
 
 > **UPDATE THIS TABLE at the end of every session with what was accomplished.**
 

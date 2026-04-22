@@ -111,14 +111,13 @@ function WaitlistForm({ source = 'landing', label = 'Get early access →', comp
         whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
         style={{
           padding: compact ? '10px 20px' : '13px 24px',
-          background: state === 'loading' || !email
-            ? 'rgba(255,255,255,0.07)'
-            : `linear-gradient(135deg, ${VOLT}, ${VOLTD})`,
-          color: state === 'loading' || !email ? 'rgba(255,255,255,0.25)' : '#0a0a0a',
+          background: `linear-gradient(135deg, ${VOLT}, ${VOLTD})`,
+          opacity: state === 'loading' || !email ? 0.58 : 1,
+          color: '#0a0a0a',
           border: 'none', borderRadius: 100, fontWeight: 700,
           fontSize: compact ? 13 : 14, fontFamily: FF,
           cursor: state === 'loading' || !email ? 'not-allowed' : 'pointer',
-          boxShadow: state === 'loading' || !email ? 'none' : `0 4px 20px rgba(204,253,1,0.2)`,
+          boxShadow: state === 'loading' || !email ? `0 4px 18px rgba(204,253,1,0.08)` : `0 4px 20px rgba(204,253,1,0.22)`,
           transition: 'all 0.2s ease', whiteSpace: 'nowrap',
         }}
       >
@@ -282,8 +281,8 @@ function Hero() {
   return (
     <section style={{
       minHeight: '100vh', display: 'flex', flexDirection: 'column',
-      justifyContent: 'center',
-      padding: 'clamp(112px, 15vh, 154px) 20px clamp(34px, 6vw, 72px)',
+      justifyContent: 'flex-start',
+      padding: 'clamp(98px, 12vh, 126px) 20px clamp(28px, 5vw, 58px)',
       position: 'relative', fontFamily: FF,
       overflow: 'hidden',
     }}>
@@ -317,11 +316,11 @@ function Hero() {
         className="nomaad-hero-grid"
         style={{
           position: 'relative',
-          width: '100%', maxWidth: 1380, margin: '0 auto',
+          width: '100%', maxWidth: 1320, margin: '0 auto',
           display: 'grid',
-          gridTemplateColumns: 'minmax(360px, 0.72fr) minmax(560px, 1fr)',
+          gridTemplateColumns: 'minmax(320px, 0.96fr) minmax(520px, 1fr)',
           alignItems: 'center',
-          gap: 'clamp(42px, 5.5vw, 84px)',
+          gap: 'clamp(36px, 4.5vw, 68px)',
         }}
       >
         <div style={{ minWidth: 0 }}>
@@ -352,9 +351,9 @@ function Hero() {
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
             style={{
-              fontSize: 'clamp(42px, 5.4vw, 76px)', fontWeight: 750,
-              lineHeight: 1.05, letterSpacing: '-0.035em',
-              color: '#f0f0f5', margin: '0 0 22px',
+              fontSize: 'clamp(40px, 4.9vw, 72px)', fontWeight: 740,
+              lineHeight: 1.08, letterSpacing: '-0.03em',
+              color: '#f0f0f5', margin: '0 0 20px',
             }}
           >
             Your entire creative workflow.{' '}
@@ -365,9 +364,9 @@ function Hero() {
             initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
             style={{
-              fontSize: 'clamp(17px, 1.35vw, 20px)',
-              color: 'rgba(240,240,245,0.55)', lineHeight: 1.65,
-              maxWidth: 510, margin: '0 0 36px',
+              fontSize: 'clamp(16px, 1.15vw, 19px)',
+              color: 'rgba(240,240,245,0.54)', lineHeight: 1.62,
+              maxWidth: 540, margin: '0 0 30px',
             }}
           >
             Find clients, manage projects, deliver work, and hire collaborators — one system, built for solo creatives.
@@ -410,7 +409,7 @@ function Hero() {
           initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.75, delay: 0.22, ease: [0.22, 1, 0.36, 1] }}
           className="nomaad-hero-mock"
-          style={{ position: 'relative', minWidth: 0 }}
+          style={{ position: 'relative', minWidth: 0, width: '100%', maxWidth: 860, justifySelf: 'end' }}
         >
           <HeroDashboardMock />
         </MotionDiv>
@@ -436,24 +435,52 @@ function Hero() {
           border: 0 !important;
           background: transparent !important;
           min-width: 0;
+          color: #f0f0f5 !important;
+          font-size: 15px !important;
+        }
+        .hero-waitlist-shell input::placeholder {
+          color: rgba(240,240,245,0.4) !important;
         }
         .hero-waitlist-shell button {
           min-height: 48px;
           padding-left: 28px !important;
           padding-right: 28px !important;
         }
-        @media (max-width: 920px) {
+        @media (max-width: 1260px) {
+          .nomaad-hero-grid {
+            grid-template-columns: minmax(300px, 0.95fr) minmax(460px, 1fr) !important;
+            gap: 34px !important;
+          }
+          .nomaad-hero-mock {
+            max-width: 760px !important;
+          }
+        }
+        @media (max-width: 1060px) {
           .nomaad-hero-grid {
             grid-template-columns: 1fr !important;
           }
           .nomaad-hero-mock {
-            margin-top: 48px;
+            margin-top: 32px;
+            max-width: 880px !important;
+            justify-self: center !important;
+          }
+        }
+        @media (max-width: 920px) {
+          .nomaad-hero-mock {
+            margin-top: 24px;
+          }
+          .hero-feature-rail {
+            margin-top: 42px !important;
           }
         }
         @media (max-width: 640px) {
+          .hero-waitlist-shell {
+            width: 100%;
+          }
           .hero-waitlist-shell form {
             grid-template-columns: 1fr;
             border-radius: 28px;
+            width: 100%;
           }
           .hero-waitlist-shell button {
             width: 100%;
@@ -513,8 +540,8 @@ function HeroFeatureRail() {
       style={{
         position: 'relative',
         width: '100%',
-        maxWidth: 1380,
-        margin: 'clamp(52px, 7vw, 84px) auto 0',
+        maxWidth: 1320,
+        margin: 'clamp(46px, 6vw, 76px) auto 0',
         display: 'grid',
         gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
         borderRadius: 16,
