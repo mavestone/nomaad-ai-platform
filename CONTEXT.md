@@ -139,6 +139,7 @@ Full schema: `supabase/schema.sql`
 - **Automations** — n8n-style node-based workflow builder with wire connections
 - **Docs** — Document CRUD, project assignment
 - **Messages** — Channel list, message thread, send messages
+- **Profile editing popup** — Fully redesigned `EditProfileDialog` with dark glassmorphic shell, stronger field hierarchy, improved accessibility/focus states, better mobile touch targets, refined availability controls, and clearer save/error feedback
 
 ### 🔶 Built But Basic / Needs Overhaul
 - **Prospecting** — Basic list view, needs curated card-based discovery UX with API search
@@ -203,6 +204,8 @@ npm run dev
 | 2026-04-18 | Antigravity | Continued from Claude's session to purge remaining dummy data. Replaced `MOCK_DELIVERABLES` with `documents` query, wired `INBOX_TASKS` in `calendar-view.jsx` to fetch from `tasks` table, removed `MOCK_USERS` from `projects-view.jsx`, replaced hardcoded `MEMBERS` array in `nomaad-connect.jsx` with real `profiles` fetch. All pages build cleanly. **Next session**: Pick up with Week 1 MVP Priorities — Wire the tasks table properly to projects in `projects-view.jsx`, add FKs to Supabase schema, and persist CRM notes/tags. |
 | 2026-04-20 | Antigravity | Rebuilt `UserProfileView.jsx` using Radix/OriginUI floating un-controlled dialog modals (`EditProfileDialog` + `ProjectDialog`). Solved bug where name change required hard-refresh (optimistic UI update via AuthContext). Inserted "Your Skills" phase in `OnboardingView.jsx`. Extended `schema.sql` profiles struct (skills, bio, use_cases, etc). Overhauled `PublicProfilePage.jsx` to feature a highly convertible Linktree-inspired aesthetic spanning Book a Call, Email, and dynamic YouTube project CTAs. Fixed minor layout overflow bounds on `LandingPage.jsx` mobile rendering. |
 | 2026-04-20 | minimax-m2.5-free | Removed "NOW IN BETA" from landing page. Created custom animated loader in Nomaad brand colors to replace "Loading..." text on auth. Added location/currency/timezone to onboarding (Step 5). Extended schema.sql with currency and timezone columns to profiles. Fixed clients adding timeout by adding null coalescing and better error handling. |
+| 2026-04-22 | Codex (GPT-5.3) | Synced latest `origin/main`, started local dev server, and completed a full redesign of the profile settings popup in `src/components/EditProfileDialog.jsx` (new glassmorphic container, upgraded visual hierarchy, improved field UX/accessibility, clearer avatar block, better availability selector, and refined save/loading/error states). |
+| 2026-04-22 | Codex (GPT-5.3) | Replaced previous profile popup pass with a completely new `EditProfileDialog.jsx` layout: wider split-style glass panel, new top bar and save CTA treatment, rebuilt avatar/profile summary section, icon-labeled field cards, redesigned availability block, and updated mobile-friendly form interaction styling. |
 
 > **UPDATE THIS TABLE at the end of every session with what was accomplished.**
 
