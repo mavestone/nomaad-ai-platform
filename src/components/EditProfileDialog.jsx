@@ -218,7 +218,17 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSaveComplete 
   const overlay = (
     <AnimatePresence>
       {open && (
-        <>
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 1000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "clamp(16px, 4vw, 40px)",
+          }}
+        >
           <motion.div
             key="backdrop"
             initial={{ opacity: 0 }}
@@ -227,16 +237,10 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSaveComplete 
             transition={{ duration: 0.2 }}
             onClick={() => onOpenChange(false)}
             style={{
-              position: "fixed",
+              position: "absolute",
               inset: 0,
-              zIndex: 50,
-              background: "rgba(0,0,0,0.55)",
-              backdropFilter: "blur(4px)",
-              WebkitBackdropFilter: "blur(4px)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "clamp(12px, 4vw, 32px)",
+              zIndex: 0,
+              background: "rgba(0,0,0,0.45)",
             }}
           />
           <motion.div
@@ -246,17 +250,17 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSaveComplete 
             exit={{ opacity: 0, scale: 0.96, y: 12 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
             style={{
-              position: "fixed",
-              zIndex: 51,
+              position: "relative",
+              zIndex: 10,
               width: "100%",
               maxWidth: 860,
               maxHeight: "90vh",
               display: "flex",
               flexDirection: "column",
-              background: "rgba(12,12,14,0.97)",
+              background: "#0b0b0f",
               borderRadius: 28,
-              border: "1px solid rgba(255,255,255,0.09)",
-              boxShadow: "0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.03) inset",
+              border: "1px solid rgba(255,255,255,0.1)",
+              boxShadow: "0 24px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.04) inset",
               overflow: "hidden",
               flexShrink: 0,
             }}
@@ -496,7 +500,7 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSaveComplete 
               }
             `}</style>
           </motion.div>
-        </>
+        </div>
       )}
     </AnimatePresence>
   );
