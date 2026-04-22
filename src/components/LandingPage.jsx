@@ -46,16 +46,6 @@ function FadeUp({ children, delay = 0, style }) {
   );
 }
 
-function Label({ text }) {
-  return (
-    <p style={{
-      fontSize: 11, fontWeight: 700, color: 'rgba(240,240,245,0.35)',
-      letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 14, margin: '0 0 14px',
-      fontFamily: FF,
-    }}>{text}</p>
-  );
-}
-
 // ─── Waitlist Form ────────────────────────────────────────────────────────────
 
 function WaitlistForm({ source = 'landing', label = 'Get early access →', compact = false }) {
@@ -622,48 +612,42 @@ const PAINS = [
 
 function ProblemSection() {
   return (
-    <section style={{ padding: 'clamp(80px, 12vw, 120px) 20px', maxWidth: 880, margin: '0 auto', fontFamily: FF }}>
-      <FadeUp style={{ textAlign: 'center', marginBottom: 72 }}>
-        <Label text="Sound familiar?" />
+    <section style={{ padding: 'clamp(100px, 14vw, 160px) 20px', maxWidth: 800, margin: '0 auto', fontFamily: FF }}>
+      <FadeUp style={{ textAlign: 'center', marginBottom: 64 }}>
         <h2 style={{
-          fontSize: 'clamp(28px, 6vw, 52px)', fontWeight: 800,
-          color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 16px', lineHeight: 1.1,
+          fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 700,
+          color: '#f0f0f5', letterSpacing: '-0.03em', margin: 0, lineHeight: 1.15,
         }}>
-          This is what your workflow
-          <br />
-          <span style={{ color: 'rgba(240,240,245,0.3)' }}>probably looks like.</span>
+          Sound familiar?
         </h2>
       </FadeUp>
 
-      <div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
         {PAINS.map((p, i) => (
           <FadeUp key={i} delay={i * 0.05}>
-            <div style={{
-              padding: '26px 0',
-              borderBottom: i === PAINS.length - 1 ? 'none' : '1px solid rgba(255,255,255,0.05)',
-              display: 'flex', gap: 20, alignItems: 'flex-start',
-            }}>
+            <div style={{ textAlign: 'center' }}>
               <div style={{
-                width: 28, height: 28, borderRadius: '50%', flexShrink: 0, marginTop: 2,
-                background: 'rgba(255,98,89,0.08)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 11, fontWeight: 700, color: 'rgba(255,98,89,0.6)',
-                fontVariantNumeric: 'tabular-nums',
-              }}>{String(i + 1).padStart(2, '0')}</div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 17, fontWeight: 600, color: 'rgba(240,240,245,0.9)', marginBottom: 6, lineHeight: 1.45, letterSpacing: '-0.01em' }}>{p.title}</div>
-                <div style={{ fontSize: 14, color: 'rgba(240,240,245,0.4)', lineHeight: 1.55 }}>{p.sub}</div>
+                fontSize: 'clamp(18px, 2.5vw, 22px)', fontWeight: 600,
+                color: 'rgba(240,240,245,0.9)', marginBottom: 8, lineHeight: 1.4,
+                letterSpacing: '-0.015em',
+              }}>
+                {p.title}
+              </div>
+              <div style={{
+                fontSize: 15, color: 'rgba(240,240,245,0.4)', lineHeight: 1.6,
+              }}>
+                {p.sub}
               </div>
             </div>
           </FadeUp>
         ))}
       </div>
 
-      <FadeUp style={{ textAlign: 'center', marginTop: 56 }}>
+      <FadeUp style={{ textAlign: 'center', marginTop: 72 }}>
         <p style={{
-          fontSize: 'clamp(20px, 2.8vw, 26px)', fontWeight: 700,
-          color: '#f0f0f5', lineHeight: 1.3, letterSpacing: '-0.02em',
-          margin: 0, maxWidth: 520, marginLeft: 'auto', marginRight: 'auto',
+          fontSize: 'clamp(22px, 3vw, 30px)', fontWeight: 700,
+          color: '#f0f0f5', lineHeight: 1.25, letterSpacing: '-0.025em',
+          margin: 0,
         }}>
           It&apos;s not you.{' '}
           <span style={{ color: VOLT }}>Your system is broken.</span>
@@ -713,107 +697,96 @@ const FLOW_STEPS = [
 
 function ProductFlowSection() {
   return (
-    <section id="how-it-works" style={{ padding: 'clamp(80px, 12vw, 120px) 20px', maxWidth: 1080, margin: '0 auto', fontFamily: FF }}>
-      <FadeUp style={{ textAlign: 'center', marginBottom: 72 }}>
-        <Label text="How it works" />
+    <section id="how-it-works" style={{ padding: 'clamp(100px, 14vw, 160px) 20px', maxWidth: 1200, margin: '0 auto', fontFamily: FF }}>
+      <FadeUp style={{ textAlign: 'center', marginBottom: 80 }}>
         <h2 style={{
-          fontSize: 'clamp(28px, 6vw, 52px)', fontWeight: 800,
-          color: '#f0f0f5', letterSpacing: '-0.03em', margin: 0, lineHeight: 1.1,
+          fontSize: 'clamp(32px, 5vw, 56px)', fontWeight: 700,
+          color: '#f0f0f5', letterSpacing: '-0.035em', margin: 0, lineHeight: 1.1,
         }}>
-          From idea <span style={{ color: 'rgba(240,240,245,0.3)' }}>→</span> to paid{' '}
-          <span style={{ color: 'rgba(240,240,245,0.3)' }}>→</span> to <span style={{ color: VOLT }}>delivered.</span>
+          How it works
         </h2>
+        <p style={{
+          fontSize: 18, color: 'rgba(240,240,245,0.45)', marginTop: 16, lineHeight: 1.6,
+          maxWidth: 480, marginLeft: 'auto', marginRight: 'auto',
+        }}>
+          Three steps. One system. No more juggling.
+        </p>
       </FadeUp>
 
       <div
         className="nomaad-flow-grid"
         style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-          alignItems: 'stretch',
-          gap: 16,
-          position: 'relative',
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'center',
+          gap: 0,
         }}
       >
         {FLOW_STEPS.map((s, i) => (
-          <div key={s.n}>
-            <FadeUp delay={i * 0.08}>
+          <FadeUp key={s.n} delay={i * 0.1} style={{ flex: '1 1 0', maxWidth: 360, position: 'relative' }}>
+            <div style={{
+              padding: '0 clamp(20px, 4vw, 48px)',
+              textAlign: 'center',
+            }}>
+              {/* Step number */}
               <div style={{
-                padding: 28,
-                borderRadius: 18,
-                background: 'rgba(255,255,255,0.015)',
-                border: '1px solid rgba(255,255,255,0.06)',
-                height: '100%',
-                display: 'flex', flexDirection: 'column', gap: 16,
-                position: 'relative', overflow: 'hidden',
+                fontSize: 13, fontWeight: 700, color: s.color,
+                letterSpacing: '0.08em', marginBottom: 20,
               }}>
-                <div style={{
-                  position: 'absolute', top: 0, left: 0, right: 0, height: 2,
-                  background: `linear-gradient(90deg, ${s.color}00 0%, ${s.color}80 50%, ${s.color}00 100%)`,
-                }} />
-
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{
-                    width: 40, height: 40, borderRadius: 11,
-                    background: `${s.color}12`,
-                    border: `1px solid ${s.color}28`,
-                    color: s.color,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    {s.icon}
-                  </div>
-                  <span style={{
-                    fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.25)',
-                    fontVariantNumeric: 'tabular-nums', letterSpacing: '0.04em',
-                  }}>{s.n}</span>
-                </div>
-
-                <div>
-                  <h3 style={{
-                    fontSize: 22, fontWeight: 700,
-                    color: '#f0f0f5', margin: '0 0 10px',
-                    letterSpacing: '-0.02em', lineHeight: 1.15,
-                  }}>
-                    {s.title}
-                  </h3>
-                  <p style={{
-                    fontSize: 14, color: 'rgba(240,240,245,0.5)',
-                    lineHeight: 1.6, margin: 0,
-                  }}>
-                    {s.body}
-                  </p>
-                </div>
+                {s.n}
               </div>
-            </FadeUp>
-          </div>
-        ))}
 
-        {/* Connecting arrows overlay (desktop only) */}
-        <div aria-hidden="true" className="nomaad-flow-arrows" style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none',
-          display: 'flex',
-        }}>
-          {[33.33, 66.66].map(left => (
-            <div key={left} style={{
-              position: 'absolute', top: '50%', left: `${left}%`,
-              transform: 'translate(-50%, -50%)',
-              width: 24, height: 24, borderRadius: '50%',
-              background: SHELL,
-              border: '1px solid rgba(255,255,255,0.1)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'rgba(255,255,255,0.5)',
-              fontSize: 12, fontWeight: 700,
-            }}>→</div>
-          ))}
-        </div>
+              {/* Icon */}
+              <div style={{
+                width: 56, height: 56, borderRadius: 16,
+                background: `${s.color}10`,
+                color: s.color,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                margin: '0 auto 24px',
+              }}>
+                {s.icon}
+              </div>
+
+              {/* Title */}
+              <h3 style={{
+                fontSize: 'clamp(24px, 3vw, 32px)', fontWeight: 700,
+                color: '#f0f0f5', margin: '0 0 12px',
+                letterSpacing: '-0.025em', lineHeight: 1.15,
+              }}>
+                {s.title}
+              </h3>
+
+              {/* Body */}
+              <p style={{
+                fontSize: 15, color: 'rgba(240,240,245,0.5)',
+                lineHeight: 1.65, margin: 0,
+              }}>
+                {s.body}
+              </p>
+            </div>
+
+            {/* Connecting line (not on last item) */}
+            {i < FLOW_STEPS.length - 1 && (
+              <div aria-hidden="true" className="nomaad-flow-line" style={{
+                position: 'absolute',
+                top: 70,
+                right: 0,
+                width: '50%',
+                height: 1,
+                background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 100%)',
+              }} />
+            )}
+          </FadeUp>
+        ))}
       </div>
 
       <style>{`
-        @media (max-width: 820px) {
+        @media (max-width: 720px) {
           .nomaad-flow-grid {
-            grid-template-columns: 1fr !important;
+            flex-direction: column !important;
+            gap: 56px !important;
           }
-          .nomaad-flow-arrows {
+          .nomaad-flow-line {
             display: none !important;
           }
         }
@@ -883,84 +856,96 @@ const CORE_VALUES = [
 
 function CoreValueSection() {
   return (
-    <section style={{ padding: 'clamp(80px, 12vw, 120px) 20px', maxWidth: 1080, margin: '0 auto', fontFamily: FF }}>
-      <FadeUp style={{ textAlign: 'center', marginBottom: 72 }}>
-        <Label text="Everything in one place" />
+    <section style={{ padding: 'clamp(100px, 14vw, 160px) 20px', maxWidth: 1200, margin: '0 auto', fontFamily: FF }}>
+      <FadeUp style={{ textAlign: 'center', marginBottom: 100 }}>
         <h2 style={{
-          fontSize: 'clamp(28px, 6vw, 52px)', fontWeight: 800,
-          color: '#f0f0f5', letterSpacing: '-0.03em', margin: 0, lineHeight: 1.1,
+          fontSize: 'clamp(32px, 5vw, 56px)', fontWeight: 700,
+          color: '#f0f0f5', letterSpacing: '-0.035em', margin: 0, lineHeight: 1.1,
         }}>
-          Everything connected.
+          Everything you need.
           {' '}
-          <span style={{ color: VOLT }}>Nothing scattered.</span>
+          <span style={{ color: 'rgba(240,240,245,0.35)' }}>Nothing you don&apos;t.</span>
         </h2>
       </FadeUp>
 
-      <div
-        className="nomaad-core-grid"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(6, minmax(0, 1fr))',
-          gap: 16,
-        }}
-      >
-        {CORE_VALUES.map((v, i) => {
-          // Layout: 3 across top row (cols 1-2, 3-4, 5-6), then featured portal spans 4 cols + hire spans 2
-          const span = v.featured ? 4 : (i === 4 ? 2 : 2);
-          return (
-            <FadeUp key={v.tag} delay={i * 0.06} style={{ gridColumn: `span ${span}` }}>
-              <div style={{
-                padding: 28,
-                borderRadius: 18,
-                background: v.featured
-                  ? 'linear-gradient(180deg, rgba(204,253,1,0.04) 0%, rgba(204,253,1,0.01) 100%)'
-                  : 'rgba(255,255,255,0.015)',
-                border: v.featured
-                  ? '1px solid rgba(204,253,1,0.16)'
-                  : '1px solid rgba(255,255,255,0.06)',
-                height: '100%',
-                display: 'flex', flexDirection: 'column', gap: 16,
-                position: 'relative', overflow: 'hidden',
-                minHeight: 220,
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{
-                    width: 34, height: 34, borderRadius: 10,
-                    background: v.featured ? 'rgba(204,253,1,0.14)' : 'rgba(255,255,255,0.04)',
-                    border: v.featured ? '1px solid rgba(204,253,1,0.28)' : '1px solid rgba(255,255,255,0.05)',
-                    color: v.featured ? VOLT : 'rgba(240,240,245,0.75)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>{v.icon}</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(80px, 12vw, 120px)' }}>
+        {CORE_VALUES.map((v, i) => (
+          <FadeUp key={v.tag} delay={0.05}>
+            <div
+              className="nomaad-feature-row"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: i % 2 === 0 ? '1fr 1.2fr' : '1.2fr 1fr',
+                alignItems: 'center',
+                gap: 'clamp(40px, 8vw, 100px)',
+              }}
+            >
+              {/* Text side */}
+              <div style={{ order: i % 2 === 0 ? 1 : 2 }}>
+                <div style={{
+                  fontSize: 11, fontWeight: 700, color: v.featured ? VOLT : 'rgba(240,240,245,0.4)',
+                  letterSpacing: '0.12em', textTransform: 'uppercase',
+                  marginBottom: 16,
+                  display: 'flex', alignItems: 'center', gap: 10,
+                }}>
                   <span style={{
-                    fontSize: 10, fontWeight: 700,
-                    color: v.featured ? VOLT : 'rgba(240,240,245,0.4)',
-                    letterSpacing: '0.12em', textTransform: 'uppercase',
-                  }}>{v.tag}</span>
+                    width: 28, height: 28, borderRadius: 8,
+                    background: v.featured ? 'rgba(204,253,1,0.12)' : 'rgba(255,255,255,0.04)',
+                    color: v.featured ? VOLT : 'rgba(240,240,245,0.6)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>{v.icon}</span>
+                  {v.tag}
                 </div>
 
-                <div>
-                  <div style={{
-                    fontSize: v.featured ? 20 : 17, fontWeight: 700,
-                    color: '#f0f0f5', marginBottom: 8,
-                    lineHeight: 1.3, letterSpacing: '-0.015em',
-                  }}>{v.headline}</div>
-                  <div style={{ fontSize: 13.5, color: 'rgba(240,240,245,0.5)', lineHeight: 1.6 }}>
-                    {v.body}
-                  </div>
-                </div>
+                <h3 style={{
+                  fontSize: 'clamp(24px, 3.5vw, 36px)', fontWeight: 700,
+                  color: '#f0f0f5', margin: '0 0 16px',
+                  letterSpacing: '-0.025em', lineHeight: 1.2,
+                }}>
+                  {v.headline}
+                </h3>
+
+                <p style={{
+                  fontSize: 16, color: 'rgba(240,240,245,0.5)',
+                  lineHeight: 1.7, margin: 0, maxWidth: 440,
+                }}>
+                  {v.body}
+                </p>
               </div>
-            </FadeUp>
-          );
-        })}
+
+              {/* Visual side — placeholder for future product screenshots */}
+              <div style={{
+                order: i % 2 === 0 ? 2 : 1,
+                aspectRatio: '4 / 3',
+                borderRadius: 20,
+                background: v.featured
+                  ? 'linear-gradient(135deg, rgba(204,253,1,0.06) 0%, rgba(204,253,1,0.02) 100%)'
+                  : 'linear-gradient(135deg, rgba(255,255,255,0.025) 0%, rgba(255,255,255,0.01) 100%)',
+                border: v.featured
+                  ? '1px solid rgba(204,253,1,0.12)'
+                  : '1px solid rgba(255,255,255,0.05)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <span style={{
+                  fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.2)',
+                  letterSpacing: '0.06em', textTransform: 'uppercase',
+                }}>
+                  Coming soon
+                </span>
+              </div>
+            </div>
+          </FadeUp>
+        ))}
       </div>
 
       <style>{`
-        @media (max-width: 880px) {
-          .nomaad-core-grid {
+        @media (max-width: 820px) {
+          .nomaad-feature-row {
             grid-template-columns: 1fr !important;
+            gap: 32px !important;
           }
-          .nomaad-core-grid > * {
-            grid-column: span 1 !important;
+          .nomaad-feature-row > * {
+            order: unset !important;
           }
         }
       `}</style>
@@ -979,312 +964,79 @@ const OLD_STACK = [
 ];
 
 function StackSection() {
+  const totalCost = OLD_STACK.reduce((sum, t) => {
+    const num = parseInt(t.cost.replace(/[^0-9]/g, ''), 10);
+    return sum + (isNaN(num) ? 0 : num);
+  }, 0);
+
   return (
-    <section style={{ padding: 'clamp(80px, 12vw, 120px) 20px', maxWidth: 880, margin: '0 auto', fontFamily: FF }}>
-      <FadeUp style={{ textAlign: 'center', marginBottom: 72 }}>
-        <Label text="The modern freelance stack" />
+    <section style={{ padding: 'clamp(100px, 14vw, 160px) 20px', maxWidth: 960, margin: '0 auto', fontFamily: FF }}>
+      <FadeUp style={{ textAlign: 'center', marginBottom: 80 }}>
         <h2 style={{
-          fontSize: 'clamp(28px, 6vw, 52px)', fontWeight: 800,
-          color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 16px', lineHeight: 1.1,
+          fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 700,
+          color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 20px', lineHeight: 1.15,
         }}>
-          Great tools.
-          <br />
-          <span style={{ color: 'rgba(240,240,245,0.3)' }}>Disconnected from each other.</span>
+          The modern creative stack
         </h2>
-        <p style={{ fontSize: 16, color: 'rgba(240,240,245,0.4)', maxWidth: 480, margin: '0 auto', lineHeight: 1.6 }}>
-          Each of these apps is excellent at one thing. The problem isn&apos;t the tools — it&apos;s that none of them share a single record of your clients, work, or cash flow.
+        <p style={{ fontSize: 17, color: 'rgba(240,240,245,0.45)', maxWidth: 520, margin: '0 auto', lineHeight: 1.65 }}>
+          Great tools — none of them talking to each other.
         </p>
       </FadeUp>
 
-      <div style={{ marginBottom: 56 }}>
+      <div style={{ marginBottom: 48 }}>
         {OLD_STACK.map((t, i) => (
           <FadeUp key={t.name} delay={i * 0.04}>
-            <div style={{
-              padding: '22px 0',
-              borderBottom: i === OLD_STACK.length - 1 ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(255,255,255,0.05)',
-              borderTop: i === 0 ? '1px solid rgba(255,255,255,0.05)' : 'none',
-              display: 'grid',
-              gridTemplateColumns: 'minmax(140px, 180px) 1fr auto',
-              gap: 24, alignItems: 'center',
-            }}>
-              <div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: 'rgba(240,240,245,0.85)', marginBottom: 3 }}>{t.name}</div>
-                <div style={{ fontSize: 12, color: 'rgba(240,240,245,0.35)' }}>{t.purpose}</div>
+            <div
+              className="nomaad-stack-row"
+              style={{
+                padding: '24px 0',
+                borderBottom: '1px solid rgba(255,255,255,0.04)',
+                display: 'flex', alignItems: 'baseline', gap: 24,
+              }}
+            >
+              <div style={{ width: 140, flexShrink: 0 }}>
+                <span style={{ fontSize: 15, fontWeight: 600, color: 'rgba(240,240,245,0.85)' }}>{t.name}</span>
               </div>
-              <div style={{ fontSize: 13, color: 'rgba(240,240,245,0.5)', lineHeight: 1.55 }}>{t.gap}</div>
+              <div style={{ flex: 1, fontSize: 14, color: 'rgba(240,240,245,0.45)', lineHeight: 1.6 }}>
+                {t.gap}
+              </div>
               <div style={{
-                fontSize: 12, fontWeight: 700, color: 'rgba(240,240,245,0.5)',
-                fontVariantNumeric: 'tabular-nums',
-                textAlign: 'right', whiteSpace: 'nowrap',
-              }}>{t.cost}</div>
+                fontSize: 13, fontWeight: 600, color: 'rgba(240,240,245,0.4)',
+                fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap',
+              }}>
+                {t.cost}
+              </div>
             </div>
           </FadeUp>
         ))}
       </div>
 
+      {/* Summary row */}
       <FadeUp>
-        <StackComparison />
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '28px 0',
+          borderTop: '1px solid rgba(255,255,255,0.08)',
+        }}>
+          <div>
+            <div style={{ fontSize: 15, color: 'rgba(240,240,245,0.5)', marginBottom: 4 }}>
+              4 apps. 4 logins. 0 shared data.
+            </div>
+            <div style={{ fontSize: 28, fontWeight: 700, color: '#f0f0f5', letterSpacing: '-0.02em' }}>
+              £{totalCost}<span style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.4)' }}>/mo</span>
+            </div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: 15, color: VOLT, marginBottom: 4, fontWeight: 600 }}>
+              With Nomaad
+            </div>
+            <div style={{ fontSize: 28, fontWeight: 700, color: '#f0f0f5', letterSpacing: '-0.02em' }}>
+              £39<span style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.4)' }}>/mo</span>
+            </div>
+          </div>
+        </div>
       </FadeUp>
     </section>
-  );
-}
-
-// ─── Stack Comparison (problem vs solution with animation) ────────────────────
-
-const COMPARE_TOOLS = [
-  { name: 'Gmail',    src: '/integrations/gmail.svg' },
-  { name: 'Stripe',   src: '/integrations/stripe.svg' },
-  { name: 'Calendar', src: '/integrations/google-calendar.svg' },
-  { name: 'Drive',    src: '/integrations/google-drive.svg' },
-];
-
-function ToolLogo({ src, size = 20 }) {
-  return (
-    <img
-      src={src}
-      alt=""
-      aria-hidden="true"
-      loading="lazy"
-      style={{ width: size, height: size, objectFit: 'contain', display: 'block' }}
-    />
-  );
-}
-
-function StackComparison() {
-  // Each logo sits at a fixed x along a horizontal row (viewBox coords -150..150 x 0..100)
-  const LOGO_X = [-105, -35, 35, 105];
-  const LOGO_Y = 14;
-  const HUB_Y  = 86;
-
-  return (
-    <div className="nomaad-compare-grid" style={{
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
-      gap: 12,
-      marginTop: 40,
-    }}>
-      {/* ───── LEFT: Today ───── */}
-      <div style={{
-        background: 'rgba(255,255,255,0.015)',
-        border: '1px solid rgba(255,255,255,0.06)',
-        borderRadius: 16,
-        padding: 20,
-        display: 'flex', flexDirection: 'column',
-        gap: 18,
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.45)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-            Today
-          </div>
-          <div style={{
-            fontSize: 10, fontWeight: 600,
-            color: 'rgba(255,160,160,0.7)',
-            background: 'rgba(255,160,160,0.06)',
-            padding: '3px 9px', borderRadius: 999,
-            letterSpacing: '0.04em',
-          }}>
-            Disconnected
-          </div>
-        </div>
-
-        {/* Scattered tool chips */}
-        <div style={{
-          display: 'flex', flexWrap: 'wrap', gap: 8,
-          padding: '4px 0',
-        }}>
-          {COMPARE_TOOLS.map((t, i) => (
-            <div key={t.name} style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              padding: '7px 11px',
-              background: 'rgba(255,255,255,0.025)',
-              border: '1px dashed rgba(255,255,255,0.1)',
-              borderRadius: 10,
-              transform: `translateY(${[0, -3, 2, -1][i]}px)`,
-            }}>
-              <ToolLogo src={t.src} size={14} />
-              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', fontWeight: 500 }}>{t.name}</span>
-            </div>
-          ))}
-        </div>
-
-        <div style={{ marginTop: 'auto' }}>
-          <div style={{ fontSize: 24, fontWeight: 800, color: '#f0f0f5', letterSpacing: '-0.02em', lineHeight: 1 }}>
-            £69<span style={{ fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.4)' }}>/mo</span>
-          </div>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 5 }}>
-            4 apps · 4 logins · 0 shared data
-          </div>
-        </div>
-      </div>
-
-      {/* ───── RIGHT: With Nomaad ───── */}
-      <div style={{
-        background: 'linear-gradient(180deg, rgba(204,253,1,0.04) 0%, rgba(204,253,1,0.01) 100%)',
-        border: '1px solid rgba(204,253,1,0.14)',
-        borderRadius: 16,
-        padding: 20,
-        display: 'flex', flexDirection: 'column',
-        gap: 18,
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', zIndex: 2 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: VOLT, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-            With Nomaad
-          </div>
-          <div style={{
-            fontSize: 10, fontWeight: 600,
-            color: VOLT,
-            background: 'rgba(204,253,1,0.09)',
-            padding: '3px 9px', borderRadius: 999,
-            letterSpacing: '0.04em',
-            display: 'inline-flex', alignItems: 'center', gap: 6,
-          }}>
-            <span style={{
-              width: 5, height: 5, borderRadius: '50%',
-              background: VOLT,
-              boxShadow: `0 0 6px ${VOLT}`,
-              animation: 'nomaad-heartbeat 1.8s ease-in-out infinite',
-            }} />
-            Live
-          </div>
-        </div>
-
-        {/* Flow diagram */}
-        <div style={{
-          position: 'relative',
-          height: 120,
-          display: 'flex',
-          alignItems: 'flex-end',
-          justifyContent: 'center',
-        }}>
-          <svg
-            aria-hidden="true"
-            viewBox="-150 0 300 100"
-            preserveAspectRatio="xMidYMid meet"
-            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
-          >
-            <defs>
-              <linearGradient id="nomaad-flow-grad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%"  stopColor={VOLT} stopOpacity="0" />
-                <stop offset="60%" stopColor={VOLT} stopOpacity="0.35" />
-                <stop offset="100%" stopColor={VOLT} stopOpacity="0.6" />
-              </linearGradient>
-              <radialGradient id="nomaad-dot-grad">
-                <stop offset="0%"  stopColor={VOLT} stopOpacity="1" />
-                <stop offset="60%" stopColor={VOLT} stopOpacity="0.6" />
-                <stop offset="100%" stopColor={VOLT} stopOpacity="0" />
-              </radialGradient>
-            </defs>
-
-            {/* Curved connection paths from each logo to the hub */}
-            {LOGO_X.map((x, i) => {
-              const midY = (LOGO_Y + HUB_Y) / 2;
-              const d = `M ${x} ${LOGO_Y} C ${x} ${midY}, 0 ${midY}, 0 ${HUB_Y}`;
-              return (
-                <g key={i}>
-                  <path
-                    d={d}
-                    fill="none"
-                    stroke="url(#nomaad-flow-grad)"
-                    strokeWidth="1"
-                    strokeLinecap="round"
-                  />
-                  {/* Glowing dot travelling along the path */}
-                  <circle
-                    r="5"
-                    fill="url(#nomaad-dot-grad)"
-                    style={{
-                      offsetPath: `path('${d}')`,
-                      offsetRotate: '0deg',
-                      animation: `nomaad-travel 3.2s ease-in-out infinite`,
-                      animationDelay: `${i * 0.6}s`,
-                    }}
-                  />
-                </g>
-              );
-            })}
-          </svg>
-
-          {/* Logo row */}
-          <div style={{
-            position: 'absolute',
-            top: 0, left: 0, right: 0,
-            display: 'flex', justifyContent: 'space-between',
-            padding: '0 6%',
-          }}>
-            {COMPARE_TOOLS.map(t => (
-              <div key={t.name} style={{
-                width: 28, height: 28, borderRadius: 8,
-                background: '#15151a',
-                border: '1px solid rgba(255,255,255,0.08)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
-              }}>
-                <ToolLogo src={t.src} size={16} />
-              </div>
-            ))}
-          </div>
-
-          {/* Nomaad pill at bottom */}
-          <div style={{
-            position: 'relative',
-            display: 'inline-flex', alignItems: 'center', gap: 7,
-            padding: '7px 14px 7px 10px',
-            background: 'linear-gradient(180deg, #e5ff4a 0%, #ccfd01 100%)',
-            borderRadius: 999,
-            boxShadow: `0 8px 24px ${VOLT}40, 0 0 0 1px rgba(255,255,255,0.15) inset`,
-            zIndex: 2,
-          }}>
-            <span style={{
-              width: 20, height: 20, borderRadius: 6,
-              background: '#0a0a0a',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 12, fontWeight: 900, color: VOLT,
-              fontFamily: FF, letterSpacing: '-0.04em',
-            }}>N</span>
-            <span style={{
-              fontSize: 12, fontWeight: 700, color: '#0a0a0a',
-              fontFamily: FF, letterSpacing: '-0.01em',
-            }}>Nomaad</span>
-          </div>
-        </div>
-
-        <div style={{ marginTop: 'auto', position: 'relative', zIndex: 2 }}>
-          <div style={{ fontSize: 24, fontWeight: 800, color: '#f0f0f5', letterSpacing: '-0.02em', lineHeight: 1 }}>
-            £39<span style={{ fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.4)' }}>/mo</span>
-          </div>
-          <div style={{ fontSize: 11, color: 'rgba(204,253,1,0.7)', marginTop: 5 }}>
-            1 login · one source of truth
-          </div>
-        </div>
-      </div>
-
-      <style>{`
-        @keyframes nomaad-travel {
-          0%   { offset-distance: 0%;   opacity: 0; }
-          10%  {                         opacity: 1; }
-          90%  {                         opacity: 1; }
-          100% { offset-distance: 100%; opacity: 0; }
-        }
-        @keyframes nomaad-heartbeat {
-          0%, 100% { transform: scale(1);   opacity: 1;   }
-          50%      { transform: scale(1.4); opacity: 0.7; }
-        }
-        @media (max-width: 720px) {
-          .nomaad-compare-grid {
-            grid-template-columns: 1fr !important;
-          }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .nomaad-compare-grid * {
-            animation: none !important;
-          }
-        }
-      `}</style>
-    </div>
   );
 }
 
@@ -1354,17 +1106,14 @@ function IntegrationsSection() {
         textAlign: 'center', marginBottom: 64, padding: '0 20px',
         maxWidth: 720, marginLeft: 'auto', marginRight: 'auto',
       }}>
-        <Label text="Plays well with others" />
         <h2 style={{
-          fontSize: 'clamp(28px, 6vw, 52px)', fontWeight: 800,
-          color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 16px', lineHeight: 1.1,
+          fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 700,
+          color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 16px', lineHeight: 1.15,
         }}>
-          Connects to the tools
-          <br />
-          <span style={{ color: VOLT }}>you already love.</span>
+          Connects to everything you use
         </h2>
-        <p style={{ fontSize: 16, color: 'rgba(240,240,245,0.4)', margin: 0, lineHeight: 1.6 }}>
-          Keep your inbox, calendar, calls and payments exactly where they are. Nomaad sits on top and gives you the single view you&apos;ve been missing.
+        <p style={{ fontSize: 17, color: 'rgba(240,240,245,0.45)', margin: 0, lineHeight: 1.65 }}>
+          Gmail, Calendar, Stripe, Drive — all synced. One view.
         </p>
       </FadeUp>
 
@@ -1414,73 +1163,56 @@ const PORTAL_BULLETS = [
 
 function ClientPortalShowcase() {
   return (
-    <section style={{ padding: 'clamp(80px, 12vw, 120px) 20px', maxWidth: 1120, margin: '0 auto', fontFamily: FF }}>
-      <FadeUp style={{ textAlign: 'center', marginBottom: 64, maxWidth: 680, marginLeft: 'auto', marginRight: 'auto' }}>
-        <Label text="Client portal" />
-        <h2 style={{
-          fontSize: 'clamp(28px, 6vw, 52px)', fontWeight: 800,
-          color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 16px', lineHeight: 1.1,
-        }}>
-          Clients stop asking{' '}
-          <span style={{ color: VOLT }}>&ldquo;any updates?&rdquo;</span>
-        </h2>
-        <p style={{ fontSize: 16, color: 'rgba(240,240,245,0.4)', margin: 0, lineHeight: 1.6 }}>
-          One login. Everything they need. Nothing they have to chase you for.
-        </p>
-      </FadeUp>
-
+    <section style={{ padding: 'clamp(100px, 14vw, 160px) 20px', maxWidth: 1200, margin: '0 auto', fontFamily: FF }}>
       <div
         className="nomaad-portal-grid"
         style={{
           display: 'grid',
-          gridTemplateColumns: '1.1fr 1fr',
+          gridTemplateColumns: '1fr 1.1fr',
           alignItems: 'center',
-          gap: 48,
+          gap: 'clamp(48px, 8vw, 100px)',
         }}
       >
+        {/* Text side */}
         <FadeUp>
-          <ClientPortalMock />
-        </FadeUp>
+          <div style={{
+            fontSize: 11, fontWeight: 700, color: VOLT,
+            letterSpacing: '0.12em', textTransform: 'uppercase',
+            marginBottom: 20,
+          }}>
+            Client Portal
+          </div>
 
-        <FadeUp delay={0.1}>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 18 }}>
-            {PORTAL_BULLETS.map((b, i) => (
-              <li key={i} style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-                <span style={{
-                  width: 22, height: 22, borderRadius: '50%',
-                  background: 'rgba(204,253,1,0.1)',
-                  border: '1px solid rgba(204,253,1,0.25)',
-                  color: VOLT,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0, marginTop: 2,
-                }}>
-                  <svg viewBox="0 0 24 24" width={12} height={12} fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M20 6 9 17l-5-5" />
-                  </svg>
-                </span>
-                <div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: '#f0f0f5', letterSpacing: '-0.01em' }}>
-                    {b.title}
-                  </div>
-                  <div style={{ fontSize: 13, color: 'rgba(240,240,245,0.45)', marginTop: 3, lineHeight: 1.55 }}>
-                    {b.body}
-                  </div>
-                </div>
+          <h2 style={{
+            fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 700,
+            color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 20px', lineHeight: 1.15,
+          }}>
+            No more &ldquo;any updates?&rdquo; messages.
+          </h2>
+
+          <p style={{
+            fontSize: 17, color: 'rgba(240,240,245,0.5)', lineHeight: 1.7,
+            margin: '0 0 32px', maxWidth: 440,
+          }}>
+            Give clients a single place to track progress, review edits, and request changes — without chasing you.
+          </p>
+
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {PORTAL_BULLETS.slice(0, 3).map((b, i) => (
+              <li key={i} style={{
+                fontSize: 15, color: 'rgba(240,240,245,0.6)',
+                display: 'flex', alignItems: 'center', gap: 12,
+              }}>
+                <span style={{ color: VOLT, fontSize: 14 }}>✓</span>
+                {b.title}
               </li>
             ))}
           </ul>
+        </FadeUp>
 
-          <p style={{
-            marginTop: 32, padding: '14px 18px',
-            border: '1px solid rgba(204,253,1,0.16)',
-            background: 'rgba(204,253,1,0.04)',
-            borderRadius: 12,
-            fontSize: 14, fontWeight: 600, color: '#f0f0f5',
-            letterSpacing: '-0.01em',
-          }}>
-            Clear for them.{' '}
-            <span style={{ color: VOLT }}>Easy for you.</span>
-          </p>
+        {/* Visual side */}
+        <FadeUp delay={0.1}>
+          <ClientPortalMock />
         </FadeUp>
       </div>
 
@@ -1488,7 +1220,7 @@ function ClientPortalShowcase() {
         @media (max-width: 880px) {
           .nomaad-portal-grid {
             grid-template-columns: 1fr !important;
-            gap: 32px !important;
+            gap: 40px !important;
           }
         }
       `}</style>
@@ -1656,61 +1388,56 @@ const COLLAB_BULLETS = [
 
 function CollaborationSection() {
   return (
-    <section style={{ padding: 'clamp(80px, 12vw, 120px) 20px', maxWidth: 1120, margin: '0 auto', fontFamily: FF }}>
-      <FadeUp style={{ textAlign: 'center', marginBottom: 64, maxWidth: 680, marginLeft: 'auto', marginRight: 'auto' }}>
-        <Label text="Collaborate" />
-        <h2 style={{
-          fontSize: 'clamp(28px, 6vw, 52px)', fontWeight: 800,
-          color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 16px', lineHeight: 1.1,
-        }}>
-          Need help on a project?{' '}
-          <span style={{ color: VOLT }}>Hire inside Nomaad.</span>
-        </h2>
-        <p style={{ fontSize: 16, color: 'rgba(240,240,245,0.4)', margin: 0, lineHeight: 1.6 }}>
-          No more hunting through Instagram or random contacts.
-        </p>
-      </FadeUp>
-
+    <section style={{ padding: 'clamp(100px, 14vw, 160px) 20px', maxWidth: 1200, margin: '0 auto', fontFamily: FF }}>
       <div
         className="nomaad-collab-grid"
         style={{
           display: 'grid',
-          gridTemplateColumns: '1fr 1.1fr',
+          gridTemplateColumns: '1.1fr 1fr',
           alignItems: 'center',
-          gap: 48,
+          gap: 'clamp(48px, 8vw, 100px)',
         }}
       >
+        {/* Visual side */}
         <FadeUp>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 18 }}>
-            {COLLAB_BULLETS.map((b, i) => (
-              <li key={i} style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-                <span style={{
-                  width: 22, height: 22, borderRadius: '50%',
-                  background: 'rgba(204,253,1,0.1)',
-                  border: '1px solid rgba(204,253,1,0.25)',
-                  color: VOLT,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0, marginTop: 2,
-                }}>
-                  <svg viewBox="0 0 24 24" width={12} height={12} fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M20 6 9 17l-5-5" />
-                  </svg>
-                </span>
-                <div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: '#f0f0f5', letterSpacing: '-0.01em' }}>
-                    {b.title}
-                  </div>
-                  <div style={{ fontSize: 13, color: 'rgba(240,240,245,0.45)', marginTop: 3, lineHeight: 1.55 }}>
-                    {b.body}
-                  </div>
-                </div>
+          <CollabMock />
+        </FadeUp>
+
+        {/* Text side */}
+        <FadeUp delay={0.1}>
+          <div style={{
+            fontSize: 11, fontWeight: 700, color: 'rgba(240,240,245,0.4)',
+            letterSpacing: '0.12em', textTransform: 'uppercase',
+            marginBottom: 20,
+          }}>
+            Collaboration
+          </div>
+
+          <h2 style={{
+            fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 700,
+            color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 20px', lineHeight: 1.15,
+          }}>
+            Need help? Hire inside Nomaad.
+          </h2>
+
+          <p style={{
+            fontSize: 17, color: 'rgba(240,240,245,0.5)', lineHeight: 1.7,
+            margin: '0 0 32px', maxWidth: 440,
+          }}>
+            Find vetted editors, designers, and shooters — and plug them straight into your projects.
+          </p>
+
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {COLLAB_BULLETS.slice(0, 3).map((b, i) => (
+              <li key={i} style={{
+                fontSize: 15, color: 'rgba(240,240,245,0.6)',
+                display: 'flex', alignItems: 'center', gap: 12,
+              }}>
+                <span style={{ color: VOLT, fontSize: 14 }}>✓</span>
+                {b.title}
               </li>
             ))}
           </ul>
-        </FadeUp>
-
-        <FadeUp delay={0.1}>
-          <CollabMock />
         </FadeUp>
       </div>
 
@@ -1718,7 +1445,7 @@ function CollaborationSection() {
         @media (max-width: 880px) {
           .nomaad-collab-grid {
             grid-template-columns: 1fr !important;
-            gap: 32px !important;
+            gap: 40px !important;
           }
         }
       `}</style>
@@ -1813,41 +1540,32 @@ function CollabMock() {
 // ─── Avatar Section ───────────────────────────────────────────────────────────
 
 function AvatarSection() {
-  const AVATARS = ['Freelance videographer', 'Photographer', 'Brand designer', 'Copywriter', 'Video editor', 'Content creator', 'Creative coach', 'Social media manager'];
+  const AVATARS = ['Videographers', 'Photographers', 'Designers', 'Copywriters', 'Editors', 'Creators', 'Coaches', 'Social managers'];
   return (
-    <section style={{ padding: 'clamp(80px, 12vw, 120px) 20px', maxWidth: 860, margin: '0 auto', fontFamily: FF, textAlign: 'center' }}>
+    <section style={{ padding: 'clamp(100px, 14vw, 160px) 20px', maxWidth: 900, margin: '0 auto', fontFamily: FF, textAlign: 'center' }}>
       <FadeUp>
-        <Label text="Built for solo operators" />
         <h2 style={{
-          fontSize: 'clamp(26px, 6vw, 50px)', fontWeight: 800,
-          color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 20px', lineHeight: 1.1,
+          fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 700,
+          color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 24px', lineHeight: 1.15,
         }}>
-          Not for agencies. Not for teams.
-          <br />
-          <span style={{ color: VOLT }}>For the person doing everything themselves.</span>
+          Built for solo operators
         </h2>
         <p style={{
-          fontSize: 16, color: 'rgba(240,240,245,0.4)', maxWidth: 560,
-          margin: '0 auto 40px', lineHeight: 1.7,
+          fontSize: 17, color: 'rgba(240,240,245,0.45)', maxWidth: 520,
+          margin: '0 auto 48px', lineHeight: 1.7,
         }}>
-          If you're taking client briefs, managing your own pipeline, chasing your own invoices,
-          handling your own admin, and still somehow finding time to do the actual work —
-          Nomaad was built for you.
+          Not agencies. Not teams. For the person doing everything themselves.
         </p>
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, justifyContent: 'center', marginBottom: 40 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
           {AVATARS.map((a) => (
             <span key={a} style={{
-              padding: '8px 16px', borderRadius: 100,
-              background: 'rgba(204,253,1,0.05)', border: '1px solid rgba(204,253,1,0.12)',
-              fontSize: 13, fontWeight: 600, color: VOLT, fontFamily: FF,
+              padding: '10px 20px', borderRadius: 100,
+              background: 'transparent', border: '1px solid rgba(255,255,255,0.08)',
+              fontSize: 14, fontWeight: 500, color: 'rgba(240,240,245,0.6)', fontFamily: FF,
             }}>{a}</span>
           ))}
         </div>
-
-        <p style={{ fontSize: 14, color: 'rgba(240,240,245,0.3)', fontStyle: 'italic' }}>
-          If you wear every hat — creator, account manager, bookkeeper, sales rep — this is for you.
-        </p>
       </FadeUp>
     </section>
   );
@@ -1976,19 +1694,14 @@ function TestimonialCard({ t, featured }) {
 
 function TestimonialsSection() {
   return (
-    <section style={{ padding: 'clamp(80px, 12vw, 120px) 20px', maxWidth: 1200, margin: '0 auto', fontFamily: FF }}>
-      <FadeUp style={{ textAlign: 'center', marginBottom: 56, maxWidth: 640, marginLeft: 'auto', marginRight: 'auto' }}>
-        <Label text="Social proof" />
+    <section style={{ padding: 'clamp(100px, 14vw, 160px) 20px', maxWidth: 1200, margin: '0 auto', fontFamily: FF }}>
+      <FadeUp style={{ textAlign: 'center', marginBottom: 72 }}>
         <h2 style={{
-          fontSize: 'clamp(28px, 6vw, 52px)', fontWeight: 800,
-          color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 16px', lineHeight: 1.1,
+          fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 700,
+          color: '#f0f0f5', letterSpacing: '-0.03em', margin: 0, lineHeight: 1.15,
         }}>
-          Built for how creatives{' '}
-          <span style={{ color: VOLT }}>actually work.</span>
+          What early users are saying
         </h2>
-        <p style={{ fontSize: 16, color: 'rgba(240,240,245,0.4)', margin: 0, lineHeight: 1.6 }}>
-          Early access users replacing their scattered stacks with one system.
-        </p>
       </FadeUp>
 
       <div style={{
@@ -2068,17 +1781,17 @@ const PLANS = [
 
 function PricingSection() {
   return (
-    <section id="pricing" style={{ padding: 'clamp(80px, 12vw, 120px) 24px', maxWidth: 920, margin: '0 auto', fontFamily: FF }}>
+    <section id="pricing" style={{ padding: 'clamp(100px, 14vw, 160px) 24px', maxWidth: 920, margin: '0 auto', fontFamily: FF }}>
       <FadeUp style={{ textAlign: 'center', marginBottom: 72 }}>
-        <Label text="Pricing" />
         <h2 style={{
-          fontSize: 'clamp(30px, 4.5vw, 50px)', fontWeight: 800,
-          color: '#f0f0f5', letterSpacing: '-0.03em', margin: 0, lineHeight: 1.1,
+          fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 700,
+          color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 16px', lineHeight: 1.15,
         }}>
-          Replace 5 tools for less than
-          <br />
-          <span style={{ color: VOLT }}>the cost of one of them.</span>
+          Simple pricing
         </h2>
+        <p style={{ fontSize: 17, color: 'rgba(240,240,245,0.45)', margin: 0, lineHeight: 1.65 }}>
+          Replace 5 tools for less than the cost of one.
+        </p>
       </FadeUp>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 20, alignItems: 'stretch' }}>
@@ -2147,27 +1860,20 @@ function PricingSection() {
 
 function CloserSection() {
   return (
-    <section style={{ padding: 'clamp(80px, 12vw, 120px) 24px', textAlign: 'center', fontFamily: FF, position: 'relative' }}>
-      <div style={{
-        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
-        width: 600, height: 300, borderRadius: '50%',
-        background: VOLT, filter: 'blur(120px)', opacity: 0.04, pointerEvents: 'none',
-      }} />
-      <FadeUp style={{ maxWidth: 680, margin: '0 auto', position: 'relative' }}>
+    <section style={{ padding: 'clamp(120px, 16vw, 200px) 24px', textAlign: 'center', fontFamily: FF }}>
+      <FadeUp style={{ maxWidth: 640, margin: '0 auto' }}>
         <h2 style={{
-          fontSize: 'clamp(32px, 5vw, 58px)', fontWeight: 800,
-          color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 16px', lineHeight: 1.08,
+          fontSize: 'clamp(32px, 5vw, 52px)', fontWeight: 700,
+          color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 24px', lineHeight: 1.1,
         }}>
-          Stop juggling tools.
-          <br />
-          <span style={{ color: VOLT }}>Start running your business.</span>
+          Ready to simplify?
         </h2>
-        <p style={{ fontSize: 16, color: 'rgba(240,240,245,0.4)', lineHeight: 1.65, margin: '0 0 40px' }}>
-          This is how your workflow should feel.
+        <p style={{ fontSize: 18, color: 'rgba(240,240,245,0.45)', lineHeight: 1.7, margin: '0 0 48px' }}>
+          Join creators who stopped juggling tools and started running their business.
         </p>
-        <WaitlistForm source="closer" label="Join the waitlist →" />
-        <p style={{ fontSize: 12, color: 'rgba(240,240,245,0.25)', marginTop: 16 }}>
-          No card required · 14-day free trial on launch · Cancel anytime
+        <WaitlistForm source="closer" label="Join the waitlist" />
+        <p style={{ fontSize: 13, color: 'rgba(240,240,245,0.3)', marginTop: 20 }}>
+          Free trial on launch. No card required.
         </p>
       </FadeUp>
     </section>

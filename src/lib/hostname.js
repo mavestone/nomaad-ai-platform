@@ -19,6 +19,12 @@ export const BASE_URL = 'https://nomaad.ai';
  */
 export function getHostnameRoute() {
   const host = window.location.hostname;
+  const params = new URLSearchParams(window.location.search);
+
+  // Dev mode: allow ?route=landing to preview landing page
+  if ((host === 'localhost' || host === '127.0.0.1') && params.get('route') === 'landing') {
+    return { route: 'landing' };
+  }
 
   if (host === 'localhost' || host === '127.0.0.1') return { route: 'local' };
   if (host === 'app.nomaad.ai')                     return { route: 'app' };
