@@ -87,19 +87,19 @@ function WaitlistForm({ source = 'landing', label = 'Get early access →', comp
   }
 
   return (
-    <form onSubmit={submit} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+    <form onSubmit={submit} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
       <input
         type="email" value={email} onChange={(e) => setEmail(e.target.value)}
         placeholder="your@email.com" required
         style={{
-          padding: compact ? '10px 16px' : '13px 18px',
-          background: 'rgba(255,255,255,0.06)',
-          border: state === 'error' ? '1px solid rgba(255,98,89,0.5)' : '1px solid rgba(255,255,255,0.12)',
+          padding: compact ? '10px 16px' : '13px 20px',
+          background: 'rgba(255,255,255,0.05)',
+          border: state === 'error' ? '1px solid rgba(255,98,89,0.5)' : '1px solid rgba(255,255,255,0.1)',
           borderRadius: 100, color: '#f0f0f5', fontSize: compact ? 13 : 14,
-          fontFamily: FF, outline: 'none', width: compact ? 220 : 260, transition: 'border-color 0.2s',
+          fontFamily: FF, outline: 'none', width: compact ? 200 : 240, transition: 'border-color 0.2s',
         }}
-        onFocus={(e) => { e.target.style.borderColor = 'rgba(204,253,1,0.4)'; }}
-        onBlur={(e) => { e.target.style.borderColor = state === 'error' ? 'rgba(255,98,89,0.5)' : 'rgba(255,255,255,0.12)'; }}
+        onFocus={(e) => { e.target.style.borderColor = 'rgba(204,253,1,0.35)'; }}
+        onBlur={(e) => { e.target.style.borderColor = state === 'error' ? 'rgba(255,98,89,0.5)' : 'rgba(255,255,255,0.1)'; }}
       />
       <motion.button
         type="submit" disabled={state === 'loading' || !email}
@@ -107,20 +107,20 @@ function WaitlistForm({ source = 'landing', label = 'Get early access →', comp
         style={{
           padding: compact ? '10px 20px' : '13px 24px',
           background: state === 'loading' || !email
-            ? 'rgba(255,255,255,0.08)'
+            ? 'rgba(255,255,255,0.07)'
             : `linear-gradient(135deg, ${VOLT}, ${VOLTD})`,
-          color: state === 'loading' || !email ? 'rgba(255,255,255,0.3)' : '#0a0a0a',
+          color: state === 'loading' || !email ? 'rgba(255,255,255,0.25)' : '#0a0a0a',
           border: 'none', borderRadius: 100, fontWeight: 700,
           fontSize: compact ? 13 : 14, fontFamily: FF,
           cursor: state === 'loading' || !email ? 'not-allowed' : 'pointer',
-          boxShadow: state === 'loading' || !email ? 'none' : `0 4px 24px rgba(204,253,1,0.25)`,
+          boxShadow: state === 'loading' || !email ? 'none' : `0 4px 20px rgba(204,253,1,0.2)`,
           transition: 'all 0.2s ease', whiteSpace: 'nowrap',
         }}
       >
         {state === 'loading' ? 'Joining…' : label}
       </motion.button>
       {state === 'error' && (
-        <p style={{ width: '100%', textAlign: 'center', fontSize: 12, color: '#FF6259', margin: '4px 0 0' }}>
+        <p style={{ width: '100%', fontSize: 12, color: '#FF6259', margin: '4px 0 0' }}>
           {errMsg}
         </p>
       )}
@@ -143,27 +143,22 @@ function WaitlistCount() {
   return (
     <motion.div
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
-      style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        gap: 14, marginTop: 20, flexWrap: 'wrap', fontFamily: FF,
-      }}
+      style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: FF }}
     >
       <div style={{ display: 'flex', alignItems: 'center' }}>
         {['#FF6259', '#5AC8FA', '#FFB340', VOLT, '#BF5AF2'].map((c, i) => (
           <div key={i} style={{
-            width: 26, height: 26, borderRadius: '50%',
-            background: `${c}28`, border: `2px solid #08080a`,
-            marginLeft: i === 0 ? 0 : -8, flexShrink: 0,
+            width: 24, height: 24, borderRadius: '50%',
+            background: `${c}22`, border: `2px solid #08080a`,
+            marginLeft: i === 0 ? 0 : -7, flexShrink: 0,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 10, fontWeight: 700, color: c,
+            fontSize: 9, fontWeight: 700, color: c,
           }}>{['J','P','M','S','A'][i]}</div>
         ))}
       </div>
-      <span style={{ fontSize: 12, color: 'rgba(240,240,245,0.4)' }}>
-        <span style={{ color: 'rgba(240,240,245,0.75)', fontWeight: 600 }}>{display}+ solo creators</span> already waiting
+      <span style={{ fontSize: 12, color: 'rgba(240,240,245,0.38)' }}>
+        <span style={{ color: 'rgba(240,240,245,0.7)', fontWeight: 600 }}>{display}+</span> already waiting
       </span>
-      <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: 10 }}>·</span>
-      <span style={{ fontSize: 12, color: 'rgba(240,240,245,0.3)' }}>No card required</span>
     </motion.div>
   );
 }
@@ -283,12 +278,19 @@ function Hero({ onSignIn }) {
     <section style={{
       minHeight: '100vh', display: 'flex', flexDirection: 'column',
       justifyContent: 'center',
-      padding: 'clamp(100px, 15vh, 140px) 20px 80px', position: 'relative',
-      fontFamily: FF,
+      padding: 'clamp(120px, 18vh, 180px) 20px 100px',
+      position: 'relative', fontFamily: FF,
     }}>
-      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
-        <div style={{ position: 'absolute', top: '-10%', left: '60%', width: 700, height: 700, borderRadius: '50%', background: VOLT, filter: 'blur(160px)', opacity: 0.05 }} />
-        <div style={{ position: 'absolute', bottom: '-5%', left: '-5%', width: 600, height: 600, borderRadius: '50%', background: '#5AC8FA', filter: 'blur(140px)', opacity: 0.035 }} />
+      {/* Subtle single glow — volt only, not blue */}
+      <div aria-hidden="true" style={{
+        position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none',
+      }}>
+        <div style={{
+          position: 'absolute', top: '20%', left: '55%',
+          width: 800, height: 600, borderRadius: '50%',
+          background: VOLT, filter: 'blur(180px)', opacity: 0.04,
+          transform: 'translate(-50%, -50%)',
+        }} />
       </div>
 
       <div
@@ -297,104 +299,109 @@ function Hero({ onSignIn }) {
           position: 'relative',
           width: '100%', maxWidth: 1200, margin: '0 auto',
           display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1.05fr) minmax(0, 1fr)',
+          gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
           alignItems: 'center',
-          gap: 'clamp(32px, 6vw, 80px)',
+          gap: 'clamp(48px, 7vw, 96px)',
         }}
       >
-        {/* ─── Left column: copy ─── */}
+        {/* ─── Left: copy ─── */}
         <div style={{ minWidth: 0 }}>
+
+          {/* Badge */}
           <motion.div
-            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
             style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              padding: '6px 14px 6px 10px',
-              background: 'rgba(204,253,1,0.07)', border: '1px solid rgba(204,253,1,0.2)',
-              borderRadius: 100, marginBottom: 32,
+              display: 'inline-flex', alignItems: 'center', gap: 7,
+              padding: '5px 12px 5px 9px',
+              background: 'rgba(204,253,1,0.06)',
+              border: '1px solid rgba(204,253,1,0.15)',
+              borderRadius: 100, marginBottom: 28,
             }}
           >
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: VOLT, boxShadow: `0 0 8px ${VOLT}`, animation: 'pulse 2s ease infinite' }} />
-            <span style={{ fontSize: 12, fontWeight: 600, color: VOLT, letterSpacing: '0.04em' }}>WAITLIST OPEN</span>
+            <span style={{
+              width: 6, height: 6, borderRadius: '50%',
+              background: VOLT, flexShrink: 0,
+              boxShadow: `0 0 6px ${VOLT}`,
+              animation: 'pulse 2s ease infinite',
+            }} />
+            <span style={{ fontSize: 11, fontWeight: 700, color: VOLT, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              Waitlist open
+            </span>
           </motion.div>
 
+          {/* Headline */}
           <motion.h1
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.6, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
             style={{
-              fontSize: 'clamp(34px, 6.2vw, 68px)', fontWeight: 800,
-              lineHeight: 1.05, letterSpacing: '-0.035em',
-              color: '#f0f0f5', margin: '0 0 20px',
+              fontSize: 'clamp(36px, 5.5vw, 64px)', fontWeight: 700,
+              lineHeight: 1.08, letterSpacing: '-0.035em',
+              color: '#f0f0f5', margin: '0 0 22px',
             }}
           >
-            Your entire creative workflow.
-            {' '}
+            Your entire creative workflow.{' '}
             <span style={{ color: VOLT }}>Finally in one place.</span>
           </motion.h1>
 
+          {/* Single, confident subline */}
           <motion.p
-            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
+            initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
             style={{
-              fontSize: 'clamp(16px, 1.6vw, 19px)',
-              color: 'rgba(240,240,245,0.55)', lineHeight: 1.6,
-              maxWidth: 540, margin: '0 0 16px',
+              fontSize: 'clamp(16px, 1.5vw, 18px)',
+              color: 'rgba(240,240,245,0.5)', lineHeight: 1.65,
+              maxWidth: 460, margin: '0 0 40px',
             }}
           >
-            Find clients, manage projects, deliver work, and hire collaborators — without juggling 5 different tools.
+            Find clients, manage projects, deliver work, and hire collaborators — one system, built for solo creatives.
           </motion.p>
 
-          <motion.p
-            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, delay: 0.20, ease: [0.22, 1, 0.36, 1] }}
-            style={{
-              fontSize: 14,
-              color: 'rgba(240,240,245,0.35)', lineHeight: 1.55,
-              maxWidth: 520, margin: '0 0 36px',
-            }}
-          >
-            Built for solo creatives who are done with messy workflows and scattered systems.
-          </motion.p>
-
+          {/* CTA */}
           <motion.div
             id="waitlist"
-            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, delay: 0.24, ease: [0.22, 1, 0.36, 1] }}
+            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.22, ease: [0.22, 1, 0.36, 1] }}
           >
-            <WaitlistForm source="hero" label="Join the waitlist →" />
+            <WaitlistForm source="hero" label="Join the waitlist" />
+
             <div style={{
-              display: 'flex', alignItems: 'center', gap: 16,
-              marginTop: 14, flexWrap: 'wrap',
+              display: 'flex', alignItems: 'center', gap: 20,
+              marginTop: 20, flexWrap: 'wrap',
             }}>
               <WaitlistCount />
+              <span style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
               <a href="#how-it-works" style={{
-                fontSize: 13, fontWeight: 600, color: 'rgba(240,240,245,0.5)',
+                fontSize: 13, fontWeight: 500,
+                color: 'rgba(240,240,245,0.4)',
                 textDecoration: 'none', letterSpacing: '-0.01em',
-                display: 'inline-flex', alignItems: 'center', gap: 4,
               }}>
-                See how it works
-                <span aria-hidden="true" style={{ opacity: 0.6 }}>→</span>
+                See how it works →
               </a>
             </div>
           </motion.div>
 
+          {/* Sign in */}
           <motion.p
             initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.52 }}
-            style={{ fontSize: 12, color: 'rgba(240,240,245,0.3)', marginTop: 20 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+            style={{ fontSize: 12, color: 'rgba(240,240,245,0.28)', marginTop: 24, lineHeight: 1 }}
           >
             Already have an account?{' '}
             <button onClick={onSignIn} style={{
-              background: 'none', border: 'none', color: 'rgba(204,253,1,0.7)',
-              fontFamily: FF, fontSize: 12, cursor: 'pointer', fontWeight: 600, padding: 0,
-            }}>Sign in →</button>
+              background: 'none', border: 'none',
+              color: 'rgba(240,240,245,0.45)',
+              fontFamily: FF, fontSize: 12, cursor: 'pointer',
+              fontWeight: 600, padding: 0, textDecoration: 'underline',
+              textUnderlineOffset: 3,
+            }}>Sign in</button>
           </motion.p>
         </div>
 
-        {/* ─── Right column: product UI mock ─── */}
+        {/* ─── Right: product mock ─── */}
         <motion.div
-          initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.75, delay: 0.22, ease: [0.22, 1, 0.36, 1] }}
           className="nomaad-hero-mock"
           style={{ position: 'relative', minWidth: 0 }}
         >
@@ -406,10 +413,9 @@ function Hero({ onSignIn }) {
         @media (max-width: 920px) {
           .nomaad-hero-grid {
             grid-template-columns: 1fr !important;
-            text-align: left;
           }
           .nomaad-hero-mock {
-            margin-top: 24px;
+            margin-top: 48px;
           }
         }
       `}</style>
