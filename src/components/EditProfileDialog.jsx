@@ -1,10 +1,124 @@
 import { useId, useState, useEffect } from "react";
-import { useCharacterLimit } from "../hooks/use-character-limit";
-import { useImageUpload } from "../hooks/use-image-upload";
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "./ui/dialog";
+import { motion, AnimatePresence } from "motion/react";
 import { Camera, Check, Link2, Loader2, Mail, MapPin, UserRound, X } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabase";
+
+const VOLT = "#ccfd01";
+const VOLT_DIM = "#b8e300";
+
+function useCharacterLimit({ maxLength, initialValue = "" }) {
+  const [value, setValue] = useState(initialValue);
+  const characterCount = value.length;
+  const handleChange = (e) => {
+    if (e.target.value.length <= maxLength) setValue(e.target.value);
+  };
+  return { value, characterCount, handleChange };
+}
+
+function useImageUpload() {
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [fileObject, setFileObject] = useState(null);
+  const fileInputRef = { current: null };
+  const fileInputId = useId();
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setFileObject(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setPreviewUrl(reader.result);
+    reader.readAsDataURL(file);
+  };
+
+  const handleThumbnailClick = () => {
+    document.getElementById(fileInputId)?.click();
+  };
+
+  useEffect(() => {
+    fileInputRef.current = document.getElementById(fileInputId);
+  }, []);
+
+  return { previewUrl, fileObject, fileInputRef, handleThumbnailClick, handleFileChange, fileInputId, handleFileChange };
+}
+
+function SegmentedControl({ options, value, onChange }) {
+  return (
+    <div style={{
+      display: "inline-flex",
+      padding: 3,
+      borderRadius: 10,
+      background: "rgba(255,255,255,0.05)",
+      border: "1px solid rgba(255,255,255,0.08)",
+      gap: 2,
+    }}>
+      {options.map((opt) => {
+        const selected = value === opt.value;
+        return (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => onChange(opt.value)}
+            style={{
+              padding: "7px 16px",
+              borderRadius: 7,
+              border: "none",
+              cursor: "pointer",
+              fontSize: 13,
+              fontWeight: 500,
+              transition: "all 0.2s ease",
+              background: selected ? "rgba(255,255,255,0.12)" : "transparent",
+              color: selected ? "#f0f0f5" : "rgba(240,240,245,0.45)",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 7,
+              boxShadow: selected ? "0 1px 4px rgba(0,0,0,0.3)" : "none",
+            }}
+          >
+            <span style={{
+              width: 7,
+              height: 7,
+              borderRadius: "50%",
+              background: opt.color,
+              flexShrink: 0,
+              boxShadow: selected ? `0 0 5px ${opt.color}` : "none",
+            }} />
+            {opt.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function FieldGroup({ label, htmlFor, children, hint }) {
+  return (
+    <div>
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        marginBottom: 7,
+      }}>
+        <label
+          htmlFor={htmlFor}
+          style={{
+            fontSize: 12.5,
+            fontWeight: 500,
+            color: "rgba(240,240,245,0.5)",
+            letterSpacing: "0.01em",
+          }}
+        >
+          {label}
+        </label>
+        {hint && (
+          <span style={{ fontSize: 11.5, color: "rgba(240,240,245,0.3)" }}>{hint}</span>
+        )}
+      </div>
+      {children}
+    </div>
+  );
+}
 
 export function EditProfileDialog({ open, onOpenChange, profile, onSaveComplete }) {
   const id = useId();
@@ -17,18 +131,17 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSaveComplete 
   });
 
   const [form, setForm] = useState({
-    fullName: profile?.full_name || profile?.business_name || "",
-    username: profile?.username || "",
-    website: profile?.social_links?.website || "",
-    email: profile?.social_links?.email || "",
-    location: profile?.location || "",
-    availability: profile?.availability || "away",
+    fullName: "",
+    username: "",
+    website: "",
+    email: "",
+    location: "",
+    availability: "away",
   });
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
-
-  const { previewUrl, fileObject, fileInputRef, handleThumbnailClick, handleFileChange } = useImageUpload();
+  const { previewUrl, fileObject, fileInputId, handleFileChange } = useImageUpload();
 
   useEffect(() => {
     if (open && profile) {
@@ -89,7 +202,7 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSaveComplete 
       const { error: updateErr } = await updateProfile(updates);
 
       if (!updateErr) {
-        onSaveComplete(updates);
+        onSaveComplete?.(updates);
         onOpenChange(false);
       } else {
         setError(updateErr.message || "Failed to save profile.");
@@ -109,232 +222,524 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSaveComplete 
   const availabilityOptions = [
     { value: "available", label: "Available", color: "#34C759" },
     { value: "busy", label: "Busy", color: "#FF9500" },
-    { value: "away", label: "Away", color: "#8e8e93" },
+    { value: "away", label: "Away", color: "#8b8fa3" },
   ];
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        hideCloseButton
-        className="p-0 gap-0 sm:max-w-[740px] w-[95vw] rounded-[30px] border border-white/[0.1] bg-[#09090b]/95 shadow-[0_60px_140px_rgba(0,0,0,0.75)] overflow-hidden flex flex-col max-h-[92vh] backdrop-blur-2xl"
-      >
-        <DialogTitle className="sr-only">Edit profile</DialogTitle>
-        <DialogDescription className="sr-only">Update your profile information.</DialogDescription>
-
-        <div className="flex items-center justify-between px-6 py-4 shrink-0 border-b border-white/[0.08] bg-[#0d0d11]/90">
-          <button
+    <AnimatePresence>
+      {open && (
+        <>
+          <motion.div
+            key="backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             onClick={() => onOpenChange(false)}
-            className="min-h-11 px-3 rounded-xl text-[15px] text-white/65 hover:text-white hover:bg-white/[0.07] transition-colors font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ccfd01]/70"
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 50,
+              background: "rgba(0,0,0,0.65)",
+              backdropFilter: "blur(6px)",
+              WebkitBackdropFilter: "blur(6px)",
+            }}
+          />
+          <motion.div
+            key="modal"
+            initial={{ opacity: 0, scale: 0.96, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 8 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              position: "fixed",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              zIndex: 51,
+              width: "95vw",
+              maxWidth: 860,
+              maxHeight: "92vh",
+              display: "flex",
+              flexDirection: "column",
+              background: "rgba(12,12,14,0.96)",
+              borderRadius: 28,
+              border: "1px solid rgba(255,255,255,0.09)",
+              boxShadow: "0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.03) inset",
+              overflow: "hidden",
+            }}
+            onKeyDown={(e) => e.key === "Escape" && onOpenChange(false)}
           >
-            Cancel
-          </button>
-          <p className="text-[18px] font-semibold text-white tracking-tight">Edit Profile</p>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="min-h-11 px-4 rounded-xl text-[15px] font-semibold bg-[#ccfd01] text-black hover:bg-[#daff46] disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ccfd01]/70 inline-flex items-center gap-2"
-          >
-            {saving ? <Loader2 size={14} className="animate-spin" /> : null}
-            {saving ? "Saving" : "Save"}
-          </button>
-        </div>
-
-        <div className="overflow-y-auto flex-1 p-6 space-y-5">
-          <section className="rounded-2xl border border-white/[0.08] bg-gradient-to-br from-white/[0.08] to-white/[0.02] p-5">
-            <div className="flex items-center gap-4">
-              <div className="relative group cursor-pointer" onClick={handleThumbnailClick}>
-                <div className="w-24 h-24 rounded-full overflow-hidden ring-2 ring-white/20 shadow-[0_20px_45px_rgba(0,0,0,0.55)]">
-                  {currentImage ? (
-                    <img src={currentImage} className="w-full h-full object-cover" alt="Profile" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-[#ccfd01] text-black font-semibold text-[30px]">
-                      {initials}
-                    </div>
-                  )}
-                </div>
-                <div className="absolute inset-0 rounded-full bg-black/45 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                  <Camera size={18} className="text-white" />
-                </div>
-              </div>
-              <div className="min-w-0">
-                <p className="text-[18px] font-semibold text-white truncate">{form.fullName || "Your Name"}</p>
-                <p className="text-[13px] text-white/45 truncate">@{form.username || "username"}</p>
-                <button
-                  onClick={handleThumbnailClick}
-                  className="mt-2 min-h-10 px-3 rounded-lg border border-white/15 text-[13px] text-white/85 hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ccfd01]/70"
-                >
-                  Change photo
-                </button>
-              </div>
-            </div>
             <input
+              id={fileInputId}
               type="file"
-              ref={fileInputRef}
               onChange={handleFileChange}
               className="hidden"
               accept="image/*"
             />
-          </section>
 
-          {error ? (
-            <div className="flex items-center gap-2 text-[13px] text-red-300 bg-red-500/12 border border-red-400/25 px-4 py-3 rounded-2xl">
-              <X size={14} />
-              {error}
+            {/* Header */}
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "18px 24px 17px",
+              borderBottom: "1px solid rgba(255,255,255,0.06)",
+              flexShrink: 0,
+            }}>
+              <button
+                onClick={() => onOpenChange(false)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "rgba(240,240,245,0.45)",
+                  fontSize: 14,
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  padding: "6px 8px",
+                  borderRadius: 8,
+                  transition: "color 0.15s",
+                  minHeight: 32,
+                  minWidth: 60,
+                  textAlign: "left",
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.color = "#f0f0f5"}
+                onMouseLeave={(e) => e.currentTarget.style.color = "rgba(240,240,245,0.45)"}
+              >
+                Cancel
+              </button>
+
+              <span style={{
+                fontSize: 16,
+                fontWeight: 600,
+                color: "#f0f0f5",
+                letterSpacing: "-0.01em",
+              }}>
+                Edit Profile
+              </span>
+
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                style={{
+                  background: saving
+                    ? "rgba(204,253,1,0.1)"
+                    : "linear-gradient(135deg, #ccfd01, #b8e300)",
+                  color: saving ? "rgba(204,253,1,0.5)" : "#0a0a0a",
+                  border: "none",
+                  borderRadius: 10,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: saving ? "not-allowed" : "pointer",
+                  padding: "7px 18px",
+                  minHeight: 32,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  transition: "all 0.2s ease",
+                  boxShadow: saving ? "none" : "0 2px 12px rgba(204,253,1,0.25)",
+                  minWidth: 60,
+                  justifyContent: "center",
+                }}
+                onMouseEnter={(e) => { if (!saving) e.currentTarget.style.boxShadow = "0 4px 20px rgba(204,253,1,0.35)"; }}
+                onMouseLeave={(e) => { if (!saving) e.currentTarget.style.boxShadow = "0 2px 12px rgba(204,253,1,0.25)"; }}
+              >
+                {saving ? (
+                  <>
+                    <Loader2 size={13} style={{ animation: "spin 0.8s linear infinite" }} />
+                    Saving
+                  </>
+                ) : "Save"}
+              </button>
             </div>
-          ) : null}
 
-          <section className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Field label="Name" icon={<UserRound size={14} />} htmlFor={`${id}-name`}>
-              <input
-                id={`${id}-name`}
-                value={form.fullName}
-                onChange={(e) => handleChange("fullName", e.target.value)}
-                placeholder="Your name"
-                className="form-input"
-              />
-            </Field>
+            {/* Scrollable content */}
+            <div style={{
+              overflowY: "auto",
+              flex: 1,
+              padding: "32px 40px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 32,
+            }}>
+              {/* Error */}
+              {error && (
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: "12px 16px",
+                  borderRadius: 12,
+                  background: "rgba(255,98,89,0.08)",
+                  border: "1px solid rgba(255,98,89,0.2)",
+                  fontSize: 13,
+                  color: "#FF6259",
+                }}>
+                  <X size={14} />
+                  {error}
+                </div>
+              )}
 
-            <Field
-              label="Username"
-              icon={<Check size={14} className={form.username ? "text-[#34C759]" : "text-white/35"} />}
-              htmlFor={`${id}-username`}
-              hint={isUsernameChanged ? "Will update your public URL." : "Used in profile URL"}
-            >
-              <input
-                id={`${id}-username`}
-                value={form.username}
-                onChange={(e) => handleChange("username", e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, ""))}
-                placeholder="username"
-                className="form-input"
-              />
-            </Field>
-
-            <Field label="Location" icon={<MapPin size={14} />} htmlFor={`${id}-location`}>
-              <input
-                id={`${id}-location`}
-                value={form.location}
-                onChange={(e) => handleChange("location", e.target.value)}
-                placeholder="City, Country"
-                className="form-input"
-              />
-            </Field>
-
-            <Field label="Website" icon={<Link2 size={14} />} htmlFor={`${id}-website`}>
-              <input
-                id={`${id}-website`}
-                value={form.website}
-                onChange={(e) => handleChange("website", e.target.value.replace(/^https?:\/\//, ""))}
-                placeholder="yourdomain.com"
-                className="form-input"
-              />
-            </Field>
-
-            <div className="sm:col-span-2">
-              <Field label="Email" icon={<Mail size={14} />} htmlFor={`${id}-email`}>
-                <input
-                  id={`${id}-email`}
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => handleChange("email", e.target.value)}
-                  placeholder="hello@example.com"
-                  className="form-input"
-                />
-              </Field>
-            </div>
-          </section>
-
-          <section className="rounded-2xl border border-white/[0.08] bg-[#121215]/70 p-4">
-            <p className="text-[12px] uppercase tracking-[0.14em] font-semibold text-white/45 mb-3">Availability</p>
-            <div className="grid grid-cols-3 gap-2">
-              {availabilityOptions.map((opt) => {
-                const selected = form.availability === opt.value;
-                return (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => handleChange("availability", opt.value)}
-                    className={`min-h-11 rounded-xl border text-[13px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ccfd01]/70 ${
-                      selected
-                        ? "text-white border-white/25 bg-white/[0.10]"
-                        : "text-white/55 border-white/10 bg-black/20 hover:text-white/80 hover:border-white/20"
-                    }`}
+              {/* Profile identity block */}
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 24,
+              }}>
+                <div
+                  onClick={() => document.getElementById(fileInputId)?.click()}
+                  style={{ position: "relative", cursor: "pointer", flexShrink: 0 }}
+                >
+                  <div style={{
+                    width: 96,
+                    height: 96,
+                    borderRadius: "50%",
+                    overflow: "hidden",
+                    boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+                    border: "3px solid rgba(255,255,255,0.08)",
+                    background: currentImage ? "transparent" : "#ccfd01",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    transition: "box-shadow 0.2s",
+                  }}>
+                    {currentImage ? (
+                      <img
+                        src={currentImage}
+                        alt="Profile"
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      />
+                    ) : (
+                      <span style={{ fontSize: 36, fontWeight: 700, color: "#0a0a0a" }}>
+                        {initials}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{
+                    position: "absolute",
+                    inset: 0,
+                    borderRadius: "50%",
+                    background: "rgba(0,0,0,0.4)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    opacity: 0,
+                    transition: "opacity 0.2s",
+                  }}
+                    onMouseEnter={(e) => e.currentTarget.style.opacity = 1}
+                    onMouseLeave={(e) => e.currentTarget.style.opacity = 0}
                   >
-                    <span className="inline-flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: opt.color }} />
-                      {opt.label}
-                    </span>
+                    <Camera size={22} color="#fff" />
+                  </div>
+                </div>
+
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <h2 style={{
+                    fontSize: 20,
+                    fontWeight: 600,
+                    color: "#f0f0f5",
+                    margin: "0 0 4px",
+                    letterSpacing: "-0.02em",
+                  }}>
+                    {form.fullName || "Your Name"}
+                  </h2>
+                  <p style={{
+                    fontSize: 13.5,
+                    color: "rgba(240,240,245,0.4)",
+                    margin: "0 0 14px",
+                    fontFamily: "monospace",
+                  }}>
+                    @{form.username || "username"}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById(fileInputId)?.click()}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 7,
+                      padding: "7px 14px",
+                      borderRadius: 9,
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      background: "rgba(255,255,255,0.04)",
+                      color: "rgba(240,240,245,0.6)",
+                      fontSize: 12.5,
+                      fontWeight: 500,
+                      cursor: "pointer",
+                      transition: "all 0.15s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+                      e.currentTarget.style.color = "#f0f0f5";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                      e.currentTarget.style.color = "rgba(240,240,245,0.6)";
+                    }}
+                  >
+                    <Camera size={13} />
+                    Change photo
                   </button>
-                );
-              })}
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div style={{ height: 1, background: "rgba(255,255,255,0.05)" }} />
+
+              {/* Personal details */}
+              <div>
+                <h3 style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: "rgba(240,240,245,0.35)",
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  margin: "0 0 20px",
+                }}>
+                  Personal Details
+                </h3>
+
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: 16,
+                }}>
+                  <FieldGroup label="Name" htmlFor={`${id}-name`}>
+                    <input
+                      id={`${id}-name`}
+                      value={form.fullName}
+                      onChange={(e) => handleChange("fullName", e.target.value)}
+                      placeholder="Your name"
+                      className="ep-input"
+                    />
+                  </FieldGroup>
+
+                  <FieldGroup
+                    label="Username"
+                    htmlFor={`${id}-username`}
+                    hint={isUsernameChanged ? "URL will update" : null}
+                  >
+                    <div style={{ position: "relative" }}>
+                      <input
+                        id={`${id}-username`}
+                        value={form.username}
+                        onChange={(e) =>
+                          handleChange(
+                            "username",
+                            e.target.value
+                              .toLowerCase()
+                              .replace(/[^a-z0-9-_]/g, "")
+                          )
+                        }
+                        placeholder="username"
+                        className="ep-input ep-input-with-icon"
+                      />
+                      <span style={{
+                        position: "absolute",
+                        left: 12,
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        pointerEvents: "none",
+                      }}>
+                        <Check
+                          size={13}
+                          color={
+                            form.username
+                              ? "rgba(52,199,89,0.9)"
+                              : "rgba(255,255,255,0.2)"
+                          }
+                        />
+                      </span>
+                    </div>
+                  </FieldGroup>
+
+                  <FieldGroup label="Location" htmlFor={`${id}-location`}>
+                    <div style={{ position: "relative" }}>
+                      <input
+                        id={`${id}-location`}
+                        value={form.location}
+                        onChange={(e) => handleChange("location", e.target.value)}
+                        placeholder="City, Country"
+                        className="ep-input ep-input-with-icon"
+                      />
+                      <span style={{
+                        position: "absolute",
+                        left: 12,
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        pointerEvents: "none",
+                      }}>
+                        <MapPin size={13} color="rgba(255,255,255,0.25)" />
+                      </span>
+                    </div>
+                  </FieldGroup>
+
+                  <FieldGroup label="Website" htmlFor={`${id}-website`}>
+                    <div style={{ position: "relative" }}>
+                      <input
+                        id={`${id}-website`}
+                        value={form.website}
+                        onChange={(e) =>
+                          handleChange(
+                            "website",
+                            e.target.value.replace(/^https?:\/\//, "")
+                          )
+                        }
+                        placeholder="yourdomain.com"
+                        className="ep-input ep-input-with-icon"
+                      />
+                      <span style={{
+                        position: "absolute",
+                        left: 12,
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        pointerEvents: "none",
+                      }}>
+                        <Link2 size={13} color="rgba(255,255,255,0.25)" />
+                      </span>
+                    </div>
+                  </FieldGroup>
+                </div>
+
+                <div style={{ marginTop: 16 }}>
+                  <FieldGroup label="Email" htmlFor={`${id}-email`}>
+                    <div style={{ position: "relative" }}>
+                      <input
+                        id={`${id}-email`}
+                        type="email"
+                        value={form.email}
+                        onChange={(e) => handleChange("email", e.target.value)}
+                        placeholder="hello@example.com"
+                        className="ep-input ep-input-with-icon"
+                      />
+                      <span style={{
+                        position: "absolute",
+                        left: 12,
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        pointerEvents: "none",
+                      }}>
+                        <Mail size={13} color="rgba(255,255,255,0.25)" />
+                      </span>
+                    </div>
+                  </FieldGroup>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div style={{ height: 1, background: "rgba(255,255,255,0.05)" }} />
+
+              {/* Availability */}
+              <div>
+                <h3 style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: "rgba(240,240,245,0.35)",
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  margin: "0 0 16px",
+                }}>
+                  Availability
+                </h3>
+                <SegmentedControl
+                  options={availabilityOptions}
+                  value={form.availability}
+                  onChange={(val) => handleChange("availability", val)}
+                />
+              </div>
+
+              {/* Divider */}
+              <div style={{ height: 1, background: "rgba(255,255,255,0.05)" }} />
+
+              {/* Bio */}
+              <div>
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: 10,
+                }}>
+                  <h3 style={{
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: "rgba(240,240,245,0.35)",
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    margin: 0,
+                  }}>
+                    Bio
+                  </h3>
+                  <span style={{
+                    fontSize: 11.5,
+                    color: "rgba(240,240,245,0.25)",
+                    fontVariantNumeric: "tabular-nums",
+                  }}>
+                    {bioRemaining} remaining
+                  </span>
+                </div>
+                <textarea
+                  id={`${id}-bio`}
+                  value={bio}
+                  maxLength={maxLength}
+                  onChange={handleBioChange}
+                  placeholder="Tell people what you make, who you help, and what sets you apart..."
+                  rows={5}
+                  className="ep-input ep-textarea"
+                />
+              </div>
             </div>
-          </section>
 
-          <section className="rounded-2xl border border-white/[0.08] bg-[#121215]/70 p-4">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-[12px] uppercase tracking-[0.14em] font-semibold text-white/45">Bio</p>
-              <span className="text-[11px] tabular-nums text-white/35">{bioRemaining}</span>
-            </div>
-            <label htmlFor={`${id}-bio`} className="sr-only">
-              Bio
-            </label>
-            <textarea
-              id={`${id}-bio`}
-              value={bio}
-              maxLength={maxLength}
-              onChange={handleBioChange}
-              placeholder="Tell people what you make, who you help, and what sets you apart..."
-              rows={5}
-              className="form-input min-h-[130px] resize-y leading-relaxed"
-            />
-          </section>
-        </div>
-
-        <style>{`
-          .form-input {
-            width: 100%;
-            min-height: 44px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            background: rgba(13, 13, 15, 0.72);
-            color: #f5f5f7;
-            font-size: 14px;
-            padding: 10px 12px;
-            outline: none;
-            transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
-          }
-          .form-input::placeholder {
-            color: rgba(255, 255, 255, 0.28);
-          }
-          .form-input:hover {
-            border-color: rgba(255, 255, 255, 0.2);
-          }
-          .form-input:focus-visible {
-            border-color: rgba(204, 253, 1, 0.8);
-            box-shadow: 0 0 0 3px rgba(204, 253, 1, 0.2);
-            background: rgba(16, 16, 18, 0.92);
-          }
-          @media (max-width: 640px) {
-            .form-input {
-              font-size: 16px;
-            }
-          }
-        `}</style>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function Field({ label, htmlFor, icon, hint, children }) {
-  return (
-    <div className="rounded-2xl border border-white/[0.08] bg-[#121215]/70 p-3 space-y-2">
-      <div className="flex items-center justify-between">
-        <label htmlFor={htmlFor} className="inline-flex items-center gap-1.5 text-[12px] text-white/55 uppercase tracking-[0.12em] font-semibold">
-          <span className="text-white/45">{icon}</span>
-          {label}
-        </label>
-        {hint ? <span className="text-[11px] text-white/35">{hint}</span> : null}
-      </div>
-      {children}
-    </div>
+            <style>{`
+              @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+              }
+              .ep-input {
+                width: 100%;
+                min-height: 44px;
+                border-radius: 12px;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                background: rgba(255, 255, 255, 0.03);
+                color: #f0f0f5;
+                font-size: 14px;
+                padding: 0 12px;
+                outline: none;
+                transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+                font-family: -apple-system, 'SF Pro Display', system-ui, sans-serif;
+              }
+              .ep-input.ep-input-with-icon {
+                padding-left: 36px;
+              }
+              .ep-input::placeholder {
+                color: rgba(240, 240, 245, 0.25);
+              }
+              .ep-input:hover {
+                border-color: rgba(255, 255, 255, 0.18);
+                background: rgba(255, 255, 255, 0.05);
+              }
+              .ep-input:focus-visible {
+                border-color: rgba(204, 253, 1, 0.7);
+                box-shadow: 0 0 0 3px rgba(204, 253, 1, 0.12);
+                background: rgba(255, 255, 255, 0.05);
+              }
+              .ep-textarea {
+                min-height: 130px;
+                padding: 12px;
+                resize: vertical;
+                line-height: 1.6;
+              }
+              @media (max-width: 640px) {
+                .ep-input {
+                  font-size: 16px;
+                }
+                [data-radix-dialog-content] {
+                  padding: 20px 20px !important;
+                }
+              }
+            `}</style>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
 }
