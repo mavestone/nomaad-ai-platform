@@ -141,6 +141,7 @@ Full schema: `supabase/schema.sql`
 - **Messages** — Channel list, message thread, send messages
 - **Profile editing popup** — Fully redesigned `EditProfileDialog` with dark glassmorphic shell, stronger field hierarchy, improved accessibility/focus states, better mobile touch targets, refined availability controls, and clearer save/error feedback
 - **Landing page hero** — Mockup-inspired dark glassmorphic hero with centered pill nav, bold split headline, integrated waitlist CTA, product dashboard preview, volt orbital glow, responsive feature rail, and additional anti-clipping breakpoints for desktop/tablet
+- **Landing stack comparison section** — Full redesign of the “modern creative stack” block into a side-by-side contrast layout: “What you have now” vs “What Nomaad gives you,” with integrated benefit rows, visual fragmentation motif, and a bottom pricing/value rail aligned with the dark glassmorphic system
 
 ### 🔶 Built But Basic / Needs Overhaul
 - **Prospecting** — Basic list view, needs curated card-based discovery UX with API search
@@ -211,6 +212,7 @@ npm run dev
 | 2026-04-22 | minimax-m2.5-free | Full redesign of `EditProfileDialog.jsx`: Apple-inspired modal with custom backdrop, 860px max-width, 28px radius, clean top bar (Cancel text-left, centered title, Save pill-right), 96px avatar in identity block, 2-column grid fields with subtle icon prefix inputs, segmented availability control, spacious sections with subtle dividers, smooth motion animations, refined `form-input` styles with volt focus glow. |
 | 2026-04-23 | Codex (GPT-5) | Redesigned `src/components/LandingPage.jsx` hero to match the supplied mockup direction with improved execution: wider centered pill nav, stronger editorial headline, integrated glass waitlist form, larger dashboard preview composition, subtle volt orbital glow, bottom feature rail, responsive mobile behavior, and Motion component aliases so the landing file passes ESLint. Verified with `npx eslint src/components/LandingPage.jsx` and `npm run build`. |
 | 2026-04-23 | Codex (GPT-5) | Follow-up hero polish from production screenshot feedback: reviewed `interface-design` skill guidance, then rebalanced `src/components/LandingPage.jsx` hero proportions (smaller headline scale, tighter vertical rhythm), improved waitlist input/button default styling, added earlier desktop/tablet breakpoints to prevent right-side clipping, constrained mock width, and tuned feature-rail spacing. Verified with `npx eslint src/components/LandingPage.jsx` and `npm run build`. |
+| 2026-04-23 | Codex (GPT-5) | Rebuilt the landing page “The modern creative stack” section in `src/components/LandingPage.jsx` to match the provided visual direction: new badge + headline treatment, two-panel comparison (“What you have now” vs “What Nomaad gives you”), redesigned list cards, fragmentation visual motif, and new bottom value rail with £39/mo positioning copy. Verified with `npx eslint src/components/LandingPage.jsx` and `npm run build`. |
 
 > **UPDATE THIS TABLE at the end of every session with what was accomplished.**
 

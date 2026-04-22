@@ -1384,88 +1384,275 @@ function CoreValueSection() {
 }
 
 // ─── Stack Section ────────────────────────────────────────────────────────────
-// Redesigned: clean list of old tools with dividers, keep comparison as single accent block
 
-const OLD_STACK = [
-  { name: 'Notion',           purpose: 'Notes & tasks',            cost: '£16/mo', gap: 'Great for docs. Not built for clients, leads or invoices.' },
-  { name: 'FreshBooks',       purpose: 'Invoicing',                cost: '£29/mo', gap: 'Solid invoicing. Disconnected from your tasks and pipeline.' },
-  { name: 'Calendly',         purpose: 'Booking calls',            cost: '£12/mo', gap: 'Clean bookings. Ends right where the client work begins.' },
-  { name: 'Google Workspace', purpose: 'Email, Docs, Sheets, Meet', cost: '£12/mo', gap: 'Essential day-to-day. Nothing links it to your business.' },
+const LEGACY_STACK = [
+  { name: 'Notion', icon: 'N', detail: 'Docs only' },
+  { name: 'FreshBooks', icon: 'F', detail: 'Invoicing only' },
+  { name: 'Calendly', icon: 'C', detail: 'Booking only' },
+  { name: 'Slack', icon: 'S', detail: 'Conversations without context' },
+];
+
+const NOMAAD_GAINS = [
+  { title: 'Full pipeline visibility', body: 'See every lead, project and payment in one place.' },
+  { title: 'Projects from brief to delivery', body: 'Plan, track, and deliver work end-to-end.' },
+  { title: 'Client collaboration in context', body: 'Messages, files and feedback attached to the work.' },
+  { title: 'Payments connected to work', body: 'Invoices, payments and approvals without the handoffs.' },
+  { title: 'One system to run the business', body: 'Everything you need to operate and grow.' },
 ];
 
 function StackSection() {
-  const totalCost = OLD_STACK.reduce((sum, t) => {
-    const num = parseInt(t.cost.replace(/[^0-9]/g, ''), 10);
-    return sum + (isNaN(num) ? 0 : num);
-  }, 0);
-
   return (
-    <section style={{ padding: 'clamp(100px, 14vw, 160px) 20px', maxWidth: 960, margin: '0 auto', fontFamily: FF }}>
-      <FadeUp style={{ textAlign: 'center', marginBottom: 80 }}>
-        <h2 style={{
-          fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 700,
-          color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 20px', lineHeight: 1.15,
+    <section style={{ padding: 'clamp(96px, 12vw, 148px) 20px', maxWidth: 1240, margin: '0 auto', fontFamily: FF }}>
+      <FadeUp style={{ textAlign: 'center', marginBottom: 52 }}>
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: 9,
+          padding: '10px 18px', borderRadius: 100,
+          background: 'rgba(255,255,255,0.02)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          marginBottom: 22,
         }}>
-          The modern creative stack
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: VOLT, boxShadow: `0 0 10px ${VOLT}` }} />
+          <span style={{ fontSize: 14, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(240,240,245,0.88)', fontWeight: 650 }}>
+            Why creatives outgrow their stack
+          </span>
+        </div>
+
+        <h2 style={{
+          fontSize: 'clamp(34px, 4.4vw, 62px)', fontWeight: 730,
+          color: '#f0f0f5', letterSpacing: '-0.03em', margin: '0 0 12px', lineHeight: 1.06,
+        }}>
+          The modern creative stack is <span style={{ color: VOLT }}>broken.</span>
         </h2>
-        <p style={{ fontSize: 17, color: 'rgba(240,240,245,0.45)', maxWidth: 520, margin: '0 auto', lineHeight: 1.65 }}>
-          Great tools — none of them talking to each other.
+        <p style={{ fontSize: 'clamp(20px, 1.7vw, 34px)', color: 'rgba(240,240,245,0.82)', margin: '0 0 10px', lineHeight: 1.22, fontWeight: 630, letterSpacing: '-0.015em' }}>
+          Tools don&apos;t run your business. Systems do.
+        </p>
+        <p style={{ fontSize: 'clamp(17px, 1.15vw, 20px)', color: 'rgba(240,240,245,0.45)', maxWidth: 820, margin: '0 auto', lineHeight: 1.6 }}>
+          Work doesn&apos;t happen inside apps. It happens between them — and that&apos;s where things break.
         </p>
       </FadeUp>
 
-      <div style={{ marginBottom: 48 }}>
-        {OLD_STACK.map((t, i) => (
-          <FadeUp key={t.name} delay={i * 0.04}>
-            <div
-              className="nomaad-stack-row"
-              style={{
-                padding: '24px 0',
-                borderBottom: '1px solid rgba(255,255,255,0.04)',
-                display: 'flex', alignItems: 'baseline', gap: 24,
-              }}
-            >
-              <div style={{ width: 140, flexShrink: 0 }}>
-                <span style={{ fontSize: 15, fontWeight: 600, color: 'rgba(240,240,245,0.85)' }}>{t.name}</span>
-              </div>
-              <div style={{ flex: 1, fontSize: 14, color: 'rgba(240,240,245,0.45)', lineHeight: 1.6 }}>
-                {t.gap}
-              </div>
-              <div style={{
-                fontSize: 13, fontWeight: 600, color: 'rgba(240,240,245,0.4)',
-                fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap',
-              }}>
-                {t.cost}
-              </div>
-            </div>
-          </FadeUp>
-        ))}
-      </div>
-
-      {/* Summary row */}
       <FadeUp>
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '28px 0',
-          borderTop: '1px solid rgba(255,255,255,0.08)',
+        <div className="stack-compare-grid" style={{
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.16fr)',
+          gap: 26,
         }}>
-          <div>
-            <div style={{ fontSize: 15, color: 'rgba(240,240,245,0.5)', marginBottom: 4 }}>
-              4 apps. 4 logins. 0 shared data.
+          <div style={{
+            borderRadius: 24,
+            border: '1px solid rgba(255,255,255,0.1)',
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.025) 0%, rgba(255,255,255,0.012) 100%)',
+            boxShadow: '0 24px 80px rgba(0,0,0,0.34)',
+            padding: '26px 26px 20px',
+            minWidth: 0,
+          }}>
+            <h3 style={{ fontSize: 38, margin: '0 0 18px', color: 'rgba(240,240,245,0.72)', fontWeight: 680, letterSpacing: '-0.02em' }}>
+              What you have now
+            </h3>
+            <div className="stack-left-layout" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 210px', gap: 14, alignItems: 'stretch' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {LEGACY_STACK.map((app) => (
+                  <div key={app.name} style={{
+                    borderRadius: 14,
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    background: 'rgba(255,255,255,0.02)',
+                    padding: '12px 14px',
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    minHeight: 72,
+                  }}>
+                    <div style={{
+                      width: 46, height: 46, borderRadius: 12,
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      background: 'rgba(255,255,255,0.03)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: 'rgba(240,240,245,0.9)', fontWeight: 700, fontSize: 20,
+                      flexShrink: 0,
+                    }}>
+                      {app.icon}
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 16, color: '#f0f0f5', fontWeight: 670, lineHeight: 1.2, marginBottom: 2 }}>{app.name}</div>
+                      <div style={{ fontSize: 14, color: 'rgba(240,240,245,0.48)', lineHeight: 1.25 }}>{app.detail}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{
+                borderRadius: 16,
+                border: '1px solid rgba(255,255,255,0.06)',
+                background: 'radial-gradient(circle at 30% 20%, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.015) 50%, rgba(255,255,255,0.01) 100%)',
+                position: 'relative',
+                overflow: 'hidden',
+              }}>
+                {[
+                  { top: '12%', left: '18%', size: 54, rotate: 14 },
+                  { top: '25%', left: '55%', size: 46, rotate: -22 },
+                  { top: '45%', left: '28%', size: 62, rotate: 6 },
+                  { top: '58%', left: '62%', size: 58, rotate: -17 },
+                  { top: '74%', left: '20%', size: 44, rotate: 28 },
+                ].map((c, i) => (
+                  <div key={i} style={{
+                    position: 'absolute',
+                    top: c.top, left: c.left,
+                    width: c.size, height: c.size,
+                    borderRadius: '50%',
+                    border: '2px dashed rgba(255,255,255,0.36)',
+                    transform: `rotate(${c.rotate}deg)`,
+                  }} />
+                ))}
+                {[
+                  { top: '18%', left: '68%', txt: '↗' },
+                  { top: '34%', left: '11%', txt: '↶' },
+                  { top: '50%', left: '79%', txt: '↘' },
+                  { top: '68%', left: '14%', txt: '↩' },
+                  { top: '80%', left: '71%', txt: '↗' },
+                ].map((m, i) => (
+                  <span key={i} style={{
+                    position: 'absolute', top: m.top, left: m.left,
+                    color: 'rgba(255,255,255,0.55)', fontSize: 20, fontWeight: 700,
+                  }}>{m.txt}</span>
+                ))}
+                {[
+                  { top: '24%', left: '43%' },
+                  { top: '63%', left: '48%' },
+                  { top: '41%', left: '70%' },
+                  { top: '78%', left: '38%' },
+                ].map((x, i) => (
+                  <span key={i} style={{
+                    position: 'absolute', top: x.top, left: x.left,
+                    color: 'rgba(255,255,255,0.48)', fontSize: 16, fontWeight: 650,
+                  }}>×</span>
+                ))}
+              </div>
             </div>
-            <div style={{ fontSize: 28, fontWeight: 700, color: '#f0f0f5', letterSpacing: '-0.02em' }}>
-              £{totalCost}<span style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.4)' }}>/mo</span>
+
+            <div style={{
+              marginTop: 16, paddingTop: 14,
+              borderTop: '1px solid rgba(255,255,255,0.08)',
+              color: 'rgba(240,240,245,0.5)',
+              fontSize: 14, lineHeight: 1.4,
+            }}>
+              Fragmented. Disconnected. Hard to see the full picture.
             </div>
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 15, color: VOLT, marginBottom: 4, fontWeight: 600 }}>
-              With Nomaad
-            </div>
-            <div style={{ fontSize: 28, fontWeight: 700, color: '#f0f0f5', letterSpacing: '-0.02em' }}>
-              £39<span style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.4)' }}>/mo</span>
+
+          <div style={{
+            borderRadius: 24,
+            border: '1px solid rgba(204,253,1,0.55)',
+            background: 'linear-gradient(180deg, rgba(204,253,1,0.095) 0%, rgba(204,253,1,0.03) 100%)',
+            boxShadow: '0 0 0 1px rgba(204,253,1,0.08) inset, 0 0 88px rgba(204,253,1,0.12)',
+            padding: '26px',
+            minWidth: 0,
+          }}>
+            <h3 style={{ fontSize: 38, margin: '0 0 18px', color: VOLT, fontWeight: 700, letterSpacing: '-0.02em' }}>
+              What Nomaad gives you
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {NOMAAD_GAINS.map((gain) => (
+                <div key={gain.title} style={{
+                  borderRadius: 14,
+                  border: '1px solid rgba(204,253,1,0.34)',
+                  background: 'rgba(11,14,8,0.44)',
+                  padding: '12px 14px',
+                  display: 'grid',
+                  gridTemplateColumns: '42px minmax(0, 1fr) 28px',
+                  alignItems: 'center',
+                  gap: 11,
+                }}>
+                  <div style={{
+                    width: 42, height: 42, borderRadius: 12,
+                    border: '1px solid rgba(204,253,1,0.27)',
+                    background: 'rgba(204,253,1,0.08)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: VOLT, fontSize: 18, fontWeight: 700,
+                  }}>◎</div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ color: '#f0f0f5', fontSize: 16, lineHeight: 1.18, fontWeight: 660, marginBottom: 2 }}>
+                      {gain.title}
+                    </div>
+                    <div style={{ color: 'rgba(240,240,245,0.68)', fontSize: 14, lineHeight: 1.3 }}>
+                      {gain.body}
+                    </div>
+                  </div>
+                  <div style={{
+                    width: 28, height: 28, borderRadius: '50%',
+                    border: '1px solid rgba(204,253,1,0.8)',
+                    color: VOLT, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 15, fontWeight: 700,
+                  }}>✓</div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </FadeUp>
+
+      <FadeUp delay={0.05}>
+        <div className="stack-bottom-rail" style={{
+          marginTop: 22,
+          borderRadius: 18,
+          border: '1px solid rgba(255,255,255,0.1)',
+          background: 'rgba(255,255,255,0.018)',
+          padding: '24px 28px',
+          display: 'grid',
+          gridTemplateColumns: '1fr auto 1.2fr',
+          alignItems: 'center',
+          gap: 22,
+        }}>
+          <div>
+            <div style={{ fontSize: 52, lineHeight: 1, fontWeight: 760, color: VOLT, letterSpacing: '-0.03em' }}>
+              £39<span style={{ fontSize: 34, color: 'rgba(240,240,245,0.68)', fontWeight: 560 }}>/mo</span>
+            </div>
+            <div style={{ marginTop: 8, color: 'rgba(240,240,245,0.6)', fontSize: 18, lineHeight: 1.2 }}>
+              Replaces workflow, not tools.
+            </div>
+          </div>
+
+          <div style={{ width: 1, height: '100%', minHeight: 88, background: 'rgba(255,255,255,0.14)' }} />
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'auto minmax(0, 1fr)', gap: 14, alignItems: 'center' }}>
+            <div style={{
+              width: 42, height: 42, borderRadius: '50%',
+              background: 'rgba(204,253,1,0.11)',
+              border: '1px solid rgba(204,253,1,0.25)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: VOLT, fontSize: 20,
+            }}>✦</div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ color: '#f0f0f5', fontSize: 30, lineHeight: 1.15, fontWeight: 670, marginBottom: 4 }}>
+                Less switching. Less admin. More control.
+              </div>
+              <div style={{ color: 'rgba(240,240,245,0.62)', fontSize: 18, lineHeight: 1.2 }}>
+                Run your business with clarity and confidence.
+              </div>
+            </div>
+          </div>
+        </div>
+      </FadeUp>
+
+      <style>{`
+        @media (max-width: 1120px) {
+          .stack-compare-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+        @media (max-width: 860px) {
+          .stack-left-layout {
+            grid-template-columns: 1fr !important;
+          }
+        }
+        @media (max-width: 760px) {
+          .stack-bottom-rail {
+            grid-template-columns: 1fr !important;
+            gap: 16px !important;
+          }
+          .stack-bottom-rail > div:nth-child(2) {
+            width: 100% !important;
+            height: 1px !important;
+            min-height: 1px !important;
+          }
+        }
+      `}</style>
     </section>
   );
 }
