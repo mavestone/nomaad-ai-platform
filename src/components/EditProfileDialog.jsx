@@ -1,11 +1,10 @@
 import { useId, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Camera, Check, Link2, Loader2, Mail, MapPin, UserRound, X } from "lucide-react";
+import { Camera, Check, Link2, Loader2, Mail, MapPin, X } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabase";
 
 const VOLT = "#ccfd01";
-const VOLT_DIM = "#b8e300";
 
 function useCharacterLimit({ maxLength, initialValue = "" }) {
   const [value, setValue] = useState(initialValue);
@@ -243,6 +242,10 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSaveComplete 
               background: "rgba(0,0,0,0.65)",
               backdropFilter: "blur(6px)",
               WebkitBackdropFilter: "blur(6px)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "16px",
             }}
           />
           <motion.div
@@ -252,23 +255,18 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSaveComplete 
             exit={{ opacity: 0, scale: 0.96, y: 8 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
             style={{
-              position: "fixed",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              zIndex: 51,
-              width: "95vw",
+              width: "100%",
               maxWidth: 860,
-              maxHeight: "92vh",
+              maxHeight: "90vh",
               display: "flex",
               flexDirection: "column",
-              background: "rgba(12,12,14,0.96)",
+              background: "rgba(12,12,14,0.97)",
               borderRadius: 28,
               border: "1px solid rgba(255,255,255,0.09)",
               boxShadow: "0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.03) inset",
               overflow: "hidden",
+              flexShrink: 0,
             }}
-            onKeyDown={(e) => e.key === "Escape" && onOpenChange(false)}
           >
             <input
               id={fileInputId}
