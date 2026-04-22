@@ -12,6 +12,11 @@ const VOLT  = '#ccfd01';
 const VOLTD = '#b8e300';
 const SHELL = '#08080a';
 const FF    = "-apple-system,'SF Pro Display','SF Pro Text','Helvetica Neue',system-ui,sans-serif";
+const MotionDiv = motion.div;
+const MotionNav = motion.nav;
+const MotionButton = motion.button;
+const MotionH1 = motion.h1;
+const MotionP = motion.p;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -34,7 +39,7 @@ function useInView(threshold = 0.12) {
 function FadeUp({ children, delay = 0, style }) {
   const [ref, visible] = useInView();
   return (
-    <motion.div
+    <MotionDiv
       ref={ref}
       initial={{ opacity: 0, y: 24 }}
       animate={visible ? { opacity: 1, y: 0 } : {}}
@@ -42,7 +47,7 @@ function FadeUp({ children, delay = 0, style }) {
       style={style}
     >
       {children}
-    </motion.div>
+    </MotionDiv>
   );
 }
 
@@ -70,7 +75,7 @@ function WaitlistForm({ source = 'landing', label = 'Get early access →', comp
 
   if (state === 'success') {
     return (
-      <motion.div
+      <MotionDiv
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         style={{
@@ -82,7 +87,7 @@ function WaitlistForm({ source = 'landing', label = 'Get early access →', comp
         }}
       >
         <span style={{ fontSize: 16 }}>✓</span> You're on the list. We'll be in touch.
-      </motion.div>
+      </MotionDiv>
     );
   }
 
@@ -101,7 +106,7 @@ function WaitlistForm({ source = 'landing', label = 'Get early access →', comp
         onFocus={(e) => { e.target.style.borderColor = 'rgba(204,253,1,0.35)'; }}
         onBlur={(e) => { e.target.style.borderColor = state === 'error' ? 'rgba(255,98,89,0.5)' : 'rgba(255,255,255,0.1)'; }}
       />
-      <motion.button
+      <MotionButton
         type="submit" disabled={state === 'loading' || !email}
         whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
         style={{
@@ -118,7 +123,7 @@ function WaitlistForm({ source = 'landing', label = 'Get early access →', comp
         }}
       >
         {state === 'loading' ? 'Joining…' : label}
-      </motion.button>
+      </MotionButton>
       {state === 'error' && (
         <p style={{ width: '100%', fontSize: 12, color: '#FF6259', margin: '4px 0 0' }}>
           {errMsg}
@@ -141,7 +146,7 @@ function WaitlistCount() {
   const display = count ? Math.max(count + 40, 80) : 80;
 
   return (
-    <motion.div
+    <MotionDiv
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
       style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: FF }}
     >
@@ -159,7 +164,7 @@ function WaitlistCount() {
       <span style={{ fontSize: 12, color: 'rgba(240,240,245,0.38)' }}>
         <span style={{ color: 'rgba(240,240,245,0.7)', fontWeight: 600 }}>{display}+</span> already waiting
       </span>
-    </motion.div>
+    </MotionDiv>
   );
 }
 
@@ -176,7 +181,7 @@ function Nav({ onSignIn }) {
   const scrollTo = (id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
 
   return (
-    <motion.nav
+    <MotionNav
       initial={{ opacity: 0, y: -12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
@@ -193,18 +198,18 @@ function Nav({ onSignIn }) {
           display: grid;
           grid-template-columns: 1fr auto 1fr;
           align-items: center;
-          padding: 10px 20px 10px 16px;
+          padding: 11px 22px 11px 18px;
           border-radius: 100px;
-          min-width: 460px;
+          min-width: min(720px, calc(100vw - 32px));
           width: auto;
           pointer-events: auto;
           transition: all 0.3s ease;
         }
         .landing-nav-center {
           display: flex;
-          gap: 24px;
+          gap: 30px;
           align-items: center;
-          padding: 0 32px;
+          padding: 0 44px;
         }
         @media (max-width: 600px) {
           .landing-nav {
@@ -221,10 +226,10 @@ function Nav({ onSignIn }) {
       <div 
         className="landing-nav"
         style={{
-          background: scrolled ? 'rgba(8,8,10,0.9)' : 'rgba(8,8,10,0.65)',
-          backdropFilter: 'blur(24px) saturate(1.8)',
-          border: `1px solid ${scrolled ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.07)'}`,
-          boxShadow: scrolled ? '0 8px 40px rgba(0,0,0,0.5)' : '0 4px 24px rgba(0,0,0,0.3)',
+          background: scrolled ? 'rgba(8,8,10,0.9)' : 'rgba(8,8,10,0.58)',
+          backdropFilter: 'blur(28px) saturate(1.7)',
+          border: `1px solid ${scrolled ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.08)'}`,
+          boxShadow: scrolled ? '0 14px 50px rgba(0,0,0,0.55)' : '0 18px 70px rgba(0,0,0,0.32)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
@@ -234,7 +239,7 @@ function Nav({ onSignIn }) {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: '#0a0a0a', fontWeight: 800, fontSize: 13, flexShrink: 0,
           }}>N</div>
-          <span className="landing-brand-text" style={{ fontWeight: 700, fontSize: 15, color: '#f0f0f5', letterSpacing: -0.3 }}>Nomaad</span>
+          <span className="landing-brand-text" style={{ fontWeight: 700, fontSize: 15, color: '#f0f0f5', letterSpacing: 0 }}>Nomaad</span>
         </div>
 
         <div className="landing-nav-center">
@@ -255,7 +260,7 @@ function Nav({ onSignIn }) {
             background: 'none', border: 'none', color: 'rgba(240,240,245,0.6)',
             fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: FF, padding: '6px 12px',
           }}>Sign in</button>
-          <motion.button
+          <MotionButton
             whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
             onClick={() => scrollTo('waitlist')}
             style={{
@@ -264,32 +269,47 @@ function Nav({ onSignIn }) {
               fontWeight: 700, fontSize: 13, fontFamily: FF, cursor: 'pointer',
               boxShadow: `0 3px 16px rgba(204,253,1,0.25)`, whiteSpace: "nowrap"
             }}
-          >Join the waitlist</motion.button>
+          >Join the waitlist</MotionButton>
         </div>
       </div>
-    </motion.nav>
+    </MotionNav>
   );
 }
 
 // ─── Hero ─────────────────────────────────────────────────────────────────────
 
-function Hero({ onSignIn }) {
+function Hero() {
   return (
     <section style={{
       minHeight: '100vh', display: 'flex', flexDirection: 'column',
       justifyContent: 'center',
-      padding: 'clamp(120px, 18vh, 180px) 20px 100px',
+      padding: 'clamp(112px, 15vh, 154px) 20px clamp(34px, 6vw, 72px)',
       position: 'relative', fontFamily: FF,
+      overflow: 'hidden',
     }}>
-      {/* Subtle single glow — volt only, not blue */}
       <div aria-hidden="true" style={{
         position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none',
       }}>
         <div style={{
-          position: 'absolute', top: '20%', left: '55%',
-          width: 800, height: 600, borderRadius: '50%',
-          background: VOLT, filter: 'blur(180px)', opacity: 0.04,
+          position: 'absolute', top: '18%', left: '69%',
+          width: 860, height: 620, borderRadius: '50%',
+          background: VOLT, filter: 'blur(180px)', opacity: 0.055,
           transform: 'translate(-50%, -50%)',
+        }} />
+        <div style={{
+          position: 'absolute', inset: '15% 5% auto auto',
+          width: '44vw', maxWidth: 720, aspectRatio: '1 / 1',
+          borderRadius: '50%',
+          border: '1px solid rgba(204,253,1,0.08)',
+          boxShadow: '0 0 120px rgba(204,253,1,0.04) inset',
+          opacity: 0.65,
+        }} />
+        <div style={{
+          position: 'absolute', inset: '24% -8% auto auto',
+          width: '54vw', maxWidth: 920, aspectRatio: '1 / 1',
+          borderRadius: '50%',
+          border: '1px dotted rgba(204,253,1,0.075)',
+          opacity: 0.8,
         }} />
       </div>
 
@@ -297,25 +317,23 @@ function Hero({ onSignIn }) {
         className="nomaad-hero-grid"
         style={{
           position: 'relative',
-          width: '100%', maxWidth: 1200, margin: '0 auto',
+          width: '100%', maxWidth: 1380, margin: '0 auto',
           display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
+          gridTemplateColumns: 'minmax(360px, 0.72fr) minmax(560px, 1fr)',
           alignItems: 'center',
-          gap: 'clamp(48px, 7vw, 96px)',
+          gap: 'clamp(42px, 5.5vw, 84px)',
         }}
       >
-        {/* ─── Left: copy ─── */}
         <div style={{ minWidth: 0 }}>
-
-          {/* Badge */}
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 7,
-              padding: '5px 12px 5px 9px',
-              background: 'rgba(204,253,1,0.06)',
-              border: '1px solid rgba(204,253,1,0.15)',
+              padding: '7px 14px 7px 10px',
+              background: 'rgba(204,253,1,0.08)',
+              border: '1px solid rgba(204,253,1,0.13)',
+              boxShadow: '0 10px 30px rgba(204,253,1,0.06)',
               borderRadius: 100, marginBottom: 28,
             }}
           >
@@ -328,42 +346,41 @@ function Hero({ onSignIn }) {
             <span style={{ fontSize: 11, fontWeight: 700, color: VOLT, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
               Waitlist open
             </span>
-          </motion.div>
+          </MotionDiv>
 
-          {/* Headline */}
-          <motion.h1
+          <MotionH1
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
             style={{
-              fontSize: 'clamp(36px, 5.5vw, 64px)', fontWeight: 700,
-              lineHeight: 1.08, letterSpacing: '-0.035em',
+              fontSize: 'clamp(42px, 5.4vw, 76px)', fontWeight: 750,
+              lineHeight: 1.05, letterSpacing: '-0.035em',
               color: '#f0f0f5', margin: '0 0 22px',
             }}
           >
             Your entire creative workflow.{' '}
             <span style={{ color: VOLT }}>Finally in one place.</span>
-          </motion.h1>
+          </MotionH1>
 
-          {/* Single, confident subline */}
-          <motion.p
+          <MotionP
             initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
             style={{
-              fontSize: 'clamp(16px, 1.5vw, 18px)',
-              color: 'rgba(240,240,245,0.5)', lineHeight: 1.65,
-              maxWidth: 460, margin: '0 0 40px',
+              fontSize: 'clamp(17px, 1.35vw, 20px)',
+              color: 'rgba(240,240,245,0.55)', lineHeight: 1.65,
+              maxWidth: 510, margin: '0 0 36px',
             }}
           >
             Find clients, manage projects, deliver work, and hire collaborators — one system, built for solo creatives.
-          </motion.p>
+          </MotionP>
 
-          {/* CTA */}
-          <motion.div
+          <MotionDiv
             id="waitlist"
             initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.22, ease: [0.22, 1, 0.36, 1] }}
           >
-            <WaitlistForm source="hero" label="Join the waitlist" />
+            <div className="hero-waitlist-shell">
+              <WaitlistForm source="hero" label="Join the waitlist" />
+            </div>
 
             <div style={{
               display: 'flex', alignItems: 'center', gap: 20,
@@ -372,44 +389,59 @@ function Hero({ onSignIn }) {
               <WaitlistCount />
               <span style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
               <a href="#how-it-works" style={{
-                fontSize: 13, fontWeight: 500,
-                color: 'rgba(240,240,245,0.4)',
-                textDecoration: 'none', letterSpacing: '-0.01em',
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                fontSize: 13, fontWeight: 650,
+                color: 'rgba(240,240,245,0.72)',
+                textDecoration: 'none', letterSpacing: 0,
               }}>
-                See how it works →
+                See how it works
+                <span style={{
+                  width: 18, height: 18, borderRadius: '50%',
+                  border: '1px solid rgba(255,255,255,0.18)',
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  color: VOLT, fontSize: 10,
+                }}>▶</span>
               </a>
             </div>
-          </motion.div>
-
-          {/* Sign in */}
-          <motion.p
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
-            style={{ fontSize: 12, color: 'rgba(240,240,245,0.28)', marginTop: 24, lineHeight: 1 }}
-          >
-            Already have an account?{' '}
-            <button onClick={onSignIn} style={{
-              background: 'none', border: 'none',
-              color: 'rgba(240,240,245,0.45)',
-              fontFamily: FF, fontSize: 12, cursor: 'pointer',
-              fontWeight: 600, padding: 0, textDecoration: 'underline',
-              textUnderlineOffset: 3,
-            }}>Sign in</button>
-          </motion.p>
+          </MotionDiv>
         </div>
 
-        {/* ─── Right: product mock ─── */}
-        <motion.div
+        <MotionDiv
           initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.75, delay: 0.22, ease: [0.22, 1, 0.36, 1] }}
           className="nomaad-hero-mock"
           style={{ position: 'relative', minWidth: 0 }}
         >
           <HeroDashboardMock />
-        </motion.div>
+        </MotionDiv>
       </div>
 
+      <HeroFeatureRail />
+
       <style>{`
+        .hero-waitlist-shell form {
+          display: grid !important;
+          grid-template-columns: minmax(0, 1fr) auto;
+          gap: 8px !important;
+          width: min(100%, 520px);
+          padding: 6px;
+          border-radius: 999px;
+          background: rgba(255,255,255,0.045);
+          border: 1px solid rgba(255,255,255,0.09);
+          box-shadow: 0 22px 70px rgba(0,0,0,0.32), 0 0 0 1px rgba(255,255,255,0.025) inset;
+          backdrop-filter: blur(22px) saturate(1.5);
+        }
+        .hero-waitlist-shell input {
+          width: 100% !important;
+          border: 0 !important;
+          background: transparent !important;
+          min-width: 0;
+        }
+        .hero-waitlist-shell button {
+          min-height: 48px;
+          padding-left: 28px !important;
+          padding-right: 28px !important;
+        }
         @media (max-width: 920px) {
           .nomaad-hero-grid {
             grid-template-columns: 1fr !important;
@@ -418,8 +450,147 @@ function Hero({ onSignIn }) {
             margin-top: 48px;
           }
         }
+        @media (max-width: 640px) {
+          .hero-waitlist-shell form {
+            grid-template-columns: 1fr;
+            border-radius: 28px;
+          }
+          .hero-waitlist-shell button {
+            width: 100%;
+          }
+        }
       `}</style>
     </section>
+  );
+}
+
+function HeroFeatureRail() {
+  const items = [
+    {
+      title: 'All-in-one workspace',
+      body: 'Clients, projects, files, and more.',
+      icon: (
+        <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <rect x="4" y="5" width="16" height="14" rx="3" /><path d="M8 9h8M8 13h5" />
+        </svg>
+      ),
+    },
+    {
+      title: 'Built for creatives',
+      body: 'Designed to match your flow.',
+      icon: (
+        <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M12 3v18M4.5 7.5h15M6 16c2-3 10-3 12 0" /><circle cx="12" cy="12" r="3" />
+        </svg>
+      ),
+    },
+    {
+      title: 'Smart collaboration',
+      body: 'Feedback, tasks, approvals.',
+      icon: (
+        <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M7 8h10M7 12h6" /><rect x="4" y="4" width="16" height="12" rx="3" /><path d="m9 16-3 4" />
+        </svg>
+      ),
+    },
+    {
+      title: 'Scale your business',
+      body: 'Hire, manage, and grow.',
+      icon: (
+        <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <circle cx="8" cy="8" r="3" /><circle cx="16" cy="8" r="3" /><path d="M4 20c.8-3 2.6-5 5-5M20 20c-.8-3-2.6-5-5-5" />
+        </svg>
+      ),
+    },
+  ];
+
+  return (
+    <MotionDiv
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay: 0.38, ease: [0.22, 1, 0.36, 1] }}
+      className="hero-feature-rail"
+      style={{
+        position: 'relative',
+        width: '100%',
+        maxWidth: 1380,
+        margin: 'clamp(52px, 7vw, 84px) auto 0',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+        borderRadius: 16,
+        background: 'rgba(255,255,255,0.025)',
+        border: '1px solid rgba(255,255,255,0.08)',
+        boxShadow: '0 24px 80px rgba(0,0,0,0.28), 0 0 0 1px rgba(255,255,255,0.018) inset',
+        backdropFilter: 'blur(22px) saturate(1.4)',
+        overflow: 'hidden',
+      }}
+    >
+      {items.map((item, index) => (
+        <div
+          key={item.title}
+          className="hero-feature-item"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '42px minmax(0, 1fr)',
+            gap: 16,
+            alignItems: 'center',
+            padding: '26px 30px',
+            borderLeft: index === 0 ? 'none' : '1px solid rgba(255,255,255,0.09)',
+          }}
+        >
+          <div style={{
+            width: 34, height: 34, borderRadius: 10,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: VOLT,
+            background: 'rgba(204,253,1,0.08)',
+            border: '1px solid rgba(204,253,1,0.12)',
+          }}>
+            {item.icon}
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <div style={{
+              color: '#f0f0f5', fontSize: 14, fontWeight: 750,
+              lineHeight: 1.2, marginBottom: 5,
+            }}>{item.title}</div>
+            <div style={{
+              color: 'rgba(240,240,245,0.46)', fontSize: 13,
+              lineHeight: 1.35,
+            }}>{item.body}</div>
+          </div>
+        </div>
+      ))}
+
+      <style>{`
+        @media (max-width: 980px) {
+          .hero-feature-rail {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          }
+          .hero-feature-item {
+            border-left: none !important;
+            border-top: 1px solid rgba(255,255,255,0.07);
+          }
+          .hero-feature-item:nth-child(-n + 2) {
+            border-top: none;
+          }
+          .hero-feature-item:nth-child(even) {
+            border-left: 1px solid rgba(255,255,255,0.07) !important;
+          }
+        }
+        @media (max-width: 620px) {
+          .hero-feature-rail {
+            grid-template-columns: 1fr !important;
+          }
+          .hero-feature-item {
+            border-left: none !important;
+            border-top: 1px solid rgba(255,255,255,0.07) !important;
+            padding: 22px !important;
+          }
+          .hero-feature-item:first-child {
+            border-top: none !important;
+          }
+        }
+      `}</style>
+    </MotionDiv>
   );
 }
 
@@ -2062,7 +2233,7 @@ function PricingSection() {
                   </div>
                 ))}
               </div>
-              <motion.button
+              <MotionButton
                 whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                 onClick={() => document.getElementById('waitlist')?.scrollIntoView({ behavior: 'smooth' })}
                 style={{
@@ -2074,7 +2245,7 @@ function PricingSection() {
                 }}
               >
                 {plan.featured ? 'Join the waitlist' : 'Get early access'}
-              </motion.button>
+              </MotionButton>
               {plan.featured && (
                 <p style={{ textAlign: 'center', fontSize: 11, color: 'rgba(240,240,245,0.3)', margin: '12px 0 0', fontFamily: FF }}>
                   14-day free trial on launch · No card required · Cancel anytime
