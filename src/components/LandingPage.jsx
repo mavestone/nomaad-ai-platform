@@ -795,16 +795,330 @@ function ProductFlowSection() {
   );
 }
 
+// ─── Core Value Feature Mocks ─────────────────────────────────────────────────
+
+const UI_BASE = {
+  borderRadius: 16,
+  overflow: 'hidden',
+  border: '1px solid rgba(255,255,255,0.07)',
+  background: '#0f0f13',
+  fontFamily: FF,
+};
+
+/* ── 1. FIND: AI lead discovery ── */
+function FindMock() {
+  const leads = [
+    { name: 'Zara Fitness', handle: '@zarafitness', match: 94, badge: 'Hot', badgeColor: '#FF6259' },
+    { name: 'Blossom & Co', handle: '@blossomco', match: 88, badge: 'New', badgeColor: VOLT },
+    { name: 'Peaks Media', handle: '@peaksmedia', match: 81, badge: null, badgeColor: null },
+    { name: 'Drift Studio', handle: '@driftstudio', match: 76, badge: null, badgeColor: null },
+  ];
+  return (
+    <div style={{ ...UI_BASE, padding: '18px 20px' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#f0f0f5', letterSpacing: '-0.01em' }}>AI Prospecting</div>
+          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 1 }}>4 new matches today</div>
+        </div>
+        <div style={{
+          fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 100,
+          background: 'rgba(204,253,1,0.1)', color: VOLT, border: `1px solid rgba(204,253,1,0.2)`,
+        }}>
+          AI
+        </div>
+      </div>
+      {/* Lead rows */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {leads.map((l) => (
+          <div key={l.name} style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            padding: '10px 12px', borderRadius: 10,
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(255,255,255,0.05)',
+          }}>
+            <div style={{
+              width: 30, height: 30, borderRadius: 9,
+              background: `rgba(255,255,255,0.06)`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)', flexShrink: 0,
+            }}>
+              {l.name[0]}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: '#f0f0f5', letterSpacing: '-0.01em', display: 'flex', alignItems: 'center', gap: 6 }}>
+                {l.name}
+                {l.badge && (
+                  <span style={{ fontSize: 9, fontWeight: 700, color: l.badgeColor, background: `${l.badgeColor}14`, padding: '2px 6px', borderRadius: 100 }}>
+                    {l.badge}
+                  </span>
+                )}
+              </div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 1 }}>{l.handle}</div>
+            </div>
+            {/* Match bar */}
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: l.match > 85 ? VOLT : 'rgba(255,255,255,0.55)' }}>{l.match}%</div>
+              <div style={{ marginTop: 3, width: 40, height: 3, borderRadius: 99, background: 'rgba(255,255,255,0.08)' }}>
+                <div style={{ width: `${l.match}%`, height: '100%', borderRadius: 99, background: l.match > 85 ? VOLT : 'rgba(255,255,255,0.25)' }} />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── 2. TRACK: Pipeline kanban ── */
+function TrackMock() {
+  const cols = [
+    { label: 'Leads', count: 3, color: 'rgba(255,255,255,0.3)', cards: ['Urban Café', 'Nova Yoga'] },
+    { label: 'Proposal', count: 2, color: '#5AC8FA', cards: ['Drift Studio'] },
+    { label: 'Active', count: 4, color: VOLT, cards: ['Blossom & Co', 'Zara Fitness'] },
+    { label: 'Done', count: 1, color: '#4CAF50', cards: ['Peaks Media'] },
+  ];
+  return (
+    <div style={{ ...UI_BASE, padding: '18px 16px' }}>
+      <div style={{ fontSize: 12, fontWeight: 700, color: '#f0f0f5', marginBottom: 14, letterSpacing: '-0.01em' }}>Pipeline</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+        {cols.map((col) => (
+          <div key={col.label}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 8 }}>
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: col.color, flexShrink: 0 }} />
+              <span style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.5)' }}>{col.label}</span>
+              <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)', marginLeft: 'auto' }}>{col.count}</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+              {col.cards.map((c) => (
+                <div key={c} style={{
+                  padding: '8px 9px', borderRadius: 8,
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.7)',
+                  lineHeight: 1.4,
+                }}>
+                  {c}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      {/* Mini progress summary */}
+      <div style={{
+        marginTop: 14, padding: '10px 12px', borderRadius: 10,
+        background: 'rgba(204,253,1,0.04)', border: '1px solid rgba(204,253,1,0.1)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}>
+        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)' }}>This month</span>
+        <span style={{ fontSize: 12, fontWeight: 700, color: VOLT }}>£4,200 pipeline</span>
+      </div>
+    </div>
+  );
+}
+
+/* ── 3. DELIVER: Project checklist ── */
+function DeliverMock() {
+  const steps = [
+    { label: 'Brief received', done: true },
+    { label: 'First draft delivered', done: true },
+    { label: 'Client review', done: true },
+    { label: 'Revisions applied', done: false, active: true },
+    { label: 'Final delivery', done: false },
+    { label: 'Invoice sent', done: false },
+  ];
+  return (
+    <div style={{ ...UI_BASE, padding: '18px 20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#f0f0f5', letterSpacing: '-0.01em' }}>Blossom &amp; Co — Brand video</div>
+          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 1 }}>Step 4 of 6</div>
+        </div>
+        <div style={{
+          fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 100,
+          background: 'rgba(90,200,250,0.1)', color: '#5AC8FA', border: '1px solid rgba(90,200,250,0.2)',
+        }}>
+          In review
+        </div>
+      </div>
+      {/* Progress bar */}
+      <div style={{ height: 3, borderRadius: 99, background: 'rgba(255,255,255,0.06)', marginBottom: 16 }}>
+        <div style={{ width: '58%', height: '100%', borderRadius: 99, background: VOLT }} />
+      </div>
+      {/* Steps */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+        {steps.map((s) => (
+          <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{
+              width: 18, height: 18, borderRadius: '50%', flexShrink: 0,
+              background: s.done ? VOLT : s.active ? 'rgba(255,255,255,0.06)' : 'transparent',
+              border: s.done ? 'none' : s.active ? `1.5px solid rgba(255,255,255,0.3)` : '1.5px solid rgba(255,255,255,0.1)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              {s.done && (
+                <svg viewBox="0 0 24 24" width={10} height={10} fill="none" stroke="#0a0a0a" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+              )}
+              {s.active && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#f0f0f5' }} />}
+            </div>
+            <span style={{
+              fontSize: 12, fontWeight: s.active ? 600 : 500,
+              color: s.done ? 'rgba(255,255,255,0.35)' : s.active ? '#f0f0f5' : 'rgba(255,255,255,0.3)',
+              textDecoration: s.done ? 'line-through' : 'none',
+            }}>
+              {s.label}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── 4. CLIENT PORTAL: client-facing view ── */
+function FeaturePortalMock() {
+  return (
+    <div style={{ ...UI_BASE, border: '1px solid rgba(204,253,1,0.12)', padding: '18px 20px' }}>
+      {/* Browser-like header */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16,
+        padding: '7px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.03)',
+        border: '1px solid rgba(255,255,255,0.05)',
+      }}>
+        <div style={{ display: 'flex', gap: 4 }}>
+          {['rgba(255,255,255,0.15)', 'rgba(255,255,255,0.15)', 'rgba(255,255,255,0.15)'].map((c, i) => (
+            <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: c }} />
+          ))}
+        </div>
+        <div style={{
+          flex: 1, textAlign: 'center', fontSize: 9,
+          color: 'rgba(255,255,255,0.25)', letterSpacing: '0.02em',
+        }}>
+          portal.nomaad.ai/blossom
+        </div>
+      </div>
+      {/* Client header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+        <div style={{
+          width: 32, height: 32, borderRadius: 10,
+          background: 'rgba(204,253,1,0.12)', border: '1px solid rgba(204,253,1,0.2)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 12, fontWeight: 700, color: VOLT,
+        }}>B</div>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#f0f0f5', letterSpacing: '-0.01em' }}>Blossom &amp; Co</div>
+          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>Brand video · Due in 5 days</div>
+        </div>
+      </div>
+      {/* Milestone dots */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 14 }}>
+        {['Brief', 'Draft', 'Review', 'Revisions', 'Final'].map((m, i) => (
+          <div key={m} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+            <div style={{
+              width: 20, height: 20, borderRadius: '50%',
+              background: i < 3 ? VOLT : i === 3 ? 'rgba(204,253,1,0.15)' : 'rgba(255,255,255,0.05)',
+              border: i === 3 ? `1.5px solid ${VOLT}` : 'none',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              {i < 3 && (
+                <svg viewBox="0 0 24 24" width={9} height={9} fill="none" stroke="#0a0a0a" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+              )}
+            </div>
+            <span style={{ fontSize: 8, color: i < 3 ? 'rgba(255,255,255,0.5)' : i === 3 ? VOLT : 'rgba(255,255,255,0.2)' }}>{m}</span>
+          </div>
+        ))}
+      </div>
+      {/* Latest file card */}
+      <div style={{
+        padding: '10px 12px', borderRadius: 10,
+        background: 'rgba(204,253,1,0.05)', border: '1px solid rgba(204,253,1,0.12)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}>
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: '#f0f0f5' }}>Draft v2.mp4</div>
+          <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginTop: 1 }}>Ready to review</div>
+        </div>
+        <div style={{
+          fontSize: 10, fontWeight: 700, padding: '5px 12px', borderRadius: 100,
+          background: VOLT, color: '#0a0a0a', cursor: 'pointer',
+        }}>
+          Review
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── 5. HIRE: creator marketplace ── */
+function HireMock() {
+  const creators = [
+    { name: 'Alex R.', role: 'Video editor', rate: '£45/hr', rating: 4.9, avail: true },
+    { name: 'Priya S.', role: 'Brand designer', rate: '£55/hr', rating: 5.0, avail: true },
+    { name: 'Tom W.', role: 'Photographer', rate: '£40/hr', rating: 4.8, avail: false },
+  ];
+  return (
+    <div style={{ ...UI_BASE, padding: '18px 20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: '#f0f0f5', letterSpacing: '-0.01em' }}>Hire a Creator</div>
+        <div style={{
+          fontSize: 10, color: 'rgba(255,255,255,0.35)',
+          padding: '4px 10px', borderRadius: 100,
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(255,255,255,0.07)',
+        }}>
+          47 available
+        </div>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {creators.map((c) => (
+          <div key={c.name} style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            padding: '10px 12px', borderRadius: 10,
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(255,255,255,0.05)',
+          }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: 10,
+              background: 'rgba(255,255,255,0.07)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.5)', flexShrink: 0,
+            }}>
+              {c.name[0]}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: '#f0f0f5', letterSpacing: '-0.01em' }}>{c.name}</div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 1 }}>{c.role}</div>
+            </div>
+            <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.8)' }}>{c.rate}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                <span style={{ fontSize: 9, color: VOLT }}>★</span>
+                <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>{c.rating}</span>
+                {c.avail && <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#4CAF50', marginLeft: 4 }} />}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Core Value Section ───────────────────────────────────────────────────────
-// 5 outcome blocks: FIND / TRACK / DELIVER / CLIENT PORTAL / HIRE
 
 const CORE_VALUES = [
   {
     tag: 'Find clients',
-    headline: 'AI-powered prospecting that actually finds real opportunities.',
-    body: 'Surface the right leads — without endless searching, scraping or paying for 3 different tools.',
+    headline: 'AI-powered prospecting that actually finds real leads.',
+    body: 'Surface the right opportunities — without endless searching, scraping, or paying for 3 different tools.',
+    featured: false,
+    mock: <FindMock />,
     icon: (
-      <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
       </svg>
     ),
@@ -813,8 +1127,10 @@ const CORE_VALUES = [
     tag: 'Track everything',
     headline: 'Know exactly where every lead, project, and client stands.',
     body: 'A single pipeline across prospects, proposals, and active jobs — at a glance, not buried in tabs.',
+    featured: false,
+    mock: <TrackMock />,
     icon: (
-      <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M4 20V10" /><path d="M10 20V4" /><path d="M16 20v-8" /><path d="M22 20H2" />
       </svg>
     ),
@@ -823,19 +1139,22 @@ const CORE_VALUES = [
     tag: 'Deliver without chaos',
     headline: 'Structured project workflows so nothing gets missed.',
     body: 'Briefs, files, milestones, payments — one place, tied to one client, moving in one direction.',
+    featured: false,
+    mock: <DeliverMock />,
     icon: (
-      <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><path d="m9 11 3 3L22 4" />
       </svg>
     ),
   },
   {
     tag: 'Client portal',
-    featured: true,
-    headline: 'Give clients one place to track progress, review edits, and request changes.',
+    headline: 'Give clients one place to track, review, and request changes.',
     body: 'No more chasing messages across email, DMs and WhatsApp. They log in — everything they need is there.',
+    featured: true,
+    mock: <FeaturePortalMock />,
     icon: (
-      <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <rect x="3" y="4" width="18" height="16" rx="2" />
         <path d="M3 8h18" /><circle cx="7" cy="6" r="0.6" fill="currentColor" />
       </svg>
@@ -845,8 +1164,10 @@ const CORE_VALUES = [
     tag: 'Hire & collaborate',
     headline: 'Find and hire other creators inside Nomaad.',
     body: 'Editors, designers, shooters — vetted, bookable, and ready to plug straight into your projects.',
+    featured: false,
+    mock: <HireMock />,
     icon: (
-      <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <circle cx="9" cy="8" r="3.4" /><path d="M2 20c0-3.4 3.1-6 7-6s7 2.6 7 6" />
         <circle cx="17.5" cy="9.5" r="2.4" /><path d="M17.5 14c2.8 0 4.5 1.8 4.5 4" />
       </svg>
@@ -883,22 +1204,23 @@ function CoreValueSection() {
               {/* Text side */}
               <div style={{ order: i % 2 === 0 ? 1 : 2 }}>
                 <div style={{
-                  fontSize: 11, fontWeight: 700, color: v.featured ? VOLT : 'rgba(240,240,245,0.4)',
+                  fontSize: 11, fontWeight: 700,
+                  color: v.featured ? VOLT : 'rgba(240,240,245,0.4)',
                   letterSpacing: '0.12em', textTransform: 'uppercase',
                   marginBottom: 16,
                   display: 'flex', alignItems: 'center', gap: 10,
                 }}>
                   <span style={{
-                    width: 28, height: 28, borderRadius: 8,
+                    width: 26, height: 26, borderRadius: 8,
                     background: v.featured ? 'rgba(204,253,1,0.12)' : 'rgba(255,255,255,0.04)',
-                    color: v.featured ? VOLT : 'rgba(240,240,245,0.6)',
+                    color: v.featured ? VOLT : 'rgba(240,240,245,0.55)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>{v.icon}</span>
                   {v.tag}
                 </div>
 
                 <h3 style={{
-                  fontSize: 'clamp(24px, 3.5vw, 36px)', fontWeight: 700,
+                  fontSize: 'clamp(22px, 3vw, 32px)', fontWeight: 700,
                   color: '#f0f0f5', margin: '0 0 16px',
                   letterSpacing: '-0.025em', lineHeight: 1.2,
                 }}>
@@ -907,31 +1229,15 @@ function CoreValueSection() {
 
                 <p style={{
                   fontSize: 16, color: 'rgba(240,240,245,0.5)',
-                  lineHeight: 1.7, margin: 0, maxWidth: 440,
+                  lineHeight: 1.7, margin: 0, maxWidth: 400,
                 }}>
                   {v.body}
                 </p>
               </div>
 
-              {/* Visual side — placeholder for future product screenshots */}
-              <div style={{
-                order: i % 2 === 0 ? 2 : 1,
-                aspectRatio: '4 / 3',
-                borderRadius: 20,
-                background: v.featured
-                  ? 'linear-gradient(135deg, rgba(204,253,1,0.06) 0%, rgba(204,253,1,0.02) 100%)'
-                  : 'linear-gradient(135deg, rgba(255,255,255,0.025) 0%, rgba(255,255,255,0.01) 100%)',
-                border: v.featured
-                  ? '1px solid rgba(204,253,1,0.12)'
-                  : '1px solid rgba(255,255,255,0.05)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <span style={{
-                  fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.2)',
-                  letterSpacing: '0.06em', textTransform: 'uppercase',
-                }}>
-                  Coming soon
-                </span>
+              {/* Mock UI side */}
+              <div style={{ order: i % 2 === 0 ? 2 : 1 }}>
+                {v.mock}
               </div>
             </div>
           </FadeUp>
@@ -1571,7 +1877,7 @@ function AvatarSection() {
   );
 }
 
-// ─── Testimonials ─���───────────────────────────────────────────────────────────
+// ─── Testimonials ─���──────────────────────────────────────────────��────────────
 // Redesigned: transparent quotes with left accent line, no boxed cards
 
 const TESTIMONIALS = [
@@ -1880,7 +2186,7 @@ function CloserSection() {
   );
 }
 
-// ─── Footer ───────────────────────────────────────────────────────────────────
+// ─── Footer ─────────���─────────────────────────────────────────────────────────
 
 function Footer() {
   return (
